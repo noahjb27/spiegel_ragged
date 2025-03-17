@@ -1,0 +1,31 @@
+# Core dependencies
+fastapi>=0.95.0
+uvicorn>=0.21.1
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# RAG and LLM dependencies
+chromadb>=0.4.6
+langchain>=0.0.267
+langchain-community>=0.0.1
+langchain-chroma>=0.0.1  # For Chroma integration
+langchain-ollama>=0.0.1  # For Ollama embeddings
+sentence-transformers>=2.2.2
+openai>=1.0.0
+jsonfinder>=1.0.0  # For parsing JSON from LLM outputs
+termcolor>=2.0.0  # For colored terminal output
+
+# Word embeddings
+gensim>=4.3.1
+
+# UI dependencies
+gradio>=3.32.0
+
+# Utilities
+numpy>=1.24.3
+pandas>=2.0.0
+requests>=2.31.0
+
+# Testing
+pytest>=7.3.1
+pytest-cov>=4.1.0
