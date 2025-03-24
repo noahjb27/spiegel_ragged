@@ -4,7 +4,7 @@ Gradio interface for Spiegel RAG.
 import os
 import sys
 import logging
-import json
+import time
 from typing import Dict, List, Tuple, Optional
 
 import gradio as gr
@@ -48,6 +48,10 @@ def perform_search(
     Perform search with custom system prompt support.
     """
     try:
+        # Start timing
+        start_time = time.time()
+        logger.info(f"Search started with query: '{query}', question: '{question}'")
+
         # Determine which system prompt to use
         system_prompt = None
         
@@ -64,6 +68,8 @@ def perform_search(
         # Process keywords if provided
         keywords_to_use = keywords.strip() if keywords and keywords.strip() else None
         
+        logger.info(f"Starting RAG search with chunk_size={chunk_size}, year_range={year_range}, use_query_refinement={use_query_refinement}")
+
         # Perform search
         results = rag_engine.search(
             question=question,
@@ -79,6 +85,9 @@ def perform_search(
             semantic_expansion_factor=semantic_expansion_factor,
             enforce_keywords=enforce_keywords
         )
+
+        logger.info(f"Search completed in {time.time() - start_time:.2f} seconds")
+        logger.info(f"Found {len(results.get('chunks', []))} chunks")
         
         # Format retrieved chunks for display
         chunks_formatted = ""
@@ -150,6 +159,8 @@ def perform_search(
             metadata_str += f"\n### Errors\n\n"
             metadata_str += f"Error: {results['metadata']['error']}\n"
         
+        logger.info("Results formatted successfully, returning to UI")
+
         return results["answer"], chunks_formatted, metadata_str
     except Exception as e:
         logger.error(f"Error in search: {e}", exc_info=True)

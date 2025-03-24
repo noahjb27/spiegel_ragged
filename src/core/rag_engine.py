@@ -101,14 +101,9 @@ class SpiegelRAGEngine:
                 # Log the expanded terms for debugging
                 logger.info(f"Expanded keywords: {expanded_terms}")
                 
-                # We'll keep track of the expanded keywords but continue to use the original
-                # since the advanced filtering is implemented in the vector store
-                
-                # This could be enhanced to modify the query itself to include expanded terms,
-                # but that would require changes to how the query is processed
             except Exception as e:
                 logger.error(f"Error in semantic expansion: {e}")
-                
+        
         # Build metadata filter
         filter_dict = self.vector_store.build_metadata_filter(
             year_range=year_range,
@@ -116,8 +111,14 @@ class SpiegelRAGEngine:
             keywords=None,
             search_in=None
         )
-
-            
+                   
+    # Store all keyword filtering parameters for consistent reuse
+        keyword_params = {
+            "keywords": keywords,
+            "search_in": search_in,
+            "enforce_keywords": enforce_keywords
+        }
+                
         # If query refinement is enabled, get better search queries
         refined_queries = []
         if use_query_refinement:
@@ -127,20 +128,8 @@ class SpiegelRAGEngine:
                 logger.error(f"Query refinement failed: {e}")
                 refined_queries = []
         
-        # Perform search (either standard or with refined queries)
-        chunks = self.vector_store.similarity_search(
-            search_query,
-            chunk_size,
-            k=top_k,
-            filter_dict=filter_dict,
-            min_relevance_score=min_relevance_score,
-            keywords=keywords,
-            search_in=search_in,
-            enforce_keywords=enforce_keywords
-        )
-
-        
         try:
+            # Choose the appropriate search method based on configuration
             if refined_queries:
                 # Search with multiple refined queries
                 chunks = self._perform_refined_search(
@@ -150,7 +139,8 @@ class SpiegelRAGEngine:
                     chunk_size,
                     filter_dict,
                     min_relevance_score,
-                    top_k
+                    top_k,
+                    **keyword_params  # Pass keyword filtering parameters
                 )
             elif use_iterative_search:
                 # Iterative time window search
@@ -161,7 +151,8 @@ class SpiegelRAGEngine:
                     time_window_size,
                     filter_dict,
                     min_relevance_score,
-                    top_k
+                    top_k,
+                    **keyword_params  # Pass keyword filtering parameters
                 )
             else:
                 # Standard single query search
@@ -170,7 +161,10 @@ class SpiegelRAGEngine:
                     chunk_size,
                     k=top_k,
                     filter_dict=filter_dict,
-                    min_relevance_score=min_relevance_score
+                    min_relevance_score=min_relevance_score,
+                    keywords=keywords,
+                    search_in=search_in,
+                    enforce_keywords=enforce_keywords
                 )
         except Exception as e:
             logger.error(f"Search failed: {e}")
@@ -195,7 +189,9 @@ class SpiegelRAGEngine:
         # Select appropriate system prompt if not provided
         if system_prompt is None:
             system_prompt = settings.SYSTEM_PROMPTS["with_citations"] if with_citations else settings.SYSTEM_PROMPTS["default"]
-        
+
+        logger.info(f"About to generate LLM response with model {model}")
+
         # Generate answer
         try:
             llm_response = self.llm_service.generate_response(
@@ -204,6 +200,9 @@ class SpiegelRAGEngine:
                 model=model,
                 system_prompt=system_prompt
             )
+
+            logger.info(f"LLM response generated successfully, length: {len(llm_response['text'])}")
+
         except Exception as e:
             logger.error(f"LLM response generation failed: {e}")
             return {
@@ -346,7 +345,10 @@ und ergibt die nachfolgenden Textauszüge.
         chunk_size: int,
         filter_dict: Optional[Dict] = None,
         min_relevance_score: float = 0.3,
-        top_k: int = 10
+        top_k: int = 10,
+        keywords: Optional[str] = None,
+        search_in: Optional[List[str]] = None,
+        enforce_keywords: bool = True
     ) -> List[Tuple[Document, float]]:
         """
         Perform search with multiple refined queries.
@@ -359,6 +361,9 @@ und ergibt die nachfolgenden Textauszüge.
             filter_dict: Optional filter dictionary
             min_relevance_score: Minimum relevance score
             top_k: Maximum number of results to return
+            keywords: Optional boolean expression for keyword filtering
+            search_in: Where to search for keywords
+            enforce_keywords: Whether to strictly enforce keyword presence
             
         Returns:
             Combined and deduplicated results
@@ -379,7 +384,10 @@ und ergibt die nachfolgenden Textauszüge.
                     chunk_size,
                     k=results_per_query,
                     filter_dict=filter_dict,
-                    min_relevance_score=min_relevance_score
+                    min_relevance_score=min_relevance_score,
+                    keywords=keywords,
+                    search_in=search_in,
+                    enforce_keywords=enforce_keywords
                 )
                 
                 # Add unique results to the combined list
@@ -401,7 +409,10 @@ und ergibt die nachfolgenden Textauszüge.
                 chunk_size,
                 k=results_per_query,
                 filter_dict=filter_dict,
-                min_relevance_score=min_relevance_score
+                min_relevance_score=min_relevance_score,
+                keywords=keywords,
+                search_in=search_in,
+                enforce_keywords=enforce_keywords
             )
             
             # Add unique results from original query
@@ -417,7 +428,9 @@ und ergibt die nachfolgenden Textauszüge.
         # Sort by relevance and take top_k
         all_results.sort(key=lambda x: x[1], reverse=True)
         return all_results[:top_k]
+
     
+    # Also modify the _perform_iterative_search method similarly:
     def _perform_iterative_search(
         self,
         query: str,
@@ -426,7 +439,10 @@ und ergibt die nachfolgenden Textauszüge.
         window_size: int,
         filter_dict: Optional[Dict] = None,
         min_relevance_score: float = 0.3,
-        top_k: int = 10
+        top_k: int = 10,
+        keywords: Optional[str] = None,
+        search_in: Optional[List[str]] = None,
+        enforce_keywords: bool = True
     ) -> List[Tuple[Document, float]]:
         """
         Perform iterative search across time windows.
@@ -439,6 +455,9 @@ und ergibt die nachfolgenden Textauszüge.
             filter_dict: Base filter dictionary
             min_relevance_score: Minimum relevance score
             top_k: Number of top results to retrieve
+            keywords: Optional boolean expression for keyword filtering
+            search_in: Where to search for keywords
+            enforce_keywords: Whether to strictly enforce keyword presence
             
         Returns:
             Combined results across time windows
@@ -474,7 +493,10 @@ und ergibt die nachfolgenden Textauszüge.
                     chunk_size,
                     k=results_per_window,
                     filter_dict=window_filter,
-                    min_relevance_score=min_relevance_score
+                    min_relevance_score=min_relevance_score,
+                    keywords=keywords,
+                    search_in=search_in,
+                    enforce_keywords=enforce_keywords
                 )
                 
                 all_results.extend(window_results)
