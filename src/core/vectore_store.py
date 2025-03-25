@@ -48,13 +48,22 @@ class ChromaDBInterface:
         
         Args:
             chunk_size: Size of chunks in the collection
-            chunk_overlap: Overlap size (defaults to 10% of chunk_size)
+            chunk_overlap: Overlap size (defaults to specific values based on chunk size)
             
         Returns:
             Chroma: The vectorstore instance
         """
-        if chunk_overlap is None:
-            chunk_overlap = chunk_size // 10
+        # Behandle spezielle Fälle für die zwei verfügbaren Sammlungen
+        if chunk_size == 2000:
+            chunk_overlap = 400  # Spezieller Fall für 2000 chunk size
+        elif chunk_size == 3000:
+            chunk_overlap = 300  # Spezieller Fall für 3000 chunk size
+        else:
+            # Fallback zu einer der verfügbaren Größen
+            nearest_size = min(settings.AVAILABLE_CHUNK_SIZES, key=lambda x: abs(x - chunk_size))
+            logger.warning(f"Chunk size {chunk_size} not available, using nearest size {nearest_size}")
+            chunk_size = nearest_size
+            chunk_overlap = 400 if chunk_size == 2000 else 300
             
         collection_name = f"recursive_chunks_{chunk_size}_{chunk_overlap}_TH_cosine_nomic-embed-text"
         

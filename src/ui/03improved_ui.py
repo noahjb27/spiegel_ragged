@@ -435,8 +435,8 @@ with gr.Blocks(title="Der Spiegel RAG (1948-1979)") as app:
                         
                         with gr.Row():
                             chunk_size = gr.Dropdown(
-                                choices=[300, 600, 1200, 2400, 3000],
-                                value=1200,
+                                choices=[2000, 3000],
+                                value=3000,
                                 label="Textgröße",
                                 info="Größe der Textabschnitte in Zeichen. Kleinere Abschnitte sind präziser, größere bieten mehr Kontext."
                             )
@@ -676,8 +676,7 @@ with gr.Blocks(title="Der Spiegel RAG (1948-1979)") as app:
             
             ## Datengrundlage
             
-            Die Datenbank enthält Der Spiegel-Artikel aus den Jahren 1948 bis 1979, die in Textabschnitte 
-            unterschiedlicher Größe aufgeteilt und vektorisiert wurden.
+            Die Datenbank enthält Der Spiegel-Artikel aus den Jahren 1948 bis 1979, die in aus dem Spiegel-Archiv gescraped wurden.
             """)
     
     # Set up event handlers
