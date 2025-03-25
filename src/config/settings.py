@@ -28,9 +28,9 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "https://dighist.geschichte.hu-be
 WORD_EMBEDDING_MODEL_PATH = "models/fasttext_model_spiegel_corpus_neu_50epochs_2.model"
 
 # Chunk Settings
-DEFAULT_CHUNK_SIZE = int(os.getenv("DEFAULT_CHUNK_SIZE", "1200"))
+DEFAULT_CHUNK_SIZE = int(os.getenv("DEFAULT_CHUNK_SIZE", "3000"))
 DEFAULT_CHUNK_OVERLAP_PERCENTAGE = int(os.getenv("DEFAULT_CHUNK_OVERLAP_PERCENTAGE", "10"))
-AVAILABLE_CHUNK_SIZES = [300, 600, 1200, 2400]
+AVAILABLE_CHUNK_SIZES = [2000, 3000]  # Nur diese beiden Größen sind verfügbar
 
 # Default LLM Model
 DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "hu-llm")
@@ -48,11 +48,18 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 def get_collection_name(
     chunk_size: int, 
     chunk_overlap: Optional[int] = None,
-    embedding_model: str = "allMiniLM"
+    embedding_model: str = "nomic-embed-text"
 ) -> str:
     """Generate collection name based on chunk size and overlap."""
+    # Verwende die spezifischen Überlappungswerte für die verfügbaren Kollektionen
     if chunk_overlap is None:
-        chunk_overlap = chunk_size // 10
+        if chunk_size == 2000:
+            chunk_overlap = 400
+        elif chunk_size == 3000:
+            chunk_overlap = 300
+        else:
+            # Fallback zur ursprünglichen Berechnung
+            chunk_overlap = chunk_size // 10
     
     return f"recursive_chunks_{chunk_size}_{chunk_overlap}_TH_cosine_{embedding_model}"
 
