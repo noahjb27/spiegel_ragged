@@ -125,7 +125,9 @@ def perform_search_with_keywords(
     expanded_words_json: str,
     enforce_keywords: bool,
     use_time_windows: bool,
-    time_window_size: int
+    time_window_size: int,
+    model_selection: str,  # Add these parameters
+    openai_api_key: str
 ) -> Tuple[str, str, str]:
     """Perform search with keyword filtering and semantic expansion."""
     try:
@@ -154,6 +156,13 @@ def perform_search_with_keywords(
         # Set search fields
         search_fields = search_in if search_in else ["Text"]
         
+               # Handle model selection
+        model_to_use = "hu-llm"  # Default
+        if model_selection == "openai-gpt4o":
+            model_to_use = "gpt-4o"
+        elif model_selection == "openai-gpt35":
+            model_to_use = "gpt-3.5-turbo"
+        
         # Perform search
         results = rag_engine.search(
             question=question,
@@ -162,7 +171,9 @@ def perform_search_with_keywords(
             chunk_size=chunk_size,
             keywords=keywords_to_use,
             search_in=search_fields,
-            use_query_refinement=False,  # Disable for simplicity
+            model=model_to_use,  # Use selected model
+            openai_api_key=openai_api_key,  # Pass API key
+            use_query_refinement=False,
             use_iterative_search=use_time_windows,
             time_window_size=time_window_size,
             with_citations=False,
@@ -310,6 +321,7 @@ def perform_search_with_keywords(
         # Format metadata
         metadata_text = f"""
 ## Suchparameter
+- **Model**: {model_to_use}
 - **Suchanfrage**: {query}
 - **Frage**: {question}
 - **Chunk-Größe**: {chunk_size} Zeichen
@@ -382,7 +394,7 @@ with gr.Blocks(title="Der Spiegel RAG (1948-1979)") as app:
                 with gr.Column(scale=1):
                     # Main search panel
                     with gr.Group():
-                        gr.Markdown("### Suchanfrage")
+                        gr.Markdown("## Suchanfrage")
                         
                         query = gr.Textbox(
                             label="Suchanfrage (welche Inhalte gesucht werden sollen)",
@@ -523,11 +535,53 @@ with gr.Blocks(title="Der Spiegel RAG (1948-1979)") as app:
                             erfordert aber mehr Verarbeitungszeit aufgrund mehrerer Suchanfragen.
                             """)
                     search_btn = gr.Button("Suchen", variant="primary")
-                
+
+                    with gr.Accordion("Erweiterte Einstellungen", open=False):
+                        gr.Markdown("""
+                        ### Modellauswahl
+                        
+                        Sie können zwischen verschiedenen LLM-Modellen wählen:
+                        - **HU-LLM**: Lokales Modell 
+                                    (kein API-Schlüssel erforderlich, HU-Netzwerk erforderlich)
+                        - **OpenAI GPT-4o**: Leistungsstärkstes OpenAI-Modell 
+                                    (erfordert API-Schlüssel)
+                        - **OpenAI GPT-3.5 Turbo**: Schnelles OpenAI-Modell 
+                                    (erfordert API-Schlüssel)
+                        """)
+                        
+                        with gr.Row():
+                            model_selection = gr.Radio(
+                                choices=["hu-llm", "openai-gpt4o", "openai-gpt35"],
+                                value="hu-llm",
+                                label="LLM-Modell",
+                                info="Wählen Sie das zu verwendende Sprachmodell"
+                            )
+                        
+                        with gr.Row(visible=False) as openai_key_row:
+                            openai_api_key = gr.Textbox(
+                                label="OpenAI API-Schlüssel",
+                                placeholder="sk-...",
+                                type="password",
+                                info="Ihr OpenAI API-Schlüssel wird nur für diese Sitzung gespeichert"
+                            )
+
+                        # Show the API key row only when OpenAI models are selected
+                        def toggle_api_key_visibility(model_choice):
+                            if model_choice.startswith("openai"):
+                                return gr.update(visible=True)
+                            return gr.update(visible=False)
+                        
+                        model_selection.change(
+                            toggle_api_key_visibility,
+                            inputs=[model_selection],
+                            outputs=[openai_key_row]
+                        )
+
+   
                 # Results panel
                 with gr.Column(scale=1):
                     with gr.Group():
-                        gr.Markdown("### Ergebnisse")
+                        gr.Markdown("## Ergebnisse")
                         
                         with gr.Tabs():
                             with gr.TabItem("Analyse"):
@@ -633,13 +687,15 @@ with gr.Blocks(title="Der Spiegel RAG (1948-1979)") as app:
         outputs=[expansion_output, expanded_words_state]
     )
     
+    # search button click handler
     search_btn.click(
         perform_search_with_keywords,
         inputs=[
             query, question, chunk_size, year_start, year_end,
             keywords, search_in, use_semantic_expansion,
             semantic_expansion_factor, expanded_words_state,
-            enforce_keywords, use_time_windows, time_window_size
+            enforce_keywords, use_time_windows, time_window_size,
+            model_selection, openai_api_key  
         ],
         outputs=[answer_output, chunks_output, metadata_output]
     )
