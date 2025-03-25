@@ -50,6 +50,7 @@ class SpiegelRAGEngine:
         keywords: Optional[str] = None,
         search_in: Optional[List[str]] = None,
         model: Optional[str] = None,
+        openai_api_key: Optional[str] = None,  # Add this parameter
         use_iterative_search: bool = False,
         time_window_size: int = 5,
         system_prompt: Optional[str] = None,
@@ -198,11 +199,9 @@ class SpiegelRAGEngine:
                 question=question,
                 context=context,
                 model=model,
-                system_prompt=system_prompt
+                system_prompt=system_prompt,
+                openai_api_key=openai_api_key  # Pass the key to the LLM service
             )
-
-            logger.info(f"LLM response generated successfully, length: {len(llm_response['text'])}")
-
         except Exception as e:
             logger.error(f"LLM response generation failed: {e}")
             return {
