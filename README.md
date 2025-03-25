@@ -47,13 +47,14 @@ pip install -r requirements.txt
 
 Die FastText-Worteinbettungen müssen separat heruntergeladen werden, da sie zu groß für das Repository sind:
 
-1. Laden Sie die Einbettungen von der angegebenen URL herunter: https://box.hu-berlin.de/f/34c17bfd74b84454b276/?dl=1
+1. Laden Sie die Einbettungen von der angegebenen URL herunter: <https://box.hu-berlin.de/f/34c17bfd74b84454b276/?dl=1>
 2. Entpacken Sie die Dateien in den `models/` Ordner
 
 **Hinweis zu verfügbaren ChromaDB-Kollektionen:**
 Das System ist so konfiguriert, dass es nur die folgenden zwei existierenden ChromaDB-Kollektionen verwendet:
-1. `recursive_chunks_3000_300_TH_cosine_nomic-embed-text` (247639 Einträge)
-2. `recursive_chunks_2000_400_TH_cosine_nomic-embed-text` (365378 Einträge)
+
+1. `recursive_chunks_3000_300_TH_cosine_nomic-embed-text`
+2. `recursive_chunks_2000_400_TH_cosine_nomic-embed-text`
 
 ## Ausführen der Anwendung
 
@@ -63,7 +64,7 @@ Das System ist so konfiguriert, dass es nur die folgenden zwei existierenden Chr
 python src/ui/03improved_ui.py
 ```
 
-Die Anwendung ist dann unter http://localhost:7860 verfügbar.
+Die Anwendung ist dann unter <http://localhost:7860> verfügbar.
 
 ## Komponententests
 
@@ -85,6 +86,7 @@ Die Anwendung besteht aus folgenden Hauptkomponenten:
 - **Embedding Service** (`src/core/embedding_service.py`): Lokaler Worteinbettungs-Service für semantische Ähnlichkeitssuche mit FastText
 
 Der Datenfluss in der Anwendung:
+
 1. Der Benutzer gibt eine Suchanfrage und Frage in der UI ein
 2. Die RAG Engine sendet eine Anfrage an den externen ChromaDB-Service, um relevante Textabschnitte zu finden
 3. Der externe Ollama-Service liefert die Sentence Embeddings für die Ähnlichkeitssuche
@@ -110,6 +112,7 @@ Der Datenfluss in der Anwendung:
 ### Schlagwort-Analyse
 
 Die Anwendung bietet Tools zur Analyse von Schlagwörtern:
+
 - Finden ähnlicher Wörter basierend auf dem Korpus
 - Erweiterung boolescher Ausdrücke mit semantisch ähnlichen Begriffen
 - Analyse der Häufigkeit von Begriffen im Korpus
@@ -117,6 +120,7 @@ Die Anwendung bietet Tools zur Analyse von Schlagwörtern:
 ### Modellauswahl
 
 Sie können zwischen verschiedenen Sprachmodellen wählen:
+
 - **HU-LLM**: Lokales Modell (kein API-Schlüssel erforderlich, HU-Netzwerk erforderlich)
 - **OpenAI GPT-4o**: Leistungsstärkstes OpenAI-Modell (erfordert API-Schlüssel)
 - **OpenAI GPT-3.5 Turbo**: Schnelleres OpenAI-Modell (erfordert API-Schlüssel)
