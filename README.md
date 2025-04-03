@@ -27,7 +27,7 @@ Dieses System ermöglicht die semantische Suche, Analyse und KI-gestützte Auswe
 
 ```bash
 git clone [repository-url]
-cd spiegel-rag
+cd spiegel_ragged
 ```
 
 ### 2. Virtuelle Umgebung erstellen und aktivieren
