@@ -18,7 +18,7 @@ Dieses System ermöglicht die semantische Suche, Analyse und KI-gestützte Auswe
 ## Systemanforderungen
 
 - Python 3.8 oder höher
-- Internetzugang für die Verbindung zum ChromaDB und Ollama Embedding Service
+- Internetzugang über HU-Eduroam oder VPN für die Verbindung zum ChromaDB und Ollama Embedding Service
 - Optional: OpenAI API-Schlüssel für GPT-4o oder GPT-3.5 Turbo
 
 ## Installation
@@ -61,7 +61,7 @@ Das System ist so konfiguriert, dass es nur die folgenden zwei existierenden Chr
 ### Starten der Benutzeroberfläche
 
 ```bash
-python src/ui/03improved_ui.py
+python src/ui/app.py
 ```
 
 Die Anwendung ist dann unter <http://localhost:7860> verfügbar.
