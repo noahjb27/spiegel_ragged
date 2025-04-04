@@ -24,8 +24,8 @@ CHROMA_DB_CACHE_DIR = os.getenv("CHROMA_DB_CACHE_DIR", "./cache")
 OLLAMA_MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "nomic-embed-text")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "https://dighist.geschichte.hu-berlin.de:11434")
 
-# Word Embedding Settings (for similar word lookup)
-WORD_EMBEDDING_MODEL_PATH = "../../models/fasttext_model_spiegel_corpus_neu_50epochs_2.model"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+WORD_EMBEDDING_MODEL_PATH = os.path.join(BASE_DIR, "models", "fasttext_model_spiegel_corpus_neu_50epochs_2.model")
 
 # Chunk Settings
 DEFAULT_CHUNK_SIZE = int(os.getenv("DEFAULT_CHUNK_SIZE", "3000"))
