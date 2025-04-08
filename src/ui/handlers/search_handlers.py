@@ -2,6 +2,7 @@
 """
 Handler functions for search operations.
 These functions are connected to UI events in the search panel.
+Refactored to support separate retrieval and analysis steps.
 """
 import json
 import logging
@@ -25,6 +26,180 @@ def set_rag_engine(engine: Any) -> None:
     global rag_engine
     rag_engine = engine
 
+def perform_retrieval(
+    content_description: str,
+    chunk_size: int,
+    year_start: int,
+    year_end: int,
+    keywords: str,
+    search_in: List[str],
+    use_semantic_expansion: bool,
+    semantic_expansion_factor: int,
+    expanded_words_json: str,
+    enforce_keywords: bool,
+    use_time_windows: bool,
+    time_window_size: int
+) -> Tuple[str, Dict[str, Any]]:
+    """
+    Perform source retrieval based on content description and filters.
+    
+    Args:
+        content_description: Description of content to retrieve
+        chunk_size: Size of text chunks to retrieve
+        year_start: Start year for search range
+        year_end: End year for search range
+        keywords: Boolean expression of keywords to filter by
+        search_in: List of fields to search in
+        use_semantic_expansion: Whether to use semantic expansion
+        semantic_expansion_factor: Number of similar words to find
+        expanded_words_json: JSON string of expanded words
+        enforce_keywords: Whether to strictly enforce keyword filtering
+        use_time_windows: Whether to use time window search
+        time_window_size: Size of time windows in years
+        
+    Returns:
+        Tuple of (info text, retrieved chunks state)
+    """
+    try:
+        if not rag_engine:
+            return "Error: RAG Engine failed to initialize", None
+        
+        start_time = time.time()
+        logger.info(f"Starting retrieval: content_description='{content_description}', keywords='{keywords}'")
+        
+        # Process keywords - only use if keywords are actually provided
+        keywords_to_use = keywords.strip() if keywords and keywords.strip() else None
+        
+        # Only use expanded words if keywords are provided and expansion is enabled
+        expanded_words = None
+        if keywords_to_use and use_semantic_expansion and expanded_words_json:
+            try:
+                expanded_words = json.loads(expanded_words_json)
+                logger.info(f"Using expanded words: {expanded_words}")
+            except:
+                logger.warning("Failed to parse expanded words JSON")
+        elif not keywords_to_use:
+            # Reset expanded words if no keywords provided
+            expanded_words_json = ""
+            expanded_words = None
+        
+        # Set search fields
+        search_fields = search_in if search_in else ["Text"]
+        
+        # Perform retrieval
+        results = rag_engine.retrieve(
+            content_description=content_description,
+            year_range=[year_start, year_end],
+            chunk_size=chunk_size,
+            keywords=keywords_to_use,
+            search_in=search_fields,
+            use_iterative_search=use_time_windows,
+            time_window_size=time_window_size,
+            use_semantic_expansion=use_semantic_expansion and keywords_to_use is not None,
+            semantic_expansion_factor=semantic_expansion_factor,
+            enforce_keywords=enforce_keywords
+        )
+        
+        retrieval_time = time.time() - start_time
+        logger.info(f"Retrieval completed in {retrieval_time:.2f} seconds")
+        
+        # Get actual number of chunks
+        num_chunks = len(results.get('chunks', []))
+        logger.info(f"Found {num_chunks} chunks")
+        
+        # Create summary info message
+        if num_chunks > 0:
+            info_text = f"""
+            ### Quellen erfolgreich abgerufen
+            
+            **Inhaltsbeschreibung**: {content_description}  
+            **Zeitraum**: {year_start} - {year_end}  
+            **Anzahl gefundener Quellen**: {num_chunks}  
+            **Abrufzeit**: {retrieval_time:.2f} Sekunden
+            
+            Sie können jetzt im Tab "2. Quellen analysieren" Fragen zu diesen Quellen stellen.
+            """
+        else:
+            info_text = f"""
+            ### Keine passenden Quellen gefunden
+            
+            Versuchen Sie es mit einer anderen Inhaltsbeschreibung oder erweitern Sie die Filter.
+            """
+        
+        return info_text, results
+        
+    except Exception as e:
+        logger.error(f"Error in retrieval: {e}", exc_info=True)
+        return f"Error: {str(e)}", None
+
+def perform_analysis(
+    question: str,
+    retrieved_chunks: Dict[str, Any],
+    model_selection: str,
+    openai_api_key: str
+) -> Tuple[str, str, str]:
+    """
+    Perform analysis on previously retrieved chunks.
+    
+    Args:
+        question: Question to answer based on retrieved chunks
+        retrieved_chunks: Dict with previously retrieved chunks
+        model_selection: Selected LLM model
+        openai_api_key: OpenAI API key (if applicable)
+        
+    Returns:
+        Tuple of (answer text, chunks text, metadata text)
+    """
+    try:
+        if not rag_engine:
+            return "Error: RAG Engine failed to initialize", "", "Check the logs for details"
+        
+        if not retrieved_chunks or not retrieved_chunks.get('chunks'):
+            return "Bitte rufen Sie zuerst Quellen ab im Tab '1. Quellen abrufen'", "", "Keine Quellen abgerufen"
+        
+        start_time = time.time()
+        logger.info(f"Starting analysis with question: '{question}'")
+        
+        # Handle model selection
+        model_to_use = "hu-llm"  # Default
+        if model_selection == "openai-gpt4o":
+            model_to_use = "gpt-4o"
+        elif model_selection == "openai-gpt35":
+            model_to_use = "gpt-3.5-turbo"
+        
+        # Perform analysis
+        results = rag_engine.analyze(
+            question=question,
+            model=model_to_use,
+            openai_api_key=openai_api_key,
+            with_citations=False
+        )
+        
+        analysis_time = time.time() - start_time
+        logger.info(f"Analysis completed in {analysis_time:.2f} seconds")
+        
+        # Get chunks from the retrieval results
+        chunks = retrieved_chunks.get('chunks', [])
+        
+        # Format results
+        answer_text = results.get('answer', 'No answer generated')
+        chunks_text = format_chunks(chunks)
+        
+        # Format metadata
+        from src.ui.utils.ui_helpers import format_analysis_metadata
+        metadata_text = format_analysis_metadata(
+            question=question,
+            model=model_to_use,
+            analysis_time=analysis_time,
+            retrieved_info=retrieved_chunks.get('metadata', {})
+        )
+        
+        return answer_text, chunks_text, metadata_text
+        
+    except Exception as e:
+        logger.error(f"Error in analysis: {e}", exc_info=True)
+        return f"Error: {str(e)}", "", "Analysis failed, check logs for details."
+
 def perform_search_with_keywords(
     query: str,
     question: str,
@@ -43,7 +218,7 @@ def perform_search_with_keywords(
     openai_api_key: str
 ) -> Tuple[str, str, str]:
     """
-    Perform search with keyword filtering and semantic expansion.
+    Combined search function for backward compatibility - performs both retrieval and analysis.
     
     Args:
         query: Content description to search for
@@ -98,7 +273,7 @@ def perform_search_with_keywords(
         elif model_selection == "openai-gpt35":
             model_to_use = "gpt-3.5-turbo"
         
-        # Perform search
+        # Perform search (combined retrieval and analysis)
         results = rag_engine.search(
             question=question,
             content_description=query,
@@ -127,7 +302,7 @@ def perform_search_with_keywords(
         # Format results
         answer_text = results.get('answer', 'No answer generated')
         chunks_text = format_chunks(
-            results, 
+            results.get('chunks', []), 
             keywords_to_use, 
             expanded_words, 
             use_time_windows, 
@@ -141,7 +316,7 @@ def perform_search_with_keywords(
         window_counts = {}
         if use_time_windows:
             for window_start in range(year_start, year_end + 1, time_window_size):
-                window_end = min(window_start + time_window_size - 1, year_end)
+                window_end = min(window_start + window_size - 1, year_end)
                 time_windows.append((window_start, window_end))
             
             # Count chunks per window
@@ -182,19 +357,19 @@ def perform_search_with_keywords(
         return f"Error: {str(e)}", "", "Search failed, check logs for details."
 
 def format_chunks(
-    results: Dict, 
-    keywords_to_use: Optional[str], 
-    expanded_words: Optional[Dict],
-    use_time_windows: bool, 
-    time_window_size: int, 
-    year_start: int, 
-    year_end: int
+    chunks: List[Dict],
+    keywords_to_use: Optional[str] = None, 
+    expanded_words: Optional[Dict] = None,
+    use_time_windows: bool = False, 
+    time_window_size: int = 5, 
+    year_start: int = 1948, 
+    year_end: int = 1979
 ) -> str:
     """
     Format retrieved chunks for display.
     
     Args:
-        results: Search results dictionary
+        chunks: List of chunk dictionaries
         keywords_to_use: Keywords used in search
         expanded_words: Dictionary of expanded words
         use_time_windows: Whether time windows were used
@@ -206,12 +381,12 @@ def format_chunks(
         Formatted markdown string with chunks information
     """
     chunks_text = ""
-    if not results.get("chunks"):
+    if not chunks:
         return "Keine passenden Texte gefunden."
     
     # Group chunks by year for better readability
     chunks_by_year = {}
-    for chunk in results["chunks"]:
+    for chunk in chunks:
         year = chunk["metadata"].get("Jahrgang", "Unknown")
         if year not in chunks_by_year:
             chunks_by_year[year] = []

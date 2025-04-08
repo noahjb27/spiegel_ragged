@@ -1,5 +1,6 @@
 """
 Core RAG Engine for Spiegel search and question answering.
+Refactored to separate retrieval and analysis steps.
 """
 import json
 import logging
@@ -39,52 +40,66 @@ class SpiegelRAGEngine:
         else:
             self._has_embedding_service = False
             
+        # Storage for cached retrieval results
+        self.last_retrieval_results = None
+        self.last_retrieval_params = None
+            
         logger.info("Initialized SpiegelRAGEngine")
     
-    def search(
+    def retrieve(
         self,
-        question: str,
-        content_description: Optional[str] = None,
+        content_description: str,
         year_range: Optional[List[int]] = None,
         chunk_size: Optional[int] = None,
         keywords: Optional[str] = None,
         search_in: Optional[List[str]] = None,
-        model: Optional[str] = None,
-        openai_api_key: Optional[str] = None,  # Add this parameter
         use_iterative_search: bool = False,
         time_window_size: int = 5,
-        system_prompt: Optional[str] = None,
         min_relevance_score: float = 0.3,
         top_k: int = 10,
-        use_query_refinement: Optional[bool] = None,
-        with_citations: Optional[bool] = None,
         use_semantic_expansion: bool = True,
         semantic_expansion_factor: int = 3,
         enforce_keywords: bool = True
     ) -> Dict[str, Any]:
-
         """
-        Perform RAG search and answer generation with enhanced semantic capabilities.
+        Perform content retrieval based on description and filters.
         
         Args:
-            # Previous arguments remain the same
-            use_semantic_expansion: Whether to expand keywords semantically using word embeddings
+            content_description: Description of the content to retrieve
+            year_range: Optional range of years to search
+            chunk_size: Optional size of chunks to retrieve
+            keywords: Optional boolean expression for keyword filtering
+            search_in: Optional list of fields to search in
+            use_iterative_search: Whether to use iterative time window search
+            time_window_size: Size of time windows in years
+            min_relevance_score: Minimum relevance score for chunks
+            top_k: Maximum number of chunks to retrieve
+            use_semantic_expansion: Whether to expand keywords semantically
             semantic_expansion_factor: Number of similar words to add per term
+            enforce_keywords: Whether to strictly enforce keyword presence
             
         Returns:
-            Dict containing answer and retrieved chunks
+            Dict containing retrieved chunks and metadata
         """
         # Use defaults if not provided
         chunk_size = chunk_size or settings.DEFAULT_CHUNK_SIZE
-        model = model or settings.DEFAULT_LLM_MODEL
         year_range = year_range or [settings.MIN_YEAR, settings.MAX_YEAR]
-        use_query_refinement = settings.ENABLE_QUERY_REFINEMENT if use_query_refinement is None else use_query_refinement
-        with_citations = settings.ENABLE_CITATIONS if with_citations is None else with_citations
         
-        # Construct search query
-        search_query = question
-        if content_description:
-            search_query = f"{content_description} {question}"
+        # Store retrieval parameters for potential caching
+        self.last_retrieval_params = {
+            "content_description": content_description,
+            "year_range": year_range,
+            "chunk_size": chunk_size,
+            "keywords": keywords,
+            "search_in": search_in,
+            "use_iterative_search": use_iterative_search,
+            "time_window_size": time_window_size,
+            "min_relevance_score": min_relevance_score,
+            "top_k": top_k,
+            "use_semantic_expansion": use_semantic_expansion,
+            "semantic_expansion_factor": semantic_expansion_factor,
+            "enforce_keywords": enforce_keywords
+        }
         
         # Perform semantic expansion of keywords if requested
         expanded_keywords = keywords
@@ -113,40 +128,19 @@ class SpiegelRAGEngine:
             search_in=None
         )
                    
-    # Store all keyword filtering parameters for consistent reuse
+        # Store all keyword filtering parameters for consistent reuse
         keyword_params = {
             "keywords": keywords,
             "search_in": search_in,
             "enforce_keywords": enforce_keywords
         }
                 
-        # If query refinement is enabled, get better search queries
-        refined_queries = []
-        if use_query_refinement:
-            try:
-                refined_queries = self._refine_search_query(search_query, question)
-            except Exception as e:
-                logger.error(f"Query refinement failed: {e}")
-                refined_queries = []
-        
         try:
             # Choose the appropriate search method based on configuration
-            if refined_queries:
-                # Search with multiple refined queries
-                chunks = self._perform_refined_search(
-                    refined_queries, 
-                    search_query,
-                    year_range,
-                    chunk_size,
-                    filter_dict,
-                    min_relevance_score,
-                    top_k,
-                    **keyword_params  # Pass keyword filtering parameters
-                )
-            elif use_iterative_search:
+            if use_iterative_search:
                 # Iterative time window search
                 chunks = self._perform_iterative_search(
-                    search_query,
+                    content_description,
                     year_range,
                     chunk_size,
                     time_window_size,
@@ -158,7 +152,7 @@ class SpiegelRAGEngine:
             else:
                 # Standard single query search
                 chunks = self.vector_store.similarity_search(
-                    search_query,
+                    content_description,
                     chunk_size,
                     k=top_k,
                     filter_dict=filter_dict,
@@ -168,19 +162,70 @@ class SpiegelRAGEngine:
                     enforce_keywords=enforce_keywords
                 )
         except Exception as e:
-            logger.error(f"Search failed: {e}")
+            logger.error(f"Retrieval failed: {e}")
             chunks = []
+        
+        # Format chunks for response
+        formatted_chunks = self._format_chunks_for_response(chunks)
+        
+        # Store retrieval results for reuse
+        self.last_retrieval_results = chunks
+        
+        # Return retrieval results
+        return {
+            "chunks": formatted_chunks,
+            "metadata": {
+                "content_description": content_description,
+                "chunk_size": chunk_size,
+                "year_range": year_range,
+                "chunks_count": len(chunks)
+            }
+        }
+    
+    def analyze(
+        self,
+        question: str,
+        chunks: Optional[List[Tuple[Document, float]]] = None,
+        model: Optional[str] = None,
+        openai_api_key: Optional[str] = None,
+        system_prompt: Optional[str] = None,
+        with_citations: Optional[bool] = None
+    ) -> Dict[str, Any]:
+        """
+        Generate an answer to a question based on previously retrieved chunks.
+        
+        Args:
+            question: Question to answer based on the chunks
+            chunks: Optional list of document chunks (if None, uses last retrieved)
+            model: Optional LLM model to use
+            openai_api_key: Optional OpenAI API key
+            system_prompt: Optional system prompt
+            with_citations: Whether to include citations
+            
+        Returns:
+            Dict containing answer and metadata
+        """
+        # Use defaults if not provided
+        model = model or settings.DEFAULT_LLM_MODEL
+        with_citations = settings.ENABLE_CITATIONS if with_citations is None else with_citations
+        
+        # Use provided chunks or fall back to last retrieval results
+        if chunks is None:
+            if self.last_retrieval_results is None:
+                return {
+                    "answer": "No content has been retrieved yet. Please retrieve content first.",
+                    "metadata": {
+                        "error": "No retrieval results available"
+                    }
+                }
+            chunks = self.last_retrieval_results
         
         if not chunks:
             return {
-                "answer": "Keine relevanten Informationen gefunden.",
-                "chunks": [],
+                "answer": "No relevant content was found to answer this question.",
                 "metadata": {
-                    "query": search_query,
-                    "chunk_size": chunk_size,
-                    "year_range": year_range,
-                    "model": model,
-                    "refined_queries": refined_queries if refined_queries else None
+                    "question": question,
+                    "model": model
                 }
             }
         
@@ -200,41 +245,202 @@ class SpiegelRAGEngine:
                 context=context,
                 model=model,
                 system_prompt=system_prompt,
-                openai_api_key=openai_api_key  # Pass the key to the LLM service
+                openai_api_key=openai_api_key
             )
         except Exception as e:
             logger.error(f"LLM response generation failed: {e}")
             return {
                 "answer": f"Fehler bei der Antwortgenerierung: {str(e)}",
-                "chunks": self._format_chunks_for_response(chunks),
                 "metadata": {
-                    "query": search_query,
-                    "chunk_size": chunk_size,
-                    "year_range": year_range,
+                    "question": question,
                     "model": model,
-                    "refined_queries": refined_queries if refined_queries else None,
                     "error": str(e)
                 }
             }
         
-        # Format chunks for response
-        formatted_chunks = self._format_chunks_for_response(chunks)
-        
         result = {
             "answer": llm_response["text"],
-            "chunks": formatted_chunks,
             "metadata": {
-                "query": search_query,
-                "chunk_size": chunk_size,
-                "year_range": year_range,
-                "model": llm_response.get("model", model),
-                "refined_queries": refined_queries if refined_queries else None
+                "question": question,
+                "model": llm_response.get("model", model)
             }
         }
         
         # Add citations if enabled
         if with_citations and citations:
             result["citations"] = citations
+            
+        return result
+    
+    def search(
+        self,
+        question: str,
+        content_description: Optional[str] = None,
+        year_range: Optional[List[int]] = None,
+        chunk_size: Optional[int] = None,
+        keywords: Optional[str] = None,
+        search_in: Optional[List[str]] = None,
+        model: Optional[str] = None,
+        openai_api_key: Optional[str] = None,
+        use_iterative_search: bool = False,
+        time_window_size: int = 5,
+        system_prompt: Optional[str] = None,
+        min_relevance_score: float = 0.3,
+        top_k: int = 10,
+        use_query_refinement: Optional[bool] = None,
+        with_citations: Optional[bool] = None,
+        use_semantic_expansion: bool = True,
+        semantic_expansion_factor: int = 3,
+        enforce_keywords: bool = True,
+        reuse_last_retrieval: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Combined method for backwards compatibility - performs both retrieval and analysis.
+        
+        Args:
+            All parameters from both retrieve() and analyze() methods
+            reuse_last_retrieval: Whether to reuse the last retrieval results
+            
+        Returns:
+            Dict containing answer, chunks, and metadata
+        """
+        # Use query refinement from settings if not specified
+        use_query_refinement = settings.ENABLE_QUERY_REFINEMENT if use_query_refinement is None else use_query_refinement
+        
+        # Decide whether to perform a new retrieval or reuse the last one
+        if reuse_last_retrieval and self.last_retrieval_results is not None:
+            chunks = self.last_retrieval_results
+            retrieval_metadata = {
+                "content_description": self.last_retrieval_params.get("content_description", "Unknown"),
+                "chunk_size": self.last_retrieval_params.get("chunk_size", chunk_size or settings.DEFAULT_CHUNK_SIZE),
+                "year_range": self.last_retrieval_params.get("year_range", year_range or [settings.MIN_YEAR, settings.MAX_YEAR]),
+                "reused_retrieval": True
+            }
+        else:
+            # Check if content description is provided when not reusing retrieval
+            if not content_description and not reuse_last_retrieval:
+                content_description = question  # Fall back to using question as content description
+            
+            # If query refinement is enabled, get better search queries
+            refined_queries = []
+            if use_query_refinement:
+                try:
+                    refined_queries = self._refine_search_query(content_description, question)
+                    
+                    # Use refined queries for retrieval
+                    if refined_queries:
+                        chunks = self._perform_refined_search(
+                            refined_queries, 
+                            content_description,
+                            year_range or [settings.MIN_YEAR, settings.MAX_YEAR],
+                            chunk_size or settings.DEFAULT_CHUNK_SIZE,
+                            self.vector_store.build_metadata_filter(
+                                year_range=year_range,
+                                keywords=None,
+                                search_in=None
+                            ),
+                            min_relevance_score,
+                            top_k,
+                            keywords=keywords,
+                            search_in=search_in,
+                            enforce_keywords=enforce_keywords
+                        )
+                        # Store the results for future reuse
+                        self.last_retrieval_results = chunks
+                        self.last_retrieval_params = {
+                            "content_description": content_description,
+                            "refined_queries": refined_queries,
+                            "year_range": year_range or [settings.MIN_YEAR, settings.MAX_YEAR],
+                            "chunk_size": chunk_size or settings.DEFAULT_CHUNK_SIZE,
+                            "keywords": keywords,
+                            "search_in": search_in
+                        }
+                    else:
+                        # Perform regular retrieval
+                        retrieval_result = self.retrieve(
+                            content_description=content_description,
+                            year_range=year_range,
+                            chunk_size=chunk_size,
+                            keywords=keywords,
+                            search_in=search_in,
+                            use_iterative_search=use_iterative_search,
+                            time_window_size=time_window_size,
+                            min_relevance_score=min_relevance_score,
+                            top_k=top_k,
+                            use_semantic_expansion=use_semantic_expansion,
+                            semantic_expansion_factor=semantic_expansion_factor,
+                            enforce_keywords=enforce_keywords
+                        )
+                        chunks = self.last_retrieval_results  # Use the stored results
+                except Exception as e:
+                    logger.error(f"Query refinement failed: {e}")
+                    refined_queries = []
+                    
+                    # Fall back to regular retrieval
+                    retrieval_result = self.retrieve(
+                        content_description=content_description,
+                        year_range=year_range,
+                        chunk_size=chunk_size,
+                        keywords=keywords,
+                        search_in=search_in,
+                        use_iterative_search=use_iterative_search,
+                        time_window_size=time_window_size,
+                        min_relevance_score=min_relevance_score,
+                        top_k=top_k,
+                        use_semantic_expansion=use_semantic_expansion,
+                        semantic_expansion_factor=semantic_expansion_factor,
+                        enforce_keywords=enforce_keywords
+                    )
+                    chunks = self.last_retrieval_results  # Use the stored results
+            else:
+                # Perform regular retrieval without refinement
+                retrieval_result = self.retrieve(
+                    content_description=content_description,
+                    year_range=year_range,
+                    chunk_size=chunk_size,
+                    keywords=keywords,
+                    search_in=search_in,
+                    use_iterative_search=use_iterative_search,
+                    time_window_size=time_window_size,
+                    min_relevance_score=min_relevance_score,
+                    top_k=top_k,
+                    use_semantic_expansion=use_semantic_expansion,
+                    semantic_expansion_factor=semantic_expansion_factor,
+                    enforce_keywords=enforce_keywords
+                )
+                chunks = self.last_retrieval_results  # Use the stored results
+            
+            retrieval_metadata = {
+                "content_description": content_description,
+                "chunk_size": chunk_size or settings.DEFAULT_CHUNK_SIZE,
+                "year_range": year_range or [settings.MIN_YEAR, settings.MAX_YEAR],
+                "refined_queries": refined_queries if refined_queries else None,
+                "reused_retrieval": False
+            }
+        
+        # Perform analysis with retrieved chunks
+        analysis_result = self.analyze(
+            question=question,
+            chunks=chunks,
+            model=model,
+            openai_api_key=openai_api_key,
+            system_prompt=system_prompt,
+            with_citations=with_citations
+        )
+        
+        # Combine results
+        result = {
+            "answer": analysis_result["answer"],
+            "chunks": self._format_chunks_for_response(chunks),
+            "metadata": {
+                **retrieval_metadata,
+                **analysis_result.get("metadata", {})
+            }
+        }
+        
+        # Add citations if available
+        if "citations" in analysis_result:
+            result["citations"] = analysis_result["citations"]
             
         return result
     
@@ -427,9 +633,7 @@ und ergibt die nachfolgenden Textauszüge.
         # Sort by relevance and take top_k
         all_results.sort(key=lambda x: x[1], reverse=True)
         return all_results[:top_k]
-
     
-    # Also modify the _perform_iterative_search method similarly:
     def _perform_iterative_search(
         self,
         query: str,
