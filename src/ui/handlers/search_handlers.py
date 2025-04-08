@@ -445,8 +445,13 @@ def format_chunks(
                     metadata = chunk["metadata"]
                     chunks_text += f"#### {chunk_in_year}. {metadata.get('Artikeltitel', 'Kein Titel')}\n\n"
                     chunks_text += f"**Datum**: {metadata.get('Datum', 'Unbekannt')} | "
-                    chunks_text += f"**Relevanz**: {chunk['relevance_score']:.3f}\n\n"
-                    
+                    chunks_text += f"**Relevanz**: {chunk['relevance_score']:.3f}"
+                    url = metadata.get('URL')
+                    if url and url != 'Keine URL':
+                        chunks_text += f" | [**Link zum Artikel**]({url})"
+
+                    chunks_text += "\n\n"
+                      
                     # Highlight the keywords if found
                     if keywords_to_use:
                         content = chunk['content']
@@ -484,7 +489,11 @@ def format_chunks(
                 metadata = chunk["metadata"]
                 chunks_text += f"### {i}. {metadata.get('Artikeltitel', 'Kein Titel')}\n\n"
                 chunks_text += f"**Datum**: {metadata.get('Datum', 'Unbekannt')} | "
-                chunks_text += f"**Relevanz**: {chunk['relevance_score']:.3f}\n\n"
+                chunks_text += f"**Relevanz**: {chunk['relevance_score']:.3f}"
+                url = metadata.get('URL')
+                if url and url != 'Keine URL':
+                    chunks_text += f" | [**Link zum Artikel**]({url})"
+                chunks_text += "\n\n"
                 
                 # Highlight the keywords if found
                 if keywords_to_use:
