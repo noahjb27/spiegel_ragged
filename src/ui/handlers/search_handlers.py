@@ -38,7 +38,8 @@ def perform_retrieval(
     expanded_words_json: str,
     enforce_keywords: bool,
     use_time_windows: bool,
-    time_window_size: int
+    time_window_size: int,
+    top_k: int
 ) -> Tuple[str, Dict[str, Any]]:
     """
     Perform source retrieval based on content description and filters.
@@ -97,7 +98,8 @@ def perform_retrieval(
             time_window_size=time_window_size,
             use_semantic_expansion=use_semantic_expansion and keywords_to_use is not None,
             semantic_expansion_factor=semantic_expansion_factor,
-            enforce_keywords=enforce_keywords
+            enforce_keywords=enforce_keywords,
+            top_k=top_k
         )
         
         retrieval_time = time.time() - start_time
@@ -215,8 +217,9 @@ def perform_search_with_keywords(
     use_time_windows: bool,
     time_window_size: int,
     model_selection: str,
-    openai_api_key: str
-) -> Tuple[str, str, str]:
+    openai_api_key: str,
+    top_k: int
+) -> Tuple[str, Dict[str, Any]]:
     """
     Combined search function for backward compatibility - performs both retrieval and analysis.
     
@@ -289,7 +292,8 @@ def perform_search_with_keywords(
             with_citations=False,
             use_semantic_expansion=use_semantic_expansion and keywords_to_use is not None,
             semantic_expansion_factor=semantic_expansion_factor,
-            enforce_keywords=enforce_keywords
+            enforce_keywords=enforce_keywords,
+            top_k=top_k
         )
         
         search_time = time.time() - start_time
@@ -316,7 +320,7 @@ def perform_search_with_keywords(
         window_counts = {}
         if use_time_windows:
             for window_start in range(year_start, year_end + 1, time_window_size):
-                window_end = min(window_start + window_size - 1, year_end)
+                window_end = min(window_start + time_window_size - 1, year_end)
                 time_windows.append((window_start, window_end))
             
             # Count chunks per window

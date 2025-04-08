@@ -43,7 +43,6 @@ def create_search_panel(
                     label="Inhaltsbeschreibung (welche Quellen gesucht werden sollen)",
                     placeholder="Beispiel: Berichterstattung über die Berliner Mauer",
                     lines=2,
-                    value="Berlin Mauer",
                     info="Beschreiben Sie, welche Art von Inhalten Sie im Archiv finden möchten."
                 )
             
@@ -74,6 +73,15 @@ def create_search_panel(
                         value=3000,
                         label="Textgröße",
                         info="Größe der Textabschnitte in Zeichen. Kleinere Abschnitte sind präziser, größere bieten mehr Kontext."
+                    )
+
+                    top_k = gr.Slider(
+                        minimum=1,
+                        maximum=50,
+                        value=10,
+                        step=1,
+                        label="Anzahl Ergebnisse",
+                        info="Maximale Anzahl der Texte, die abgerufen werden sollen."
                     )
             
             # Keyword filtering options
@@ -176,7 +184,6 @@ def create_search_panel(
                     label="Frage (was Sie über die gefundenen Inhalte wissen möchten)",
                     placeholder="Beispiel: Wie wurde die Berliner Mauer in den westdeutschen Medien dargestellt?",
                     lines=2,
-                    value="Wie wurde die Berliner Mauer in den Medien dargestellt?",
                     info="Formulieren Sie Ihre Frage, die anhand der gefundenen Texte beantwortet werden soll."
                 )
                 
@@ -248,7 +255,8 @@ def create_search_panel(
         "retrieved_info": retrieved_info,
         "retrieved_chunks_state": retrieved_chunks_state,
         "expansion_output": expansion_output,
-        "openai_key_row": openai_key_row
+        "openai_key_row": openai_key_row,
+        "top_k": top_k
     }
     
     return components
