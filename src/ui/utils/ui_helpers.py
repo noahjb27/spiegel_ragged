@@ -5,7 +5,7 @@ Contains functions that are used across multiple UI components.
 """
 import json
 import logging
-from typing import Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -104,5 +104,38 @@ def format_search_metadata(
         metadata_text += "\n## Erweiterte Schlagwörter\n"
         for original, similar in expanded_words.items():
             metadata_text += f"- **{original}** → {', '.join(similar)}\n"
+    
+    return metadata_text
+
+def format_analysis_metadata(
+    question: str,
+    model: str,
+    analysis_time: float,
+    retrieved_info: Dict[str, Any]
+) -> str:
+    """
+    Format analysis metadata for display in the UI.
+    
+    Args:
+        question: The question that was asked
+        model: The LLM model used
+        analysis_time: Time taken for analysis in seconds
+        retrieved_info: Metadata from the retrieval step
+        
+    Returns:
+        Formatted markdown string with analysis metadata
+    """
+    metadata_text = f"""
+## Analyseparameter
+- **Model**: {model}
+- **Frage**: {question}
+- **Analysezeit**: {analysis_time:.2f} Sekunden
+
+## Quellen-Metadaten
+- **Inhaltsbeschreibung**: {retrieved_info.get('content_description', 'Nicht angegeben')}
+- **Chunk-Größe**: {retrieved_info.get('chunk_size', 'Unbekannt')} Zeichen
+- **Zeitraum**: {retrieved_info.get('year_range', ['Unbekannt', 'Unbekannt'])[0]} - {retrieved_info.get('year_range', ['Unbekannt', 'Unbekannt'])[1]}
+- **Anzahl Quellen**: {retrieved_info.get('chunks_count', 0)}
+"""
     
     return metadata_text
