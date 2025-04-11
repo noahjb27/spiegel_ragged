@@ -10,6 +10,8 @@ import os
 import sys
 import time
 from typing import Dict, List, Tuple, Optional, Any
+import gradio as gr
+
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
@@ -145,10 +147,9 @@ def perform_analysis(
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
     openai_api_key: str,
-    temperature: float,               
-    max_tokens: int,               
-    system_prompt_template: str,      
-    custom_system_prompt: str        
+    system_prompt: Optional[str] = None,  # Add new parameters
+    temperature: float = 0.3,
+    max_tokens: Optional[int] = None
 ) -> Tuple[str, str, str]:
     """
     Perform analysis on previously retrieved chunks.
@@ -158,6 +159,9 @@ def perform_analysis(
         retrieved_chunks: Dict with previously retrieved chunks
         model_selection: Selected LLM model
         openai_api_key: OpenAI API key (if applicable)
+        system_prompt: Custom system prompt (if provided)
+        temperature: Generation temperature (0.0-1.0)
+        max_tokens: Maximum tokens to generate
         
     Returns:
         Tuple of (answer text, chunks text, metadata text)
@@ -167,7 +171,7 @@ def perform_analysis(
             return "Error: RAG Engine failed to initialize", "", "Check the logs for details"
         
         if not retrieved_chunks or not retrieved_chunks.get('chunks'):
-            return "Bitte rufen Sie zuerst Quellen ab im Tab '1. Quellen abrufen'", "", "Keine Quellen abgerufen"
+            return "Bitte rufen Sie zuerst Quellen ab", "", "Keine Quellen abgerufen"
         
         start_time = time.time()
         logger.info(f"Starting analysis with question: '{question}'")
@@ -178,23 +182,16 @@ def perform_analysis(
             model_to_use = "gpt-4o"
         elif model_selection == "openai-gpt35":
             model_to_use = "gpt-3.5-turbo"
-
-         # Determine which system prompt to use
-        if custom_system_prompt.strip():
-            system_prompt = custom_system_prompt
-        else:
-            system_prompt = settings.SYSTEM_PROMPTS.get(system_prompt_template, settings.SYSTEM_PROMPTS["default"])
         
-        
-        # Perform analysis
+        # Perform analysis with new parameters
         results = rag_engine.analyze(
             question=question,
             model=model_to_use,
             openai_api_key=openai_api_key,
             with_citations=False,
-            system_prompt=system_prompt,   
-            temperature=temperature,     
-            max_tokens=max_tokens     
+            system_prompt=system_prompt,    # Pass new parameters
+            temperature=temperature,
+            max_tokens=max_tokens
         )
         
         analysis_time = time.time() - start_time
@@ -213,7 +210,10 @@ def perform_analysis(
             question=question,
             model=model_to_use,
             analysis_time=analysis_time,
-            retrieved_info=retrieved_chunks.get('metadata', {})
+            retrieved_info=retrieved_chunks.get('metadata', {}),
+            temperature=temperature,     # Include new parameters in metadata
+            max_tokens=max_tokens,
+            system_prompt=system_prompt
         )
         
         return answer_text, chunks_text, metadata_text
@@ -222,9 +222,8 @@ def perform_analysis(
         logger.error(f"Error in analysis: {e}", exc_info=True)
         return f"Error: {str(e)}", "", "Analysis failed, check logs for details."
 
-def perform_search_with_keywords(
-    query: str,
-    question: str,
+def perform_retrieval_and_update_ui(
+    content_description: str,
     chunk_size: int,
     year_start: int,
     year_end: int,
@@ -236,149 +235,97 @@ def perform_search_with_keywords(
     enforce_keywords: bool,
     use_time_windows: bool,
     time_window_size: int,
+    top_k: int
+) -> Tuple[str, Dict[str, Any], str, gr.Accordion, gr.Accordion, gr.Accordion]:
+    """
+    Perform retrieval and update UI accordions.
+    
+    Returns:
+        Tuple containing:
+        - Retrieved info text
+        - Retrieved chunks state
+        - Formatted chunks for display
+        - Retrieval accordion state (collapsed)
+        - Retrieved texts accordion state (expanded)
+        - Question accordion state (expanded)
+    """
+    # First, perform the retrieval
+    info_text, retrieved_chunks = perform_retrieval(
+        content_description, chunk_size, year_start, year_end,
+        keywords, search_in, use_semantic_expansion,
+        semantic_expansion_factor, expanded_words_json,
+        enforce_keywords, use_time_windows, time_window_size, top_k
+    )
+    
+    # Format the retrieved chunks for display
+    if retrieved_chunks and retrieved_chunks.get('chunks'):
+        formatted_chunks = format_chunks(retrieved_chunks.get('chunks'))
+        num_chunks = len(retrieved_chunks.get('chunks'))
+    else:
+        formatted_chunks = "Keine Texte gefunden."
+        num_chunks = 0
+    
+    # Update UI accordions based on retrieval success
+    if num_chunks > 0:
+        # Collapse retrieval section
+        retrieval_state = gr.update(open=False)
+        # Expand retrieved texts section
+        retrieved_texts_state = gr.update(open=True)
+        # Expand question section
+        question_state = gr.update(open=True)
+    else:
+        # Keep retrieval section expanded if no results
+        retrieval_state = gr.update(open=True)
+        # Collapse other sections
+        retrieved_texts_state = gr.update(open=False)
+        question_state = gr.update(open=False)
+    
+    return info_text, retrieved_chunks, formatted_chunks, retrieval_state, retrieved_texts_state, question_state
+
+def perform_analysis_and_update_ui(
+    question: str,
+    retrieved_chunks: Dict[str, Any],
     model_selection: str,
     openai_api_key: str,
-    top_k: int
-) -> Tuple[str, Dict[str, Any]]:
+    system_prompt_template: str,
+    custom_system_prompt: str,
+    temperature: float,
+    max_tokens: int
+) -> Tuple[str, str, gr.Accordion, gr.Accordion]:
     """
-    Combined search function for backward compatibility - performs both retrieval and analysis.
+    Perform analysis and update UI accordions.
     
-    Args:
-        query: Content description to search for
-        question: Question to answer based on search results
-        chunk_size: Size of text chunks to retrieve
-        year_start: Start year for search range
-        year_end: End year for search range
-        keywords: Boolean expression of keywords to filter by
-        search_in: List of fields to search in
-        use_semantic_expansion: Whether to use semantic expansion
-        semantic_expansion_factor: Number of similar words to find
-        expanded_words_json: JSON string of expanded words
-        enforce_keywords: Whether to strictly enforce keyword filtering
-        use_time_windows: Whether to use time window search
-        time_window_size: Size of time windows in years
-        model_selection: Selected LLM model
-        openai_api_key: OpenAI API key (if applicable)
-        
     Returns:
-        Tuple of (answer text, chunks text, metadata text)
+        Tuple containing:
+        - Answer text
+        - Metadata text
+        - Question accordion state (collapsed)
+        - Results accordion state (expanded)
     """
-    try:
-        if not rag_engine:
-            return "Error: RAG Engine failed to initialize", "", "Check the logs for details"
-        
-        start_time = time.time()
-        logger.info(f"Starting search with keywords: query='{query}', question='{question}', keywords='{keywords}'")
-        
-        # Process keywords - only use if keywords are actually provided
-        keywords_to_use = keywords.strip() if keywords and keywords.strip() else None
-        
-        # Only use expanded words if keywords are provided and expansion is enabled
-        expanded_words = None
-        if keywords_to_use and use_semantic_expansion and expanded_words_json:
-            try:
-                expanded_words = json.loads(expanded_words_json)
-                logger.info(f"Using expanded words: {expanded_words}")
-            except:
-                logger.warning("Failed to parse expanded words JSON")
-        elif not keywords_to_use:
-            # Reset expanded words if no keywords provided
-            expanded_words_json = ""
-            expanded_words = None
-        
-        # Set search fields
-        search_fields = search_in if search_in else ["Text"]
-        
-        # Handle model selection
-        model_to_use = "hu-llm"  # Default
-        if model_selection == "openai-gpt4o":
-            model_to_use = "gpt-4o"
-        elif model_selection == "openai-gpt35":
-            model_to_use = "gpt-3.5-turbo"
-        
-        # Perform search (combined retrieval and analysis)
-        results = rag_engine.search(
-            question=question,
-            content_description=query,
-            year_range=[year_start, year_end],
-            chunk_size=chunk_size,
-            keywords=keywords_to_use,
-            search_in=search_fields,
-            model=model_to_use,
-            openai_api_key=openai_api_key,
-            use_query_refinement=False,
-            use_iterative_search=use_time_windows,
-            time_window_size=time_window_size,
-            with_citations=False,
-            use_semantic_expansion=use_semantic_expansion and keywords_to_use is not None,
-            semantic_expansion_factor=semantic_expansion_factor,
-            enforce_keywords=enforce_keywords,
-            top_k=top_k
-        )
-        
-        search_time = time.time() - start_time
-        logger.info(f"Search completed in {search_time:.2f} seconds")
-        
-        # Get actual number of chunks
-        num_chunks = len(results.get('chunks', []))
-        logger.info(f"Found {num_chunks} chunks")
-        
-        # Format results
-        answer_text = results.get('answer', 'No answer generated')
-        chunks_text = format_chunks(
-            results.get('chunks', []), 
-            keywords_to_use, 
-            expanded_words, 
-            use_time_windows, 
-            time_window_size, 
-            year_start, 
-            year_end
-        )
-        
-        # Create time windows for metadata
-        time_windows = []
-        window_counts = {}
-        if use_time_windows:
-            for window_start in range(year_start, year_end + 1, time_window_size):
-                window_end = min(window_start + time_window_size - 1, year_end)
-                time_windows.append((window_start, window_end))
-            
-            # Count chunks per window
-            for chunk in results.get('chunks', []):
-                year = chunk["metadata"].get("Jahrgang")
-                if isinstance(year, int):
-                    for i, (window_start, window_end) in enumerate(time_windows):
-                        if window_start <= year <= window_end:
-                            window_key = f"{window_start}-{window_end}"
-                            window_counts[window_key] = window_counts.get(window_key, 0) + 1
-                            break
-        
-        # Format metadata using the helper function from ui_helpers.py
-        from src.ui.utils.ui_helpers import format_search_metadata
-        metadata_text = format_search_metadata(
-            model=model_to_use,
-            query=query,
-            question=question,
-            chunk_size=chunk_size,
-            year_start=year_start,
-            year_end=year_end,
-            search_time=search_time,
-            num_chunks=num_chunks,
-            keywords=keywords_to_use,
-            search_fields=search_fields,
-            enforce_keywords=enforce_keywords,
-            use_semantic_expansion=use_semantic_expansion and keywords_to_use is not None,
-            use_time_windows=use_time_windows,
-            time_window_size=time_window_size,
-            expanded_words=expanded_words,
-            time_windows=time_windows,
-            window_counts=window_counts
-        )
-        
-        return answer_text, chunks_text, metadata_text
-    except Exception as e:
-        logger.error(f"Error in search: {e}", exc_info=True)
-        return f"Error: {str(e)}", "", "Search failed, check logs for details."
+    # Determine which system prompt to use
+    if custom_system_prompt.strip():
+        system_prompt = custom_system_prompt
+    else:
+        system_prompt = settings.SYSTEM_PROMPTS.get(system_prompt_template, settings.SYSTEM_PROMPTS["default"])
+    
+    # Perform the analysis - note the proper unpacking of return values
+    answer_text, chunks_text, metadata_text = perform_analysis(
+        question=question,
+        retrieved_chunks=retrieved_chunks,
+        model_selection=model_selection,
+        openai_api_key=openai_api_key,
+        system_prompt=system_prompt,
+        temperature=temperature,
+        max_tokens=max_tokens
+    )
+    
+    # Update UI accordions
+    # Collapse question section
+    question_state = gr.update(open=False)
+    # Expand results section
+    results_state = gr.update(open=True)
+    
+    return answer_text, metadata_text, question_state, results_state
 
 def format_chunks(
     chunks: List[Dict],
