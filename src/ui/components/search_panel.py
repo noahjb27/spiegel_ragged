@@ -163,7 +163,13 @@ def create_search_panel(
             retrieve_btn = gr.Button("Quellen abrufen", variant="primary")
             retrieved_info = gr.Markdown("Noch keine Quellen abgerufen.")
         
-     # Define all components to be returned
+    preview_btn.click(
+        preview_callback,
+        inputs=[keywords, semantic_expansion_factor],
+        outputs=[expansion_output, expanded_words_state]
+    ) 
+    
+    # Define all components to be returned
     components = {
         "content_description": content_description,
         "chunk_size": chunk_size,
