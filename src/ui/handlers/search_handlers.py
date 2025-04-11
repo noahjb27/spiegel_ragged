@@ -6,8 +6,14 @@ Refactored to support separate retrieval and analysis steps.
 """
 import json
 import logging
+import os
+import sys
 import time
 from typing import Dict, List, Tuple, Optional, Any
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from config import settings
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -138,7 +144,11 @@ def perform_analysis(
     question: str,
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
-    openai_api_key: str
+    openai_api_key: str,
+    temperature: float,               
+    max_tokens: int,               
+    system_prompt_template: str,      
+    custom_system_prompt: str        
 ) -> Tuple[str, str, str]:
     """
     Perform analysis on previously retrieved chunks.
@@ -168,13 +178,23 @@ def perform_analysis(
             model_to_use = "gpt-4o"
         elif model_selection == "openai-gpt35":
             model_to_use = "gpt-3.5-turbo"
+
+         # Determine which system prompt to use
+        if custom_system_prompt.strip():
+            system_prompt = custom_system_prompt
+        else:
+            system_prompt = settings.SYSTEM_PROMPTS.get(system_prompt_template, settings.SYSTEM_PROMPTS["default"])
+        
         
         # Perform analysis
         results = rag_engine.analyze(
             question=question,
             model=model_to_use,
             openai_api_key=openai_api_key,
-            with_citations=False
+            with_citations=False,
+            system_prompt=system_prompt,   
+            temperature=temperature,     
+            max_tokens=max_tokens     
         )
         
         analysis_time = time.time() - start_time

@@ -67,6 +67,7 @@ class LLMService:
         context: str,
         model: str = "hu-llm",
         system_prompt: Optional[str] = None,
+        max_tokens: Optional[int] = None,  
         temperature: float = 0.3,
         preprompt: str = "",
         postprompt: str = "",
@@ -123,7 +124,8 @@ class LLMService:
                         {"role": "user", "content": prompt}
                     ],
                     model=model,
-                    temperature=temperature
+                    temperature=temperature,
+                    max_tokens=max_tokens
                 )
                 
                 return {
@@ -149,7 +151,8 @@ class LLMService:
                         {"role": "user", "content": prompt}
                     ],
                     model=model_id,
-                    temperature=temperature
+                    temperature=temperature,
+                    max_tokens=max_tokens
                 )
                 
                 return {
