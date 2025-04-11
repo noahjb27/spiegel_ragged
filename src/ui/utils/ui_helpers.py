@@ -106,12 +106,14 @@ def format_search_metadata(
             metadata_text += f"- **{original}** → {', '.join(similar)}\n"
     
     return metadata_text
-
 def format_analysis_metadata(
     question: str,
     model: str,
     analysis_time: float,
-    retrieved_info: Dict[str, Any]
+    retrieved_info: Dict[str, Any],
+    temperature: float = 0.3,
+    max_tokens: Optional[int] = None,
+    system_prompt: Optional[str] = None
 ) -> str:
     """
     Format analysis metadata for display in the UI.
@@ -121,6 +123,9 @@ def format_analysis_metadata(
         model: The LLM model used
         analysis_time: Time taken for analysis in seconds
         retrieved_info: Metadata from the retrieval step
+        temperature: Generation temperature used
+        max_tokens: Maximum tokens set for generation
+        system_prompt: System prompt used (if custom)
         
     Returns:
         Formatted markdown string with analysis metadata
@@ -130,6 +135,8 @@ def format_analysis_metadata(
 - **Model**: {model}
 - **Frage**: {question}
 - **Analysezeit**: {analysis_time:.2f} Sekunden
+- **Temperatur**: {temperature}
+- **Max Tokens**: {max_tokens or "Standardwert"}
 
 ## Quellen-Metadaten
 - **Inhaltsbeschreibung**: {retrieved_info.get('content_description', 'Nicht angegeben')}
@@ -137,5 +144,13 @@ def format_analysis_metadata(
 - **Zeitraum**: {retrieved_info.get('year_range', ['Unbekannt', 'Unbekannt'])[0]} - {retrieved_info.get('year_range', ['Unbekannt', 'Unbekannt'])[1]}
 - **Anzahl Quellen**: {retrieved_info.get('chunks_count', 0)}
 """
+    
+    # Add system prompt info if available
+    if system_prompt:
+        # Truncate if too long
+        prompt_display = system_prompt
+        if len(prompt_display) > 300:
+            prompt_display = prompt_display[:297] + "..."
+        metadata_text += f"\n## System Prompt\n```\n{prompt_display}\n```"
     
     return metadata_text

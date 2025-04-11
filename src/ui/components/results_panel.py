@@ -1,7 +1,7 @@
 # src/ui/components/results_panel.py
 """
 Results panel component for the Spiegel RAG application.
-This component defines the UI elements for displaying search results.
+This component defines the UI elements for displaying analysis results.
 """
 import gradio as gr
 from typing import Dict, Any
@@ -14,31 +14,21 @@ def create_results_panel() -> Dict[str, Any]:
         Dictionary of UI components
     """
     with gr.Group():
-        gr.Markdown("## Ergebnisse")
+        # Main answer output - always visible
+        answer_output = gr.Markdown(
+            value="Die Antwort erscheint hier...",
+            label="Analyse"
+        )
         
-        with gr.Tabs():
-            with gr.TabItem("Analyse"):
-                answer_output = gr.Markdown(
-                    value="Die Antwort erscheint hier...",
-                    label="Analyse"
-                )
-            
-            with gr.TabItem("Gefundene Texte"):
-                chunks_output = gr.Markdown(
-                    value="Gefundene Textabschnitte erscheinen hier...",
-                    label="Gefundene Texte"
-                )
-            
-            with gr.TabItem("Metadaten"):
-                metadata_output = gr.Markdown(
-                    value="Metadaten zur Suche erscheinen hier...",
-                    label="Metadaten"
-                )
+        # Metadata in collapsible accordion - hidden by default
+        with gr.Accordion("Metadaten zur Analyse", open=False):
+            metadata_output = gr.Markdown(
+                value="Detaillierte Metadaten zur Analyse erscheinen hier..."
+            )
     
     # Define all components to be returned
     components = {
         "answer_output": answer_output,
-        "chunks_output": chunks_output,
         "metadata_output": metadata_output
     }
     
