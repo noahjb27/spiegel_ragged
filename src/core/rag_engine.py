@@ -189,7 +189,10 @@ class SpiegelRAGEngine:
         model: Optional[str] = None,
         openai_api_key: Optional[str] = None,
         system_prompt: Optional[str] = None,
-        with_citations: Optional[bool] = None
+        with_citations: Optional[bool] = None,
+        temperature: float = 0.3,  
+        max_tokens: Optional[int] = None
+
     ) -> Dict[str, Any]:
         """
         Generate an answer to a question based on previously retrieved chunks.
@@ -245,7 +248,9 @@ class SpiegelRAGEngine:
                 context=context,
                 model=model,
                 system_prompt=system_prompt,
-                openai_api_key=openai_api_key
+                openai_api_key=openai_api_key,
+                temperature=temperature,
+                max_tokens=max_tokens
             )
         except Exception as e:
             logger.error(f"LLM response generation failed: {e}")

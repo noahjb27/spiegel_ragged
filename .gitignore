@@ -1,4 +1,4 @@
-.venv
-/models
-!/models/README.md
 __pycache__/
+*.npy
+*.model
+/.venv

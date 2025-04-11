@@ -208,6 +208,47 @@ def create_search_panel(
                             label="LLM-Modell",
                             info="Wählen Sie das zu verwendende Sprachmodell"
                         )
+
+                                        # Add system prompt selection
+                    with gr.Row():
+                        system_prompt_template = gr.Dropdown(
+                            choices=list(settings.SYSTEM_PROMPTS.keys()),
+                            value="default",
+                            label="System Prompt Vorlage",
+                            info="Wählen Sie eine vordefinierte Vorlage oder passen Sie den Prompt manuell an."
+                        )
+                    
+                    # Add custom system prompt input
+                    with gr.Row():
+                        custom_system_prompt = gr.Textbox(
+                            label="Eigener System Prompt",
+                            placeholder="Anpassen des System Prompts für spezifische Anweisungen an das LLM...",
+                            value="",
+                            lines=5,
+                            info="Leer lassen für die gewählte Vorlage oder eigenen Prompt eingeben."
+                        )
+                    
+                    # Add temperature slider
+                    with gr.Row():
+                        temperature = gr.Slider(
+                            minimum=0.0,
+                            maximum=1.0,
+                            value=0.3,
+                            step=0.1,
+                            label="Temperatur",
+                            info="Kontrolliert die Kreativität der Antworten. Höhere Werte = kreativere Antworten."
+                        )
+                    
+                    # Add max tokens slider
+                    with gr.Row():
+                        max_tokens = gr.Slider(
+                            minimum=100,
+                            maximum=4000,
+                            value=1000,
+                            step=100,
+                            label="Maximale Antwortlänge",
+                            info="Maximale Anzahl der Token in der Antwort."
+                        )
                     
                     with gr.Row(visible=False) as openai_key_row:
                         openai_api_key = gr.Textbox(
@@ -256,7 +297,11 @@ def create_search_panel(
         "retrieved_chunks_state": retrieved_chunks_state,
         "expansion_output": expansion_output,
         "openai_key_row": openai_key_row,
-        "top_k": top_k
+        "top_k": top_k,
+        "system_prompt_template": system_prompt_template,
+        "custom_system_prompt": custom_system_prompt,
+        "temperature": temperature,
+        "max_tokens": max_tokens
     }
     
     return components

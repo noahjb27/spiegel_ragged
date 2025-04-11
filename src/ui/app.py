@@ -128,7 +128,11 @@ def create_app():
                         search_components["question"],
                         search_components["retrieved_chunks_state"],
                         search_components["model_selection"],
-                        search_components["openai_api_key"]
+                        search_components["openai_api_key"],
+                        search_components["temperature"],         
+                        search_components["max_tokens"],                
+                        search_components["system_prompt_template"],    
+                        search_components["custom_system_prompt"]        
                     ],
                     outputs=[
                         results_components["answer_output"],
