@@ -8,7 +8,7 @@ import time
 # Ensure src is in path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from src.core.vectore_store import ChromaDBInterface
+from core.vector_store import ChromaDBInterface
 from src.core.llm_service import LLMService
 from src.core.embedding_service import WordEmbeddingService
 from src.config import settings

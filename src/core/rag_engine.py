@@ -4,12 +4,16 @@ Refactored to separate retrieval and analysis steps.
 """
 import json
 import logging
+import os
 import re
+import sys
 from typing import Dict, List, Optional, Tuple, Union, Any
 
 from langchain.docstore.document import Document
+# Ensure src is in path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from src.core.vectore_store import ChromaDBInterface
+from src.core.vector_store import ChromaDBInterface
 from src.core.llm_service import LLMService
 try:
     from src.core.embedding_service import WordEmbeddingService
