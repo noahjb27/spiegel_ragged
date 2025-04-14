@@ -47,34 +47,27 @@ def perform_retrieval(
     enforce_keywords: bool,
     use_time_windows: bool,
     time_window_size: int,
-    top_k: int
+    top_k: int,
+    # parameters for agent-based retrieval
+    use_agent_retrieval: bool = False,
+    initial_chunk_count: int = 100,
+    enable_interactive: bool = False,
+    relevance_weight: float = 0.4,
+    diversity_weight: float = 0.3,
+    quality_weight: float = 0.3,
+    model_selection: str = "hu-llm",
+    openai_api_key: Optional[str] = None
 ) -> Tuple[str, Dict[str, Any]]:
     """
     Perform source retrieval based on content description and filters.
-    
-    Args:
-        content_description: Description of content to retrieve
-        chunk_size: Size of text chunks to retrieve
-        year_start: Start year for search range
-        year_end: End year for search range
-        keywords: Boolean expression of keywords to filter by
-        search_in: List of fields to search in
-        use_semantic_expansion: Whether to use semantic expansion
-        semantic_expansion_factor: Number of similar words to find
-        expanded_words_json: JSON string of expanded words
-        enforce_keywords: Whether to strictly enforce keyword filtering
-        use_time_windows: Whether to use time window search
-        time_window_size: Size of time windows in years
-        
-    Returns:
-        Tuple of (info text, retrieved chunks state)
+    Now supports both standard and agent-based cascading retrieval.
     """
     try:
         if not rag_engine:
             return "Error: RAG Engine failed to initialize", None
         
         start_time = time.time()
-        logger.info(f"Starting retrieval: content_description='{content_description}', keywords='{keywords}'")
+        logger.info(f"Starting retrieval: content_description='{content_description}', keywords='{keywords}', agent_based={use_agent_retrieval}")
         
         # Process keywords - only use if keywords are actually provided
         keywords_to_use = keywords.strip() if keywords and keywords.strip() else None
@@ -95,20 +88,70 @@ def perform_retrieval(
         # Set search fields
         search_fields = search_in if search_in else ["Text"]
         
-        # Perform retrieval
-        results = rag_engine.retrieve(
-            content_description=content_description,
-            year_range=[year_start, year_end],
-            chunk_size=chunk_size,
-            keywords=keywords_to_use,
-            search_in=search_fields,
-            use_iterative_search=use_time_windows,
-            time_window_size=time_window_size,
-            use_semantic_expansion=use_semantic_expansion and keywords_to_use is not None,
-            semantic_expansion_factor=semantic_expansion_factor,
-            enforce_keywords=enforce_keywords,
-            top_k=top_k
-        )
+        # Determine model to use for agent
+        model_to_use = "hu-llm"  # Default
+        if model_selection == "openai-gpt4o":
+            model_to_use = "gpt-4o"
+        elif model_selection == "openai-gpt35":
+            model_to_use = "gpt-3.5-turbo"
+        
+        # Setup progress tracking (would be integrated with UI in real implementation)
+        progress_updates = []
+        def progress_callback(message, progress):
+            progress_updates.append({"message": message, "progress": progress})
+            logger.info(f"Progress: {message} ({progress:.2f})")
+        
+        # Choose retrieval method based on user selection
+        if use_agent_retrieval:
+            # Configure filtering stages based on weights
+            filtering_stages = [
+                {
+                    "name": "Basic Relevance",
+                    "keep_ratio": 0.5,
+                    "criteria": ["relevance"]
+                },
+                {
+                    "name": "Contextual Quality",
+                    "keep_ratio": 0.4,
+                    "criteria": ["context", "quality"]
+                },
+                {
+                    "name": "Diversity Selection",
+                    "keep_ratio": 0.5,
+                    "criteria": ["diversity", "representativeness"]
+                }
+            ]
+            
+            # Perform cascading agent-based retrieval
+            results = rag_engine.cascading_retrieve(
+                content_description=content_description,
+                question=None,  # Initially no question available during retrieval
+                year_range=[year_start, year_end],
+                chunk_size=chunk_size,
+                keywords=keywords_to_use,
+                search_in=search_fields,
+                initial_chunk_count=initial_chunk_count,
+                filtering_stages=filtering_stages,
+                model=model_to_use,
+                openai_api_key=openai_api_key,
+                interactive=enable_interactive,
+                progress_callback=progress_callback
+            )
+        else:
+            # Standard retrieval
+            results = rag_engine.retrieve(
+                content_description=content_description,
+                year_range=[year_start, year_end],
+                chunk_size=chunk_size,
+                keywords=keywords_to_use,
+                search_in=search_fields,
+                use_iterative_search=use_time_windows,
+                time_window_size=time_window_size,
+                use_semantic_expansion=use_semantic_expansion and keywords_to_use is not None,
+                semantic_expansion_factor=semantic_expansion_factor,
+                enforce_keywords=enforce_keywords,
+                top_k=top_k
+            )
         
         retrieval_time = time.time() - start_time
         logger.info(f"Retrieval completed in {retrieval_time:.2f} seconds")
@@ -116,6 +159,13 @@ def perform_retrieval(
         # Get actual number of chunks
         num_chunks = len(results.get('chunks', []))
         logger.info(f"Found {num_chunks} chunks")
+        
+        # Add progress information to results metadata
+        if use_agent_retrieval:
+            results["metadata"]["progress"] = progress_updates
+            results["metadata"]["retrieval_method"] = "agent"
+        else:
+            results["metadata"]["retrieval_method"] = "standard"
         
         # Create summary info message
         if num_chunks > 0:
@@ -126,9 +176,26 @@ def perform_retrieval(
             **Zeitraum**: {year_start} - {year_end}  
             **Anzahl gefundener Quellen**: {num_chunks}  
             **Abrufzeit**: {retrieval_time:.2f} Sekunden
+            **Methode**: {"Agent-basiertes Retrieval" if use_agent_retrieval else "Standard-Retrieval"}
             
             Sie können jetzt im Tab "2. Quellen analysieren" Fragen zu diesen Quellen stellen.
             """
+            
+            # Add agent-specific info
+            if use_agent_retrieval:
+                info_text += f"""
+                
+                **Agent-Prozess**:
+                - Initiale Dokumentanzahl: {initial_chunk_count}
+                - Finale Dokumentanzahl: {num_chunks}
+                - Filterungsphasen: {len(filtering_stages)}
+                """
+                
+                # Add progress information
+                if progress_updates:
+                    info_text += "\n**Fortschritt**:\n"
+                    for update in progress_updates:
+                        info_text += f"- {update['message']}\n"
         else:
             info_text = f"""
             ### Keine passenden Quellen gefunden
@@ -141,6 +208,7 @@ def perform_retrieval(
     except Exception as e:
         logger.error(f"Error in retrieval: {e}", exc_info=True)
         return f"Error: {str(e)}", None
+    
 
 def perform_analysis(
     question: str,

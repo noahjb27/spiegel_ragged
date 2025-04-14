@@ -13,6 +13,7 @@ from langchain.docstore.document import Document
 # Ensure src is in path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
+from src.core.retrieval_agent import RetrievalAgent
 from src.core.vector_store import ChromaDBInterface
 from src.core.llm_service import LLMService
 try:
@@ -739,3 +740,156 @@ und ergibt die nachfolgenden Textauszüge.
         except Exception as e:
             logger.error(f"Error finding similar words: {e}")
             return []
+
+    # Add this method to the SpiegelRAGEngine class
+    def agent_search(
+        self,
+        question: str,
+        content_description: Optional[str] = None,
+        year_range: Optional[List[int]] = None,
+        chunk_size: Optional[int] = None,
+        keywords: Optional[str] = None,
+        search_in: Optional[List[str]] = None,
+        model: Optional[str] = None,
+        openai_api_key: Optional[str] = None,
+        system_prompt: Optional[str] = None,
+        initial_retrieval_count: int = 100,
+        filter_stages: Optional[List[int]] = None,
+        with_citations: Optional[bool] = None,
+        enforce_keywords: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Perform agent-based search with iterative refinement of chunks.
+        
+        Args:
+            question: Question to answer
+            content_description: Description for initial retrieval
+            year_range: Range of years to search
+            chunk_size: Size of chunks to retrieve
+            keywords: Optional boolean expression for keyword filtering
+            search_in: Where to search for keywords
+            model: LLM model to use for evaluation and analysis
+            openai_api_key: OpenAI API key if using OpenAI models
+            system_prompt: Optional system prompt for analysis
+            initial_retrieval_count: Number of chunks to retrieve initially
+            filter_stages: List of chunk counts for each filtering stage
+            with_citations: Whether to include citations
+            enforce_keywords: Whether to enforce keyword presence
+            
+        Returns:
+            Dict containing answer, chunks, and metadata
+        """
+        # Use defaults
+        model = model or settings.DEFAULT_LLM_MODEL
+        with_citations = settings.ENABLE_CITATIONS if with_citations is None else with_citations
+        filter_stages = filter_stages or [50, 20, 10]
+        
+        # If no content description provided, use the question
+        if not content_description:
+            content_description = question
+        
+        # Initialize retrieval agent
+        if not hasattr(self, 'retrieval_agent'):
+            self.retrieval_agent = RetrievalAgent(self.vector_store, self.llm_service)
+        
+        # Perform agent-based retrieval and refinement
+        refined_chunks, retrieval_metadata = self.retrieval_agent.retrieve_and_refine(
+            question=question,
+            content_description=content_description,
+            year_range=year_range,
+            chunk_size=chunk_size,
+            keywords=keywords,
+            search_in=search_in,
+            enforce_keywords=enforce_keywords,
+            initial_retrieval_count=initial_retrieval_count,
+            filter_stages=filter_stages,
+            model=model,
+            openai_api_key=openai_api_key,
+            with_evaluations=True
+        )
+        
+        # Check if retrieval was successful
+        if not refined_chunks:
+            return {
+                "answer": "No relevant content was found to answer this question.",
+                "chunks": [],
+                "metadata": {
+                    "question": question,
+                    "model": model,
+                    "agent_metadata": retrieval_metadata
+                }
+            }
+        
+        # Format chunks for LLM context
+        # We need to convert (doc, score, eval_text) to (doc, score) format for analysis
+        chunks_for_context = [(doc, score) for doc, score, _ in refined_chunks]
+        
+        # Store retrieval results for potential reuse
+        self.last_retrieval_results = chunks_for_context
+        self.last_retrieval_params = {
+            "content_description": content_description,
+            "year_range": year_range or [settings.MIN_YEAR, settings.MAX_YEAR],
+            "chunk_size": chunk_size or settings.DEFAULT_CHUNK_SIZE,
+            "keywords": keywords,
+            "search_in": search_in,
+            "agent_search": True,
+            "filter_stages": filter_stages
+        }
+        
+        # Prepare chunk evaluations for display
+        chunk_evaluations = []
+        for doc, score, eval_text in refined_chunks:
+            if eval_text:
+                chunk_evaluations.append({
+                    "title": doc.metadata.get('Artikeltitel', 'No title'),
+                    "date": doc.metadata.get('Datum', 'No date'),
+                    "relevance_score": score,
+                    "evaluation": eval_text
+                })
+        
+        # Format context with or without citations
+        context, citations = self._format_context(chunks_for_context, with_citations)
+        
+        # Select system prompt
+        if system_prompt is None:
+            system_prompt = settings.SYSTEM_PROMPTS["with_citations"] if with_citations else settings.SYSTEM_PROMPTS["default"]
+        
+        # Generate answer with LLM
+        try:
+            llm_response = self.llm_service.generate_response(
+                question=question,
+                context=context,
+                model=model,
+                system_prompt=system_prompt,
+                openai_api_key=openai_api_key
+            )
+        except Exception as e:
+            logger.error(f"LLM response generation failed: {e}")
+            return {
+                "answer": f"Fehler bei der Antwortgenerierung: {str(e)}",
+                "chunks": self._format_chunks_for_response(chunks_for_context),
+                "metadata": {
+                    "question": question,
+                    "model": model,
+                    "error": str(e),
+                    "agent_metadata": retrieval_metadata
+                }
+            }
+        
+        # Assemble final result
+        result = {
+            "answer": llm_response["text"],
+            "chunks": self._format_chunks_for_response(chunks_for_context),
+            "evaluations": chunk_evaluations,
+            "metadata": {
+                "question": question,
+                "model": llm_response.get("model", model),
+                "agent_metadata": retrieval_metadata
+            }
+        }
+        
+        # Add citations if enabled
+        if with_citations and citations:
+            result["citations"] = citations
+        
+        return result

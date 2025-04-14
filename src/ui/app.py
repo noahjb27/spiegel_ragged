@@ -29,9 +29,14 @@ from src.ui.handlers.search_handlers import (
     set_rag_engine
 )
 from src.ui.components.question_panel import create_question_panel
-
 from src.ui.handlers.keyword_handlers import find_similar_words, expand_boolean_expression, set_embedding_service
 from src.ui.utils.ui_helpers import toggle_api_key_visibility
+from src.ui.components.agent_panel import create_agent_panel
+from src.ui.components.agent_results_panel import create_agent_results_panel
+from src.ui.handlers.agent_handlers import (
+    perform_agent_search_and_update_ui,
+    set_rag_engine as set_agent_rag_engine
+)
 
 # Configure logging
 logging.basicConfig(
@@ -70,6 +75,7 @@ def create_app():
     # Set global service references in handler modules
     set_rag_engine(rag_engine)
     set_embedding_service(embedding_service)
+    set_agent_rag_engine(rag_engine)
     
     # Create Gradio app
     with gr.Blocks(title="Der Spiegel RAG (1948-1979)") as app:
@@ -161,6 +167,52 @@ def create_app():
                 results_accordion
             ]
         )
+
+        with gr.Tab("Agenten-Suche"):
+            with gr.Row():
+                with gr.Column(scale=1):
+                    # Agent input panel
+                    agent_components = create_agent_panel(
+                        agent_search_callback=perform_agent_search_and_update_ui,
+                        toggle_api_key_callback=toggle_api_key_visibility
+                    )
+                
+                with gr.Column(scale=1):
+                    # Agent results panel
+                    agent_results_components = create_agent_results_panel()
+            
+            # Connect the search button to the results
+            agent_components["agent_search_btn"].click(
+                fn=perform_agent_search_and_update_ui,
+                inputs=[
+                    agent_components["agent_question"],
+                    agent_components["agent_content_description"],
+                    agent_components["agent_year_start"],
+                    agent_components["agent_year_end"],
+                    agent_components["agent_chunk_size"],
+                    agent_components["agent_keywords"],
+                    agent_components["agent_search_in"],
+                    agent_components["agent_enforce_keywords"],
+                    agent_components["agent_initial_count"],
+                    agent_components["agent_filter_stage1"],
+                    agent_components["agent_filter_stage2"],
+                    agent_components["agent_filter_stage3"],
+                    agent_components["agent_model"],
+                    agent_components["agent_openai_api_key"],
+                    agent_components["agent_system_prompt_template"],
+                    agent_components["agent_custom_system_prompt"]
+                ],
+                outputs=[
+                    agent_components["agent_results_state"],
+                    agent_components["agent_status"],
+                    agent_results_components["agent_answer_output"],
+                    agent_results_components["agent_process_output"],
+                    agent_results_components["agent_evaluations_output"],
+                    agent_results_components["agent_chunks_output"],
+                    agent_results_components["agent_metadata_output"]
+                ]
+            )
+
 
         # Other tabs remain the same
         with gr.Tab("Schlagwort-Analyse"):
