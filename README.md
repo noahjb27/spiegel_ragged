@@ -16,6 +16,7 @@ Dieses System ermöglicht die semantische Suche, Analyse und KI-gestützte Auswe
 * **KI-gestützte Analyse** : Generiere Zusammenfassungen und Analysen basierend auf gefundenen Texten
 * **Mehrsprachige Modelle** : Unterstützung für lokale (HU-LLM) und externe (OpenAI) Sprachmodelle
 * **Zweistufiges Retrieval & Analyse** : Zuerst relevante Quellen abrufen, dann gezielt Fragen dazu stellen
+* **Agenten-basierte Suche** : Fortschrittlicher Hybrid-Ansatz mit mehrstufiger LLM-gesteuerter Filterung
 
 ## Systemanforderungen
 
@@ -99,9 +100,11 @@ python src/utils/component_test.py
 
 ## Nutzungsanleitung
 
-Die Anwendung folgt einem zweistufigen Prozess:
+Die Anwendung bietet zwei Hauptansätze zur Informationsgewinnung:
 
-### 1. Quellen abrufen
+### 1. Standard-RAG (Zweistufiger Prozess)
+
+#### Schritt 1: Quellen abrufen
 
 1. Geben Sie eine Inhaltsbeschreibung ein - was möchten Sie im Archiv finden?
 2. Legen Sie den Zeitraum fest (zwischen 1948 und 1979)
@@ -110,7 +113,7 @@ Die Anwendung folgt einem zweistufigen Prozess:
 5. Nutzen Sie die Zeitfenster-Suche für eine ausgewogene zeitliche Verteilung der Ergebnisse
 6. Klicken Sie auf "Quellen abrufen"
 
-### 2. Quellen analysieren
+#### Schritt 2: Quellen analysieren
 
 1. Stellen Sie eine Frage über die gefundenen Texte
 2. Wählen Sie das zu verwendende Sprachmodell:
@@ -118,6 +121,34 @@ Die Anwendung folgt einem zweistufigen Prozess:
    * OpenAI GPT-4o oder GPT-3.5 Turbo (API-Schlüssel erforderlich)
 3. Passen Sie bei Bedarf die LLM-Parameter wie System-Prompt, Temperatur und maximale Antwortlänge an
 4. Klicken Sie auf "Frage beantworten"
+
+### 2. Agenten-basierte Suche (Fortgeschritten)
+
+Die Agenten-basierte Suche kombiniert Retrieval und Analyse in einem mehrstufigen Prozess:
+
+1. Geben Sie Ihre Frage ein
+2. Optional: Geben Sie eine Inhaltsbeschreibung ein (falls unterschiedlich von der Frage)
+3. Konfigurieren Sie die Filtereinstellungen:
+   * Initiale Textmenge (z.B. 100 Chunks)
+   * Filterstufen (z.B. 50 → 20 → 10)
+4. Wählen Sie das zu verwendende Sprachmodell
+5. Klicken Sie auf "Agenten-Suche starten"
+
+Im Agenten-Modus:
+
+- Werden zunächst mehr Texte abgerufen
+- Das LLM bewertet jeden Text hinsichtlich seiner Relevanz für Ihre Frage
+- Sie erhalten detaillierte Bewertungen und Begründungen für die ausgewählten Texte
+- Die finale Antwort basiert auf den bestbewerteten Texten
+
+#### Wann den Agenten-Modus verwenden?
+
+Der Agenten-Modus ist besonders hilfreich für:
+
+- Komplexe, analytische Fragestellungen
+- Vergleichende Betrachtungen
+- Untersuchungen von Mustern oder Entwicklungen
+- Fragen, die tieferes Textverständnis erfordern
 
 ### Schlagwort-Analyse
 
@@ -133,6 +164,7 @@ Die Anwendung besteht aus folgenden Hauptkomponenten:
 ### Kern-Module
 
 * **RAG Engine** (`src/core/rag_engine.py`): Hauptmodul, das die Suche und Antworterstellung koordiniert
+* **Retrieval Agent** (`src/core/retrieval_agent.py`): Implementiert die agenten-basierte mehrstufige Filterung
 * **Vector Store** (`src/core/vector_store.py`): Interface zur externen ChromaDB-Vektordatenbank
 * **LLM Service** (`src/core/llm_service.py`): Interface zu verschiedenen Sprachmodellen (HU-LLM oder OpenAI)
 * **Embedding Service** (`src/core/embedding_service.py`): Lokaler Worteinbettungs-Service für semantische Ähnlichkeitssuche mit FastText
@@ -140,18 +172,21 @@ Die Anwendung besteht aus folgenden Hauptkomponenten:
 Der Datenfluss in der Anwendung:
 
 1. Der Benutzer gibt eine Suchanfrage in der UI ein
-2. Die RAG Engine sendet eine Anfrage an den externen ChromaDB-Service, um relevante Textabschnitte zu finden
+2. Je nach gewähltem Modus:
+   - **Standard-RAG**: Die RAG Engine sendet eine Anfrage an den externen ChromaDB-Service, um relevante Textabschnitte zu finden
+   - **Agenten-Modus**: Der Retrieval Agent ruft zunächst mehr Texte ab und lässt diese vom LLM bewerten und filtern
 3. Der externe Ollama-Service liefert die Sentence Embeddings für die Ähnlichkeitssuche
 4. Der lokale Embedding Service erweitert Schlagwörter mit semantisch ähnlichen Begriffen
-5. Die gefundenen Texte werden angezeigt und stehen für Fragen bereit
-6. Der Benutzer stellt eine Frage zu den gefundenen Texten
-7. Das ausgewählte Sprachmodell (HU-LLM oder OpenAI) generiert eine fundierte Antwort
+5. Die gefundenen Texte werden angezeigt und zur Analyse verwendet
+6. Das ausgewählte Sprachmodell (HU-LLM oder OpenAI) generiert eine fundierte Antwort
 
 ### UI-Komponenten
 
 * **Such-Panel** (`src/ui/components/search_panel.py`): Interface zum Abrufen von Quellen
 * **Frage-Panel** (`src/ui/components/question_panel.py`): Interface zum Stellen von Fragen zu gefundenen Quellen
 * **Ergebnis-Panel** (`src/ui/components/results_panel.py`): Anzeige der Analyseergebnisse
+* **Agenten-Panel** (`src/ui/components/agent_panel.py`): Interface für die agenten-basierte Suche
+* **Agenten-Ergebnis-Panel** (`src/ui/components/agent_results_panel.py`): Anzeige der Agenten-Analyseergebnisse
 * **Schlagwort-Analyse-Panel** (`src/ui/components/keyword_analysis_panel.py`): Tools zur Analyse von Schlagwörtern
 
 ## Hinweise und Einschränkungen
@@ -160,6 +195,7 @@ Der Datenfluss in der Anwendung:
 * Die FastText-Worteinbettungen werden lokal verwendet und müssen separat heruntergeladen werden
 * Für die Nutzung von OpenAI-Modellen ist ein API-Schlüssel erforderlich
 * Die Datengrundlage umfasst nur Spiegel-Artikel von 1948 bis 1979
+* Der Agenten-Modus benötigt aufgrund der mehrstufigen Analyse mehr Zeit als die Standard-Suche
 
 ## Fehlerbehebung
 
