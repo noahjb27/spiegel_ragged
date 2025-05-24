@@ -155,7 +155,8 @@ class WordEmbeddingService:
             for not_part in not_parts[1:]:
                 # Remove parentheses if present
                 not_part = re.sub(r'[\(\)]', '', not_part).strip()
-                must_not.append(not_part)
+                if not_part:  # Only add if not empty
+                    must_not.append(not_part)
         
         # Handle AND/OR in main expression
         must = []
