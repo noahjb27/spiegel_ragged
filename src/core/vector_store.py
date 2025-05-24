@@ -97,198 +97,224 @@ class ChromaDBInterface:
         enforce_keywords: bool = True
     ) -> List[Tuple[Document, float]]:
         """
-        Perform similarity search with relevance scores and strict keyword filtering.
-        
-        Args:
-            query: Query text
-            chunk_size: Size of chunks to search in
-            k: Number of results to return
-            filter_dict: Optional filter dictionary for metadata filtering
-            min_relevance_score: Minimum relevance score for results
-            keywords: Optional boolean expression for keyword filtering
-            search_in: Where to search for keywords
-            enforce_keywords: Whether to strictly enforce keyword presence
-            
-        Returns:
-            List of (Document, score) tuples
+        Perform similarity search with relevance scores and keyword filtering.
+        Robust handling of UI parameter conversion issues.
         """
-        logger.info(f"Starting similarity search for query: '{query}', enforce_keywords={enforce_keywords}")
-        vectorstore = self.get_vectorstore(chunk_size)
-        logger.info("Got vectorstore, about to perform search")
         
-        # Skip keyword filtering if not enforcing or no keywords provided
-        if not enforce_keywords or not keywords or not keywords.strip():
-            logger.info(f"Skipping keyword filtering: enforce_keywords={enforce_keywords}, keywords='{keywords}'")
-            try:
+        # ROBUST PARAMETER CLEANING - Handle UI conversion issues
+        def clean_keyword_param(kw):
+            """Clean keyword parameter from potential UI conversion issues."""
+            if kw is None:
+                return None
+            if isinstance(kw, str):
+                kw = kw.strip()
+                # Handle common UI conversion issues
+                if kw == '' or kw.lower() in ['none', 'null', 'undefined']:
+                    return None
+                return kw
+            return None  # Fallback for unexpected types
+        
+        # Clean the keywords parameter
+        cleaned_keywords = clean_keyword_param(keywords)
+        
+        logger.info(f"Starting similarity search for query: '{query}', k={k}")
+        logger.info(f"Keywords (raw): {repr(keywords)} -> (cleaned): {repr(cleaned_keywords)}")
+        logger.info(f"Enforce keywords: {enforce_keywords}")
+        
+        try:
+            vectorstore = self.get_vectorstore(chunk_size)
+            logger.info("Got vectorstore, performing search")
+            
+            # Determine if we should apply keyword filtering
+            should_filter_keywords = (
+                enforce_keywords and 
+                cleaned_keywords is not None and
+                len(cleaned_keywords) > 0
+            )
+            
+            logger.info(f"Should apply keyword filtering: {should_filter_keywords}")
+            
+            if not should_filter_keywords:
                 # Standard search without keyword filtering
-                logger.info(f"Performing standard search with k={k}")
+                logger.info(f"Performing standard search (no keyword filtering)")
+                try:
+                    results = vectorstore.similarity_search_with_relevance_scores(
+                        query, k=k*2, filter=filter_dict  # Get extra results for filtering
+                    )
+                    
+                    # Filter by minimum relevance score
+                    filtered_results = [
+                        (doc, score) for doc, score in results
+                        if score >= min_relevance_score
+                    ]
+                    
+                    logger.info(f"Standard search returned {len(filtered_results)} results after relevance filtering")
+                    return filtered_results[:k]  # Limit to requested amount
+                    
+                except Exception as e:
+                    logger.error(f"Error in standard similarity search: {e}", exc_info=True)
+                    raise
+            
+            # Keyword filtering path
+            logger.info(f"Performing keyword-filtered search with keywords: '{cleaned_keywords}'")
+            
+            # Get more results for filtering
+            search_multiplier = max(3, min(10, k * 2))
+            search_k = k * search_multiplier
+            
+            logger.info(f"Retrieving {search_k} results for keyword filtering")
+            
+            try:
                 results = vectorstore.similarity_search_with_relevance_scores(
-                    query, k=k*2, filter=filter_dict  # Get more results to compensate for post-filtering
+                    query, k=search_k, filter=filter_dict
                 )
                 
-                # Filter by minimum relevance score
-                filtered_results = [
-                    (doc, score) for doc, score in results
-                    if score >= min_relevance_score
-                ]
+                logger.info(f"Raw search returned {len(results)} results before keyword filtering")
                 
-                logger.info(f"Standard search returned {len(filtered_results)} results after relevance filtering")
+                if not results:
+                    logger.warning("No results returned from vector search")
+                    return []
+                
+                # Parse keywords safely
+                parsed_query = self._parse_keywords_safely(cleaned_keywords)
+                logger.info(f"Parsed keywords: {parsed_query}")
+                
+                # Apply keyword filtering
+                filtered_results = self._apply_keyword_filter(
+                    results, parsed_query, search_in or ["Text"], min_relevance_score
+                )
+                
+                logger.info(f"Keyword filtering returned {len(filtered_results)} final results")
                 return filtered_results[:k]
+                
             except Exception as e:
-                logger.error(f"Error in standard similarity search: {e}", exc_info=True)
-                raise
-        
-        # If we're enforcing keywords, we need to do post-filtering
-        try:
-            # Request more results than needed since we'll be filtering
-            # but avoid getting too many to prevent timeouts
-            multiplier = min(10, k*3)  # Cap multiplier to avoid excessive retrieval
-            logger.info(f"Performing keyword-filtered search with k={k*multiplier}")
-            
-            results = vectorstore.similarity_search_with_relevance_scores(
-                query, k=multiplier, filter=filter_dict
-            )
-            
-            logger.info(f"Raw search returned {len(results)} results before keyword filtering")
-            
-            # Check if we have any results before proceeding
-            if not results:
-                logger.warning("No results returned from vector search, returning empty list")
-                return []
-            
-            # Parse the boolean expression with better error handling
-            parsed_query = {"must": [], "should": [], "must_not": []}
-            try:
-                if hasattr(self, 'embedding_service') and self.embedding_service:
-                    parsed_query = self.embedding_service.parse_boolean_expression(keywords)
-                    logger.info(f"Parsed keywords: {parsed_query}")
-                else:
-                    # Improved simple parsing with error handling
-                    if keywords and keywords.strip():
-                        parts = [p.strip() for p in keywords.split('AND') if p.strip()]
-                        parsed_query = {
-                            "must": parts,
-                            "should": [],
-                            "must_not": []
-                        }
-                        logger.info(f"Simple parsing of keywords: {parsed_query}")
-            except Exception as e:
-                logger.error(f"Error parsing keywords '{keywords}': {e}. Using simple parsing.")
-                if keywords and keywords.strip():
-                    parsed_query = {
-                        "must": [keywords.strip()],
-                        "should": [],
-                        "must_not": []
-                    }
-            
-            # Fast path: if no terms to filter by, return raw results
-            if not any([parsed_query["must"], parsed_query["should"], parsed_query["must_not"]]):
-                logger.info("No terms to filter by, returning raw results filtered by relevance")
-                filtered_results = [(doc, score) for doc, score in results if score >= min_relevance_score]
-                return filtered_results[:k]
-            
-            # Post-filter based on keyword criteria
-            hard_filtered_results = []
-            logger.info("Beginning keyword filtering")
-            
-            # Set a maximum number of documents to check to avoid potential infinite loops
-            max_docs_to_check = min(1000, len(results))
-            docs_checked = 0
-            
-            for doc, score in results:
-                docs_checked += 1
+                logger.error(f"Error in keyword-filtered search: {e}", exc_info=True)
+                # Fallback to standard search
+                logger.info("Falling back to standard search due to keyword filtering error")
+                return self.similarity_search(
+                    query, chunk_size, k, filter_dict, min_relevance_score, 
+                    keywords=None, enforce_keywords=False
+                )
                 
-                # Safety check - avoid checking too many documents
-                if docs_checked > max_docs_to_check:
-                    logger.warning(f"Reached max docs check limit ({max_docs_to_check}), stopping filtering")
-                    break
-                    
-                if score < min_relevance_score:
-                    continue
-                    
-                # Default to checking the content
-                text_to_check = doc.page_content.lower()
-                title_to_check = doc.metadata.get('Artikeltitel', '').lower() if doc.metadata else ''
-                keywords_to_check = doc.metadata.get('Schlagworte', '').lower() if doc.metadata else ''
-                
-                # Determine which fields to check
-                check_text = not search_in or 'Text' in search_in
-                check_title = search_in and 'Artikeltitel' in search_in
-                check_keywords = search_in and 'Schlagworte' in search_in
-                
-                # Check MUST terms (all must be present)
-                must_present = True
-                for term in parsed_query["must"]:
-                    term_lower = term.lower()
-                    term_found = False
-                    
-                    if check_text and term_lower in text_to_check:
-                        term_found = True
-                    elif check_title and term_lower in title_to_check:
-                        term_found = True
-                    elif check_keywords and term_lower in keywords_to_check:
-                        term_found = True
-                        
-                    if not term_found:
-                        must_present = False
-                        break
-                
-                if not must_present:
-                    continue
-                
-                # Check SHOULD terms (at least one must be present if there are any)
-                should_present = True
-                if parsed_query["should"]:
-                    should_present = False
-                    for term in parsed_query["should"]:
-                        term_lower = term.lower()
-                        
-                        if check_text and term_lower in text_to_check:
-                            should_present = True
-                            break
-                        elif check_title and term_lower in title_to_check:
-                            should_present = True
-                            break
-                        elif check_keywords and term_lower in keywords_to_check:
-                            should_present = True
-                            break
-                
-                if not should_present:
-                    continue
-                    
-                # Check MUST NOT terms (none must be present)
-                must_not_absent = True
-                for term in parsed_query["must_not"]:
-                    term_lower = term.lower()
-                    
-                    if (check_text and term_lower in text_to_check) or \
-                    (check_title and term_lower in title_to_check) or \
-                    (check_keywords and term_lower in keywords_to_check):
-                        must_not_absent = False
-                        break
-                
-                if not must_not_absent:
-                    continue
-                    
-                # If we get here, the document passed all keyword filters
-                hard_filtered_results.append((doc, score))
-                
-                # Stop if we have enough results
-                if len(hard_filtered_results) >= k:
-                    break
-            
-            logger.info(f"Keyword filtering complete: checked {docs_checked} docs, found {len(hard_filtered_results)} matching results")
-            return hard_filtered_results
-        
         except Exception as e:
-            logger.error(f"Error in keyword-filtered search: {e}", exc_info=True)
-            # Fallback to normal search if keyword filtering fails
-            logger.info("Falling back to standard search without keyword enforcement")
-            return self.similarity_search(
-                query, chunk_size, k, filter_dict, min_relevance_score, 
-                keywords=None, enforce_keywords=False
-            )
+            logger.error(f"Critical error in similarity_search: {e}", exc_info=True)
+            raise
 
+    def _parse_keywords_safely(self, keywords: str) -> Dict[str, List[str]]:
+        """Safely parse keywords with fallback to simple parsing."""
+        if not keywords:
+            return {"must": [], "should": [], "must_not": []}
+            
+        try:
+            # Try to use embedding service if available
+            if hasattr(self, 'embedding_service') and self.embedding_service:
+                return self.embedding_service.parse_boolean_expression(keywords)
+            else:
+                # Simple fallback parsing for AND/OR/NOT
+                logger.info("Using simple keyword parsing (no embedding service)")
+                
+                # Handle NOT terms first
+                parts = keywords.split(' NOT ')
+                main_expr = parts[0].strip()
+                must_not = [p.strip() for p in parts[1:] if p.strip()] if len(parts) > 1 else []
+                
+                # Handle OR terms
+                if ' OR ' in main_expr:
+                    should = [p.strip() for p in main_expr.split(' OR ') if p.strip()]
+                    must = []
+                # Handle AND terms  
+                elif ' AND ' in main_expr:
+                    must = [p.strip() for p in main_expr.split(' AND ') if p.strip()]
+                    should = []
+                # Single term
+                else:
+                    must = [main_expr.strip()] if main_expr.strip() else []
+                    should = []
+                
+                result = {"must": must, "should": should, "must_not": must_not}
+                logger.info(f"Simple parsing result: {result}")
+                return result
+                
+        except Exception as e:
+            logger.error(f"Error parsing keywords '{keywords}': {e}")
+            # Ultimate fallback - treat as single must term
+            return {"must": [keywords.strip()], "should": [], "must_not": []}
+
+    def _apply_keyword_filter(
+        self, 
+        results: List[Tuple[Document, float]], 
+        parsed_query: Dict[str, List[str]], 
+        search_in: List[str], 
+        min_relevance_score: float
+    ) -> List[Tuple[Document, float]]:
+        """Apply keyword filtering to search results."""
+        
+        # Quick exit if no filtering criteria
+        if not any([parsed_query["must"], parsed_query["should"], parsed_query["must_not"]]):
+            logger.info("No keyword terms to filter by, returning relevance-filtered results")
+            return [(doc, score) for doc, score in results if score >= min_relevance_score]
+        
+        filtered_results = []
+        
+        logger.info(f"Applying keyword filter to {len(results)} results")
+        logger.info(f"Search fields: {search_in}")
+        logger.info(f"Filter criteria: {parsed_query}")
+        
+        for doc, score in results:
+            if score < min_relevance_score:
+                continue
+                
+            # Get text fields to search in
+            texts_to_search = []
+            if "Text" in search_in:
+                texts_to_search.append(doc.page_content.lower())
+            if "Artikeltitel" in search_in and "Artikeltitel" in doc.metadata:
+                texts_to_search.append(doc.metadata.get('Artikeltitel', '').lower())
+            if "Schlagworte" in search_in and "Schlagworte" in doc.metadata:
+                texts_to_search.append(doc.metadata.get('Schlagworte', '').lower())
+            
+            # Check if document matches keyword criteria
+            if self._document_matches_keywords(texts_to_search, parsed_query):
+                filtered_results.append((doc, score))
+                # Early exit if we have enough results
+                if len(filtered_results) >= 50:  # Reasonable limit
+                    break
+        
+        logger.info(f"Keyword filtering kept {len(filtered_results)} out of {len(results)} results")
+        return filtered_results
+
+    def _document_matches_keywords(
+        self, 
+        texts_to_search: List[str], 
+        parsed_query: Dict[str, List[str]]
+    ) -> bool:
+        """Check if a document matches the keyword criteria."""
+        
+        # Check MUST terms (all must be present)
+        for term in parsed_query["must"]:
+            term_lower = term.lower()
+            term_found = any(term_lower in text for text in texts_to_search)
+            if not term_found:
+                return False
+        
+        # Check SHOULD terms (at least one must be present, if any exist)
+        if parsed_query["should"]:
+            should_found = any(
+                term.lower() in text 
+                for term in parsed_query["should"] 
+                for text in texts_to_search
+            )
+            if not should_found:
+                return False
+        
+        # Check MUST NOT terms (none must be present)
+        for term in parsed_query["must_not"]:
+            term_lower = term.lower()
+            if any(term_lower in text for text in texts_to_search):
+                return False
+        
+        return True
+    
     def format_search_results(
         self,
         results: List[Tuple[Document, float]],

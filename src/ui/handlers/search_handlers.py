@@ -52,9 +52,6 @@ def perform_retrieval(
     use_agent_retrieval: bool = False,
     initial_chunk_count: int = 100,
     enable_interactive: bool = False,
-    relevance_weight: float = 0.4,
-    diversity_weight: float = 0.3,
-    quality_weight: float = 0.3,
     model_selection: str = "hu-llm",
     openai_api_key: Optional[str] = None
 ) -> Tuple[str, Dict[str, Any]]:
@@ -67,7 +64,27 @@ def perform_retrieval(
             return "Error: RAG Engine failed to initialize", None
         
         start_time = time.time()
-        logger.info(f"Starting retrieval: content_description='{content_description}', keywords='{keywords}', agent_based={use_agent_retrieval}")
+        
+        def clean_ui_parameter(param):
+            """Clean UI parameters that might be None, 'None', '', etc."""
+            if param is None:
+                return None
+            if isinstance(param, str):
+                param = param.strip()
+                if param == '' or param.lower() == 'none' or param.lower() == 'null':
+                    return None
+                return param
+            return param
+        
+        # Clean all string parameters from UI
+        content_description = clean_ui_parameter(content_description)
+        
+        keywords_raw = clean_ui_parameter(keywords)
+        expanded_words_json = clean_ui_parameter(expanded_words_json)
+        
+        # Validate required parameters
+        if not content_description:
+            return "Error: Content description is required", None
         
         # Process keywords - only use if keywords are actually provided
         keywords_to_use = keywords.strip() if keywords and keywords.strip() else None
