@@ -7,7 +7,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 
-from src.core.rag_engine import SpiegelRAGEngine
+from core.engine import SpiegelRAGEngine
 
 rag = SpiegelRAGEngine()
 results = rag.retrieve(

@@ -1,232 +1,414 @@
-# src/ui/app.py
+# src/ui/app.py - Simplified unified UI
 """
-Main application entry point for the Spiegel RAG UI.
-This file initializes the application and assembles the components.
-Refactored to support separate retrieval and analysis steps.
+Unified UI that combines all search modes into a single interface.
+Reduces code duplication and improves user experience.
 """
-import os
-import sys
-import logging
-from typing import Any, Callable, Dict
-
 import gradio as gr
-
+from typing import Dict, Any, List, Tuple, Optional
+import logging
+import os
+import sys 
 
 # Ensure src is in path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from src.core.rag_engine import SpiegelRAGEngine
-from src.config import settings
-from src.ui.components.search_panel import create_search_panel
-from src.ui.components.results_panel import create_results_panel
-from src.ui.components.keyword_analysis_panel import create_keyword_analysis_panel
-from src.ui.components.info_panel import create_info_panel
-from src.ui.handlers.search_handlers import (
-    perform_analysis_and_update_ui,
-    perform_retrieval_and_update_ui,
-    perform_retrieval,
-    perform_analysis,
-    set_rag_engine
-)
-from src.ui.components.question_panel import create_question_panel
-from src.ui.handlers.keyword_handlers import find_similar_words, expand_boolean_expression, set_embedding_service
-from src.ui.utils.ui_helpers import toggle_api_key_visibility
-from src.ui.components.agent_panel import create_agent_panel
-from src.ui.components.agent_results_panel import create_agent_results_panel
-from src.ui.handlers.agent_handlers import (
-    perform_agent_search_and_update_ui,
-    set_rag_engine as set_agent_rag_engine
+from src.core.engine import SpiegelRAG
+from src.core.search.strategies import (
+    StandardSearchStrategy, 
+    TimeWindowSearchStrategy, 
+    AgentSearchStrategy,
+    SearchConfig
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+
+from src.services.search_service import SearchService
+from src.config import settings
+
 logger = logging.getLogger(__name__)
 
-def initialize_services():
-    """
-    Initialize the RAG engine and embedding service.
-    
-    Returns:
-        Tuple of (rag_engine, embedding_service)
-    """
-    try:
-        logger.info("Initializing RAG Engine...")
-        rag_engine = SpiegelRAGEngine()
-        embedding_service = rag_engine.embedding_service
-        logger.info("RAG Engine and Embedding Service initialized successfully")
-        return rag_engine, embedding_service
-    except Exception as e:
-        logger.error(f"Failed to initialize RAG Engine: {e}")
-        return None, None
 
-def create_app():
-    """
-    Create and configure the Gradio application.
+class UnifiedSearchUI:
+    """Unified search interface with mode selection"""
     
-    Returns:
-        Gradio Blocks application
-    """
-    # Initialize services
-    rag_engine, embedding_service = initialize_services()
-    
-    # Set global service references in handler modules
-    set_rag_engine(rag_engine)
-    set_embedding_service(embedding_service)
-    set_agent_rag_engine(rag_engine)
-    
-    # Create Gradio app
-    with gr.Blocks(title="Der Spiegel RAG (1948-1979)") as app:
-        gr.Markdown(
-            """
-            # Der Spiegel RAG (1948-1979)
-            
-            **Ein Retrieval-Augmented Generation System für die Analyse historischer Artikel des Spiegel-Archivs.**
-            
-            Mit diesem Tool können Sie das Spiegel-Archiv durchsuchen, relevante Inhalte abrufen und 
-            KI-gestützte Analysen zu historischen Fragestellungen erhalten.
-            """
-        )
+    def __init__(self):
+        self.search_service = SearchService()
         
-        # Main RAG interface with accordion-based layout
-        with gr.Tab("RAG-Suche"):
-            # Search panel (top section - always visible)
-            with gr.Accordion("1. Quellen abrufen", open=True) as retrieval_accordion:
-                search_components = create_search_panel(
-                    retrieve_callback=perform_retrieval,
-                    analyze_callback=perform_analysis,
-                    preview_callback=expand_boolean_expression,
-                    toggle_api_key_callback=toggle_api_key_visibility
-                )
-            
-            # Retrieved texts section (shows after retrieval)
-            with gr.Accordion("Gefundene Texte", open=False) as retrieved_texts_accordion:
-                retrieved_texts_output = gr.Markdown("Noch keine Texte abgerufen.")
-            
-            # Question section (middle - becomes visible after retrieval)
-            with gr.Accordion("2. Quellen analysieren", open=False) as question_accordion:
-                question_components = create_question_panel()
-                
-            # Results section (bottom - expands after analysis)
-            with gr.Accordion("Ergebnisse", open=False) as results_accordion:
-                results_components = create_results_panel()
-            
-
-    
-        # Connect search button to control accordion states
-        search_components["retrieve_btn"].click(
-            fn=perform_retrieval_and_update_ui,
-            inputs=[
-                # Retrieval parameters
-                search_components["content_description"],
-                search_components["chunk_size"],
-                search_components["year_start"],
-                search_components["year_end"],
-                search_components["keywords"],
-                search_components["search_in"],
-                search_components["use_semantic_expansion"],
-                search_components["semantic_expansion_factor"],
-                search_components["expanded_words_state"],
-                search_components["enforce_keywords"],
-                search_components["use_time_windows"],
-                search_components["time_window_size"],
-                search_components["top_k"]
-            ],
-            outputs=[
-                # Results and UI state updates
-                search_components["retrieved_info"],
-                search_components["retrieved_chunks_state"],
-                retrieved_texts_output,
-                retrieval_accordion,
-                retrieved_texts_accordion,
-                question_accordion
-            ]
-        )
+    def create_interface(self) -> gr.Blocks:
+        """Create the Gradio interface"""
         
-        # Connect analyze button to results and update UI
-        question_components["analyze_btn"].click(
-            fn=perform_analysis_and_update_ui,
-            inputs=[
-                # Analysis parameters
-                question_components["question"],
-                search_components["retrieved_chunks_state"],
-                question_components["model_selection"],
-                question_components["openai_api_key"],
-                question_components["system_prompt_template"],
-                question_components["custom_system_prompt"],
-                question_components["temperature"],
-                question_components["max_tokens"]
-            ],
-            outputs=[
-                # Results and UI state updates
-                results_components["answer_output"],
-                results_components["metadata_output"],
-                question_accordion,
-                results_accordion
-            ]
-        )
-
-        with gr.Tab("Agenten-Suche"):
-            with gr.Row():
-                with gr.Column(scale=1):
-                    # Agent input panel
-                    agent_components = create_agent_panel(
-                        agent_search_callback=perform_agent_search_and_update_ui,
-                        toggle_api_key_callback=toggle_api_key_visibility
+        with gr.Blocks(title="Der Spiegel RAG System") as app:
+            gr.Markdown("""
+            # Der Spiegel RAG System (1948-1979)
+            
+            Durchsuchen und analysieren Sie das historische Spiegel-Archiv mit KI-Unterstützung.
+            """)
+            
+            # State management
+            search_result_state = gr.State(None)
+            
+            with gr.Tab("Suche & Analyse"):
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        # Search mode selection
+                        search_mode = gr.Radio(
+                            choices=["Standard", "Zeitfenster", "Agent"],
+                            value="Standard",
+                            label="Suchmodus",
+                            info="Wählen Sie die Suchmethode"
+                        )
+                        
+                        # Common search parameters
+                        content_description = gr.Textbox(
+                            label="Inhaltsbeschreibung",
+                            placeholder="Was möchten Sie im Archiv finden?",
+                            lines=2
+                        )
+                        
+                        with gr.Row():
+                            year_start = gr.Slider(
+                                minimum=settings.MIN_YEAR,
+                                maximum=settings.MAX_YEAR,
+                                value=1960,
+                                step=1,
+                                label="Von Jahr"
+                            )
+                            year_end = gr.Slider(
+                                minimum=settings.MIN_YEAR,
+                                maximum=settings.MAX_YEAR,
+                                value=1970,
+                                step=1,
+                                label="Bis Jahr"
+                            )
+                        
+                        chunk_size = gr.Dropdown(
+                            choices=settings.AVAILABLE_CHUNK_SIZES,
+                            value=settings.DEFAULT_CHUNK_SIZE,
+                            label="Textgröße"
+                        )
+                        
+                        # Optional keyword filtering
+                        with gr.Accordion("Erweiterte Optionen", open=False):
+                            keywords = gr.Textbox(
+                                label="Schlagwörter",
+                                placeholder="z.B. berlin AND mauer",
+                                lines=1
+                            )
+                            
+                            top_k = gr.Slider(
+                                minimum=1,
+                                maximum=50,
+                                value=10,
+                                step=1,
+                                label="Anzahl Ergebnisse"
+                            )
+                            
+                            enforce_keywords = gr.Checkbox(
+                                label="Strikte Filterung",
+                                value=True
+                            )
+                        
+                        # Mode-specific options
+                        with gr.Group(visible=False) as timewindow_options:
+                            window_size = gr.Slider(
+                                minimum=1,
+                                maximum=10,
+                                value=5,
+                                step=1,
+                                label="Fenstergröße (Jahre)"
+                            )
+                        
+                        with gr.Group(visible=False) as agent_options:
+                            initial_count = gr.Slider(
+                                minimum=20,
+                                maximum=200,
+                                value=100,
+                                step=10,
+                                label="Initiale Textmenge"
+                            )
+                            
+                            gr.Markdown("**Filterstufen** (absteigend)")
+                            filter_stages = gr.CheckboxGroup(
+                                choices=["50", "30", "20", "10", "5"],
+                                value=["50", "20", "10"],
+                                label="Behalte jeweils X Texte"
+                            )
+                        
+                        search_btn = gr.Button("🔍 Suchen", variant="primary")
+                        
+                    with gr.Column(scale=2):
+                        # Search status and results
+                        search_status = gr.Markdown("Bereit zur Suche...")
+                        
+                        # Search results preview
+                        with gr.Accordion("Gefundene Texte", open=False) as results_accordion:
+                            search_results_preview = gr.Markdown()
+                        
+                        # Analysis section
+                        with gr.Group(visible=False) as analysis_section:
+                            gr.Markdown("### Analyse")
+                            
+                            question = gr.Textbox(
+                                label="Ihre Frage",
+                                placeholder="Was möchten Sie über die gefundenen Texte wissen?",
+                                lines=2
+                            )
+                            
+                            with gr.Row():
+                                model_choice = gr.Radio(
+                                    choices=["hu-llm", "gpt-4o", "gpt-3.5-turbo"],
+                                    value="hu-llm",
+                                    label="Modell"
+                                )
+                                
+                                temperature = gr.Slider(
+                                    minimum=0,
+                                    maximum=1,
+                                    value=0.3,
+                                    step=0.1,
+                                    label="Temperatur"
+                                )
+                            
+                            with gr.Row(visible=False) as api_key_row:
+                                openai_api_key = gr.Textbox(
+                                    label="OpenAI API Key",
+                                    type="password"
+                                )
+                            
+                            analyze_btn = gr.Button("💡 Analysieren", variant="primary")
+                            
+                            # Analysis results
+                            analysis_output = gr.Markdown()
+            
+            with gr.Tab("Schlagwort-Analyse"):
+                # Simplified keyword analysis
+                with gr.Row():
+                    keyword_input = gr.Textbox(
+                        label="Wort eingeben",
+                        placeholder="z.B. mauer"
                     )
+                    find_similar_btn = gr.Button("Ähnliche Wörter finden")
                 
-                with gr.Column(scale=1):
-                    # Agent results panel
-                    agent_results_components = create_agent_results_panel()
+                similar_words_output = gr.Markdown()
             
-            # Connect the search button to the results
-            agent_components["agent_search_btn"].click(
-                fn=perform_agent_search_and_update_ui,
+            with gr.Tab("Hilfe"):
+                gr.Markdown(self._get_help_text())
+            
+            # Event handlers
+            search_mode.change(
+                self._update_mode_options,
+                inputs=[search_mode],
+                outputs=[timewindow_options, agent_options]
+            )
+            
+            model_choice.change(
+                lambda m: gr.update(visible=m.startswith("gpt")),
+                inputs=[model_choice],
+                outputs=[api_key_row]
+            )
+            
+            search_btn.click(
+                self._perform_search,
                 inputs=[
-                    agent_components["agent_question"],
-                    agent_components["agent_content_description"],
-                    agent_components["agent_year_start"],
-                    agent_components["agent_year_end"],
-                    agent_components["agent_chunk_size"],
-                    agent_components["agent_keywords"],
-                    agent_components["agent_search_in"],
-                    agent_components["agent_enforce_keywords"],
-                    agent_components["agent_initial_count"],
-                    agent_components["agent_filter_stage1"],
-                    agent_components["agent_filter_stage2"],
-                    agent_components["agent_filter_stage3"],
-                    agent_components["agent_model"],
-                    agent_components["agent_openai_api_key"],
-                    agent_components["agent_system_prompt_template"],
-                    agent_components["agent_custom_system_prompt"]
+                    search_mode, content_description, year_start, year_end,
+                    chunk_size, keywords, top_k, enforce_keywords,
+                    window_size, initial_count, filter_stages
                 ],
                 outputs=[
-                    agent_components["agent_results_state"],
-                    agent_components["agent_status"],
-                    agent_results_components["agent_answer_output"],
-                    agent_results_components["agent_process_output"],
-                    agent_results_components["agent_evaluations_output"],
-                    agent_results_components["agent_chunks_output"],
-                    agent_results_components["agent_metadata_output"]
+                    search_status, search_results_preview, 
+                    results_accordion, analysis_section, search_result_state
                 ]
             )
-
-
-        # Other tabs remain the same
-        with gr.Tab("Schlagwort-Analyse"):
-            keyword_components = create_keyword_analysis_panel(
-                find_similar_words_callback=find_similar_words
+            
+            analyze_btn.click(
+                self._perform_analysis,
+                inputs=[
+                    question, search_result_state, model_choice, 
+                    temperature, openai_api_key
+                ],
+                outputs=[analysis_output]
+            )
+            
+            find_similar_btn.click(
+                self._find_similar_words,
+                inputs=[keyword_input],
+                outputs=[similar_words_output]
             )
         
-        with gr.Tab("Info"):
-            create_info_panel()
+        return app
     
-    return app
+    def _update_mode_options(self, mode: str) -> Tuple[gr.Group, gr.Group]:
+        """Show/hide mode-specific options"""
+        timewindow_visible = mode == "Zeitfenster"
+        agent_visible = mode == "Agent"
+        
+        return (
+            gr.update(visible=timewindow_visible),
+            gr.update(visible=agent_visible)
+        )
+    
+    def _perform_search(self, 
+                       mode: str,
+                       content_description: str,
+                       year_start: int,
+                       year_end: int,
+                       chunk_size: int,
+                       keywords: str,
+                       top_k: int,
+                       enforce_keywords: bool,
+                       window_size: int,
+                       initial_count: int,
+                       filter_stages: List[str]) -> Tuple[str, str, gr.Accordion, gr.Group, Any]:
+        """Execute search based on selected mode"""
+        
+        if not content_description.strip():
+            return (
+                "❌ Bitte geben Sie eine Inhaltsbeschreibung ein.",
+                "",
+                gr.update(open=False),
+                gr.update(visible=False),
+                None
+            )
+        
+        try:
+            # Create search config
+            config = SearchConfig(
+                content_description=content_description,
+                year_range=(year_start, year_end),
+                chunk_size=chunk_size,
+                keywords=keywords.strip() if keywords else None,
+                top_k=top_k,
+                enforce_keywords=enforce_keywords
+            )
+            
+            # Execute search
+            result = self.search_service.execute_search(
+                mode=mode.lower(),
+                config=config,
+                window_size=window_size if mode == "Zeitfenster" else None,
+                initial_count=initial_count if mode == "Agent" else None,
+                filter_stages=[int(x) for x in filter_stages] if mode == "Agent" else None
+            )
+            
+            # Format results
+            status = f"✅ {result.chunk_count} Texte gefunden ({result.metadata['search_time']:.2f}s)"
+            preview = self._format_search_results(result)
+            
+            return (
+                status,
+                preview,
+                gr.update(open=True),  # Open results accordion
+                gr.update(visible=True),  # Show analysis section
+                result  # Store in state
+            )
+            
+        except Exception as e:
+            logger.error(f"Search failed: {e}")
+            return (
+                f"❌ Fehler: {str(e)}",
+                "",
+                gr.update(open=False),
+                gr.update(visible=False),
+                None
+            )
+    
+    def _perform_analysis(self,
+                         question: str,
+                         search_result: Any,
+                         model: str,
+                         temperature: float,
+                         openai_api_key: str) -> str:
+        """Analyze search results with LLM"""
+        
+        if not question.strip():
+            return "❌ Bitte stellen Sie eine Frage."
+        
+        if not search_result:
+            return "❌ Bitte führen Sie zuerst eine Suche durch."
+        
+        try:
+            result = self.search_service.analyze_results(
+                question=question,
+                search_result=search_result,
+                model=model,
+                temperature=temperature,
+                openai_api_key=openai_api_key if model.startswith("gpt") else None
+            )
+            
+            return f"### Antwort\n\n{result.answer}\n\n---\n*Modell: {result.model}*"
+            
+        except Exception as e:
+            logger.error(f"Analysis failed: {e}")
+            return f"❌ Fehler bei der Analyse: {str(e)}"
+    
+    def _find_similar_words(self, word: str) -> str:
+        """Find similar words"""
+        if not word.strip():
+            return "Bitte geben Sie ein Wort ein."
+        
+        try:
+            similar = self.search_service.find_similar_words(word.strip())
+            
+            if not similar:
+                return f"Keine ähnlichen Wörter für '{word}' gefunden."
+            
+            result = f"### Ähnliche Wörter zu '{word}':\n\n"
+            for item in similar[:10]:
+                result += f"- **{item['word']}** (Ähnlichkeit: {item['similarity']:.3f})\n"
+            
+            return result
+            
+        except Exception as e:
+            return f"Fehler: {str(e)}"
+    
+    def _format_search_results(self, result: Any) -> str:
+        """Format search results for preview"""
+        chunks = result.chunks[:5]  # Show first 5
+        
+        if not chunks:
+            return "Keine Ergebnisse gefunden."
+        
+        output = f"### Top {len(chunks)} von {result.chunk_count} Ergebnissen\n\n"
+        
+        for i, (doc, score) in enumerate(chunks):
+            metadata = doc.metadata
+            output += f"**{i+1}. {metadata.get('Artikeltitel', 'Kein Titel')}**\n"
+            output += f"*{metadata.get('Datum', 'Unbekannt')} - Relevanz: {score:.3f}*\n"
+            output += f"{doc.page_content[:200]}...\n\n"
+        
+        if result.chunk_count > 5:
+            output += f"*... und {result.chunk_count - 5} weitere Ergebnisse*"
+        
+        return output
+    
+    def _get_help_text(self) -> str:
+        """Get help text"""
+        return """
+        ## Suchmodi
+        
+        ### Standard
+        Einfache Ähnlichkeitssuche - schnell und direkt.
+        
+        ### Zeitfenster
+        Sucht in definierten Zeitabschnitten für bessere zeitliche Abdeckung.
+        
+        ### Agent
+        Mehrstufige Suche mit KI-Bewertung für präzisere Ergebnisse.
+        
+        ## Tipps
+        
+        1. Beginnen Sie mit einer klaren Inhaltsbeschreibung
+        2. Nutzen Sie Schlagwörter für präzisere Filterung
+        3. Der Agent-Modus ist langsamer aber genauer
+        4. Speichern Sie Ihren OpenAI API Key in der Umgebung
+        """
 
-# Run the app
+
+def create_app() -> gr.Blocks:
+    """Create and launch the application"""
+    ui = UnifiedSearchUI()
+    return ui.create_interface()
+
+
 if __name__ == "__main__":
-    logger.info("Starting Spiegel RAG UI...")
     app = create_app()
     app.launch(share=False)
