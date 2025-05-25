@@ -6,6 +6,7 @@ Contains functions that are used across multiple UI components.
 import json
 import logging
 from typing import Any, Dict, List, Tuple, Optional
+import gradio as gr
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -20,7 +21,6 @@ def toggle_api_key_visibility(model_choice: str) -> Dict:
     Returns:
         Dict with update parameters for Gradio
     """
-    import gradio as gr
     if model_choice.startswith("openai"):
         return gr.update(visible=True)
     return gr.update(visible=False)
