@@ -1,6 +1,6 @@
 # src/ui/handlers/agent_handlers.py
 """
-Updated agent handlers to work with the new strategy-based architecture
+Fixed agent handlers with proper HTML formatting for text visibility
 """
 import json
 import logging
@@ -150,11 +150,11 @@ def perform_agent_search_and_analysis(
             }
         }
         
-        # Format outputs
+        # Format outputs with FIXED formatting
         status = f"Suche und Analyse erfolgreich abgeschlossen in {total_time:.2f} Sekunden."
         answer_output = analysis_result.answer
-        process_output = format_process_visualization(results)
-        evaluations_output = format_evaluations(results)
+        process_output = format_process_visualization_fixed(results)
+        evaluations_output = format_evaluations_fixed(results)
         chunks_output = format_chunks(results)
         metadata_output = format_metadata(results)
         
@@ -165,19 +165,19 @@ def perform_agent_search_and_analysis(
         error_msg = str(e)
         return {}, f"Error: {error_msg}", f"### Error\n\n{error_msg}", "", "", "", ""
 
-def format_process_visualization(results: Dict[str, Any]) -> str:
-    """Format the process visualization as HTML."""
+def format_process_visualization_fixed(results: Dict[str, Any]) -> str:
+    """FIXED: Format the process visualization as HTML with proper styling."""
     agent_metadata = results.get("metadata", {}).get("agent_metadata", {})
     stage_times = agent_metadata.get("stage_times", [])
     stage_results = agent_metadata.get("stage_results", [])
     initial_count = agent_metadata.get("initial_retrieval_count", 100)
     
     if not stage_times or not stage_results:
-        return "<div>Keine Prozessdaten verfügbar.</div>"
+        return "<div class='agent-results'>Keine Prozessdaten verfügbar.</div>"
     
-    html = "<div class='filter-stages'>"
-    html += f"<h3>Filterungsprozess ({len(stage_times)} Stufen)</h3>"
-    html += f"<p>Gesamtzeit: {agent_metadata.get('total_time', 0):.2f} Sekunden</p>"
+    html = "<div class='agent-results'>"
+    html += f"<h3 style='color: #2c3e50; margin-bottom: 20px;'>Filterungsprozess ({len(stage_times)} Stufen)</h3>"
+    html += f"<p style='color: #34495e; margin-bottom: 20px;'>Gesamtzeit: {agent_metadata.get('total_time', 0):.2f} Sekunden</p>"
     
     for i, ((stage_name, stage_time), stage_result) in enumerate(zip(stage_times, stage_results)):
         percentage = 100.0
@@ -193,7 +193,7 @@ def format_process_visualization(results: Dict[str, Any]) -> str:
         <div class='filter-stage'>
             <div class='filter-stage-title'>{stage_name} ({stage_time:.2f}s)</div>
             <div class='filter-progress'>
-                <div class='filter-bar' style='width: {min(percentage, 100)}%; background-color: #3498db; height: 25px; display: flex; align-items: center; justify-content: center; color: white;'>
+                <div class='filter-bar' style='width: {min(percentage, 100)}%;'>
                     {stage_result} Texte
                 </div>
             </div>
@@ -203,19 +203,19 @@ def format_process_visualization(results: Dict[str, Any]) -> str:
     html += "</div>"
     return html
 
-def format_evaluations(results: Dict[str, Any]) -> str:
-    """Format evaluations with detailed score breakdown."""
+def format_evaluations_fixed(results: Dict[str, Any]) -> str:
+    """FIXED: Format evaluations with proper contrast and readable text."""
     evaluations = results.get("evaluations", [])
     
     if not evaluations:
-        return "<div>Keine Bewertungen verfügbar.</div>"
+        return "<div class='agent-results'>Keine Bewertungen verfügbar.</div>"
     
-    html = "<div class='evaluations'>"
-    html += f"<h3>Detaillierte Bewertungen der {len(evaluations)} ausgewählten Texte</h3>"
+    html = "<div class='agent-results'>"
+    html += f"<h3 style='color: #2c3e50; margin-bottom: 20px;'>Detaillierte Bewertungen der {len(evaluations)} ausgewählten Texte</h3>"
     
-    # Add explanation of scoring
+    # Add FIXED explanation of scoring with proper styling
     html += """
-    <div style='background-color: #e3f2fd; padding: 10px; margin-bottom: 15px; border-radius: 5px;'>
+    <div class='explanation-box'>
         <h4>Score-Erklärung:</h4>
         <ul>
             <li><strong>LLM-Bewertung (0-1):</strong> Vom Sprachmodell vergebene Relevanz für Ihre Frage - <em>entscheidend für finale Auswahl</em></li>
@@ -237,21 +237,17 @@ def format_evaluations(results: Dict[str, Any]) -> str:
         
         evaluation = eval_data.get("evaluation", "Keine Bewertung verfügbar")
         
-        # Color code based on LLM score quality
+        # FIXED: Determine relevance class for proper styling
+        relevance_class = "low-relevance"
         if llm_score >= 0.8:
-            border_color = "#4caf50"  # Green for high relevance
-            bg_color = "#f1f8e9"
+            relevance_class = "high-relevance"
         elif llm_score >= 0.6:
-            border_color = "#ff9800"  # Orange for medium relevance
-            bg_color = "#fff8e1"
-        else:
-            border_color = "#f44336"  # Red for lower relevance
-            bg_color = "#ffebee"
+            relevance_class = "medium-relevance"
         
         html += f"""
-        <div class='evaluation-card' style='border-left: 4px solid {border_color}; padding: 10px; margin-bottom: 10px; background-color: {bg_color};'>
+        <div class='evaluation-card {relevance_class}'>
             <h4>{i+1}. {title} ({date})</h4>
-            <div style='display: flex; gap: 20px; margin-bottom: 10px;'>
+            <div style='display: flex; gap: 20px; margin-bottom: 10px; flex-wrap: wrap;'>
                 <div><strong>LLM-Bewertung:</strong> {llm_score:.3f}</div>
                 <div><strong>Ursprünglicher Score:</strong> {original_llm_score:.1f}/10</div>
                 <div><strong>Vektor-Ähnlichkeit:</strong> {vector_score:.3f}</div>

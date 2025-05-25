@@ -1,6 +1,6 @@
-# src/ui/app.py - Fixed initialization for handlers
+# src/ui/app.py
 """
-Updated app initialization to properly connect handlers with the RAG engine
+Enhanced app with improved button styling, download functionality, and fixed text visibility
 """
 import gradio as gr
 import logging
@@ -26,6 +26,7 @@ from src.ui.handlers.keyword_handlers import (
     find_similar_words,
     expand_boolean_expression
 )
+from src.ui.handlers.download_handlers import create_download_json, create_download_csv  # New import
 from src.ui.utils.ui_helpers import toggle_api_key_visibility
 from src.config import settings
 
@@ -34,7 +35,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_app():
-    """Create the main Gradio application with proper handler integration."""
+    """Create the main Gradio application with enhanced styling and download functionality."""
     
     # Initialize RAG engine
     logger.info("Initializing RAG engine...")
@@ -55,15 +56,187 @@ def create_app():
     else:
         logger.warning("Embedding service not available for keyword analysis")
     
+    # Enhanced CSS with better button styling and fixed text visibility
+    enhanced_css = """
+    /* Main container styling */
+    .gradio-container {
+        max-width: 1200px !important;
+    }
+    
+    /* ENHANCED ACCORDION BUTTON STYLING */
+    .label-wrap {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+        padding: 12px 20px !important;
+        border-radius: 8px !important;
+        border: 2px solid transparent !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.3s ease !important;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    .label-wrap:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b5b95 100%) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+        border: 2px solid #4a5568 !important;
+    }
+    
+    .label-wrap.open {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important;
+        border: 2px solid #2d7d3b !important;
+    }
+    
+    /* Icon styling within buttons */
+    .label-wrap .icon {
+        font-weight: bold !important;
+        font-size: 18px !important;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    /* Button text styling */
+    .label-wrap span:first-child {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    /* FIXED TEXT VISIBILITY FOR EVALUATIONS */
+    .evaluation-card {
+        border-left: 4px solid #3498db !important;
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+        background-color: #f8f9fa !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .evaluation-card h4 {
+        color: #2c3e50 !important;
+        margin-bottom: 10px !important;
+        font-weight: bold !important;
+    }
+    
+    .evaluation-card p, .evaluation-card div {
+        color: #34495e !important;
+        line-height: 1.6 !important;
+    }
+    
+    .evaluation-card strong {
+        color: #2c3e50 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* High relevance styling */
+    .evaluation-card.high-relevance {
+        background-color: #f1f8e9 !important;
+        border-left-color: #4caf50 !important;
+    }
+    
+    /* Medium relevance styling */
+    .evaluation-card.medium-relevance {
+        background-color: #fff8e1 !important;
+        border-left-color: #ff9800 !important;
+    }
+    
+    /* Lower relevance styling */
+    .evaluation-card.low-relevance {
+        background-color: #ffebee !important;
+        border-left-color: #f44336 !important;
+    }
+    
+    /* Progress visualization */
+    .filter-stage {
+        margin-bottom: 20px !important;
+        background-color: #f8f9fa !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+    }
+    
+    .filter-stage-title {
+        font-weight: bold !important;
+        margin-bottom: 8px !important;
+        color: #2c3e50 !important;
+    }
+    
+    .filter-progress {
+        height: 30px !important;
+        background-color: #e9ecef !important;
+        border-radius: 15px !important;
+        overflow: hidden !important;
+        margin-bottom: 5px !important;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .filter-bar {
+        height: 100% !important;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+        text-align: center !important;
+        color: white !important;
+        line-height: 30px !important;
+        font-weight: bold !important;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) !important;
+        transition: width 0.5s ease !important;
+    }
+    
+    /* Download button styling */
+    .download-button {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 6px !important;
+        padding: 8px 16px !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .download-button:hover {
+        background: linear-gradient(135deg, #27ae60 0%, #219a52 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    /* Results container styling */
+    .results-container {
+        padding: 20px !important;
+        border-radius: 8px !important;
+        border: 1px solid #e0e0e0 !important;
+        background-color: #ffffff !important;
+    }
+    
+    /* Better typography */
+    .results-container p, .results-container li {
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+        color: #2c3e50 !important;
+    }
+    
+    /* Better heading styles */
+    .results-container h1, .results-container h2, .results-container h3 {
+        margin-top: 1em !important;
+        margin-bottom: 0.5em !important;
+        color: #2c3e50 !important;
+    }
+    
+    /* Quote styling */
+    .results-container blockquote {
+        border-left: 4px solid #667eea !important;
+        padding-left: 1em !important;
+        margin-left: 0 !important;
+        font-style: italic !important;
+        background-color: #f8f9fa !important;
+        padding: 10px 15px !important;
+        border-radius: 0 6px 6px 0 !important;
+    }
+    """
+    
     # Create the Gradio interface
     with gr.Blocks(
         title="Der Spiegel RAG System",
         theme=gr.themes.Soft(),
-        css="""
-        .gradio-container {
-            max-width: 1200px !important;
-        }
-        """
+        css=enhanced_css
     ) as app:
         
         gr.Markdown("""
@@ -86,6 +259,15 @@ def create_app():
             
             with gr.Accordion("Gefundene Texte", open=False) as retrieved_texts_accordion:
                 retrieved_chunks_display = gr.Markdown("Die gefundenen Texte werden hier angezeigt...")
+                
+                # ADD DOWNLOAD FUNCTIONALITY
+                with gr.Row():
+                    download_json_btn = gr.Button("📥 Als JSON herunterladen", elem_classes=["download-button"])
+                    download_csv_btn = gr.Button("📊 Als CSV herunterladen", elem_classes=["download-button"])
+                
+                # Hidden download components
+                download_json_file = gr.File(visible=False)
+                download_csv_file = gr.File(visible=False)
         
         with gr.Tab("2. Quellen analysieren"):
             with gr.Accordion("Frage stellen", open=True) as question_accordion:
@@ -209,7 +391,20 @@ def create_app():
             ]
         )
         
-        logger.info("Gradio interface created successfully")
+        # DOWNLOAD FUNCTIONALITY - Connect buttons to handlers
+        download_json_btn.click(
+            create_download_json,
+            inputs=[search_components["retrieved_chunks_state"]],
+            outputs=[download_json_file]
+        )
+        
+        download_csv_btn.click(
+            create_download_csv,
+            inputs=[search_components["retrieved_chunks_state"]],
+            outputs=[download_csv_file]
+        )
+        
+        logger.info("Enhanced Gradio interface created successfully")
     
     return app
 
@@ -217,7 +412,7 @@ def main():
     """Main entry point for the application."""
     try:
         app = create_app()
-        logger.info("Starting Gradio application...")
+        logger.info("Starting enhanced Gradio application...")
         app.launch(
             server_name="0.0.0.0",
             server_port=7860,
