@@ -1,8 +1,6 @@
-# src/ui/handlers/search_handlers.py
+# src/ui/handlers/search_handlers.py - Fixed version
 """
-Handler functions for search operations.
-These functions are connected to UI events in the search panel.
-Refactored to support separate retrieval and analysis steps.
+Handler functions for search operations - Fixed for new strategy-based architecture
 """
 import json
 import logging
@@ -12,25 +10,25 @@ import time
 from typing import Dict, List, Tuple, Optional, Any
 import gradio as gr
 
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from config import settings
+from src.core.engine import SpiegelRAG
+from src.core.search.strategies import (
+    StandardSearchStrategy, 
+    TimeWindowSearchStrategy, 
+    AgentSearchStrategy,
+    SearchConfig
+)
+from src.config import settings
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Global reference to the RAG engine
-# This will be initialized in the main app
 rag_engine = None
 
 def set_rag_engine(engine: Any) -> None:
-    """
-    Set the global RAG engine reference.
-    
-    Args:
-        engine: The SpiegelRAGEngine instance
-    """
+    """Set the global RAG engine reference."""
     global rag_engine
     rag_engine = engine
 
@@ -48,16 +46,9 @@ def perform_retrieval(
     use_time_windows: bool,
     time_window_size: int,
     top_k: int,
-    # parameters for agent-based retrieval
-    use_agent_retrieval: bool = False,
-    initial_chunk_count: int = 100,
-    enable_interactive: bool = False,
-    model_selection: str = "hu-llm",
-    openai_api_key: Optional[str] = None
 ) -> Tuple[str, Dict[str, Any]]:
     """
-    Perform source retrieval based on content description and filters.
-    Now supports both standard and agent-based cascading retrieval.
+    Perform source retrieval using the new strategy-based approach.
     """
     try:
         if not rag_engine:
@@ -65,159 +56,104 @@ def perform_retrieval(
         
         start_time = time.time()
         
-        def clean_ui_parameter(param):
-            """Clean UI parameters that might be None, 'None', '', etc."""
-            if param is None:
-                return None
-            if isinstance(param, str):
-                param = param.strip()
-                if param == '' or param.lower() == 'none' or param.lower() == 'null':
-                    return None
-                return param
-            return param
-        
-        # Clean all string parameters from UI
-        content_description = clean_ui_parameter(content_description)
-        
-        keywords_raw = clean_ui_parameter(keywords)
-        expanded_words_json = clean_ui_parameter(expanded_words_json)
-        
-        # Validate required parameters
+        # Clean and validate parameters
+        content_description = content_description.strip() if content_description else ""
         if not content_description:
             return "Error: Content description is required", None
         
-        # Process keywords - only use if keywords are actually provided
-        keywords_to_use = keywords.strip() if keywords and keywords.strip() else None
-        
-        # Only use expanded words if keywords are provided and expansion is enabled
-        expanded_words = None
-        if keywords_to_use and use_semantic_expansion and expanded_words_json:
-            try:
-                expanded_words = json.loads(expanded_words_json)
-                logger.info(f"Using expanded words: {expanded_words}")
-            except:
-                logger.warning("Failed to parse expanded words JSON")
-        elif not keywords_to_use:
-            # Reset expanded words if no keywords provided
-            expanded_words_json = ""
-            expanded_words = None
-        
-        # Set search fields
+        keywords_cleaned = keywords.strip() if keywords else None
         search_fields = search_in if search_in else ["Text"]
         
-        # Determine model to use for agent
-        model_to_use = "hu-llm"  # Default
-        if model_selection == "openai-gpt4o":
-            model_to_use = "gpt-4o"
-        elif model_selection == "openai-gpt35":
-            model_to_use = "gpt-3.5-turbo"
+        logger.info(f"Starting retrieval with time windows: {use_time_windows}")
+        logger.info(f"Content: '{content_description}', Keywords: '{keywords_cleaned}'")
         
-        # Setup progress tracking (would be integrated with UI in real implementation)
-        progress_updates = []
-        def progress_callback(message, progress):
-            progress_updates.append({"message": message, "progress": progress})
-            logger.info(f"Progress: {message} ({progress:.2f})")
+        # Create search configuration
+        config = SearchConfig(
+            content_description=content_description,
+            year_range=(year_start, year_end),
+            chunk_size=chunk_size,
+            keywords=keywords_cleaned,
+            search_fields=search_fields,
+            enforce_keywords=enforce_keywords,
+            top_k=top_k
+        )
         
-        # Choose retrieval method based on user selection
-        if use_agent_retrieval:
-            # Configure filtering stages based on weights
-            filtering_stages = [
-                {
-                    "name": "Basic Relevance",
-                    "keep_ratio": 0.5,
-                    "criteria": ["relevance"]
-                },
-                {
-                    "name": "Contextual Quality",
-                    "keep_ratio": 0.4,
-                    "criteria": ["context", "quality"]
-                },
-                {
-                    "name": "Diversity Selection",
-                    "keep_ratio": 0.5,
-                    "criteria": ["diversity", "representativeness"]
-                }
-            ]
-            
-            # Perform cascading agent-based retrieval
-            results = rag_engine.cascading_retrieve(
-                content_description=content_description,
-                question=None,  # Initially no question available during retrieval
-                year_range=[year_start, year_end],
-                chunk_size=chunk_size,
-                keywords=keywords_to_use,
-                search_in=search_fields,
-                initial_chunk_count=initial_chunk_count,
-                filtering_stages=filtering_stages,
-                model=model_to_use,
-                openai_api_key=openai_api_key,
-                interactive=enable_interactive,
-                progress_callback=progress_callback
-            )
+        # Choose strategy based on user selection
+        if use_time_windows:
+            logger.info(f"Using TimeWindowSearchStrategy with window size: {time_window_size}")
+            strategy = TimeWindowSearchStrategy(window_size=time_window_size)
         else:
-            # Standard retrieval
-            results = rag_engine.retrieve(
-                content_description=content_description,
-                year_range=[year_start, year_end],
-                chunk_size=chunk_size,
-                keywords=keywords_to_use,
-                search_in=search_fields,
-                use_iterative_search=use_time_windows,
-                time_window_size=time_window_size,
-                use_semantic_expansion=use_semantic_expansion and keywords_to_use is not None,
-                semantic_expansion_factor=semantic_expansion_factor,
-                enforce_keywords=enforce_keywords,
-                top_k=top_k
-            )
+            logger.info("Using StandardSearchStrategy")
+            strategy = StandardSearchStrategy()
+        
+        # Execute search with strategy
+        search_result = rag_engine.search(
+            strategy=strategy,
+            config=config,
+            use_semantic_expansion=use_semantic_expansion and keywords_cleaned is not None
+        )
         
         retrieval_time = time.time() - start_time
-        logger.info(f"Retrieval completed in {retrieval_time:.2f} seconds")
         
-        # Get actual number of chunks
-        num_chunks = len(results.get('chunks', []))
-        logger.info(f"Found {num_chunks} chunks")
+        # Convert SearchResult to the format expected by the UI
+        chunks_for_ui = []
+        for doc, score in search_result.chunks:
+            chunks_for_ui.append({
+                'content': doc.page_content,
+                'metadata': doc.metadata,
+                'relevance_score': score
+            })
         
-        # Add progress information to results metadata
-        if use_agent_retrieval:
-            results["metadata"]["progress"] = progress_updates
-            results["metadata"]["retrieval_method"] = "agent"
-        else:
-            results["metadata"]["retrieval_method"] = "standard"
+        # Build result dictionary in expected format
+        results = {
+            'chunks': chunks_for_ui,
+            'metadata': {
+                'search_time': retrieval_time,
+                'strategy': search_result.metadata.get('strategy', 'unknown'),
+                'chunk_size': chunk_size,
+                'year_range': [year_start, year_end],
+                'keywords': keywords_cleaned,
+                'retrieval_method': 'time_window' if use_time_windows else 'standard'
+            }
+        }
         
-        # Create summary info message
-        if num_chunks > 0:
-            info_text = f"""
-            ### Quellen erfolgreich abgerufen
-            
-            **Inhaltsbeschreibung**: {content_description}  
-            **Zeitraum**: {year_start} - {year_end}  
-            **Anzahl gefundener Quellen**: {num_chunks}  
-            **Abrufzeit**: {retrieval_time:.2f} Sekunden
-            **Methode**: {"Agent-basiertes Retrieval" if use_agent_retrieval else "Standard-Retrieval"}
-            
-            Sie können jetzt im Tab "2. Quellen analysieren" Fragen zu diesen Quellen stellen.
+        # Add strategy-specific metadata
+        results['metadata'].update(search_result.metadata)
+        
+        num_chunks = len(chunks_for_ui)
+        logger.info(f"Retrieval completed: {num_chunks} chunks in {retrieval_time:.2f}s")
+        
+        # Create info message
+        method_name = "Zeitfenster-Suche" if use_time_windows else "Standard-Suche"
+        info_text = f"""
+        ### Quellen erfolgreich abgerufen ({method_name})
+        
+        **Inhaltsbeschreibung**: {content_description}  
+        **Zeitraum**: {year_start} - {year_end}  
+        **Anzahl gefundener Quellen**: {num_chunks}  
+        **Abrufzeit**: {retrieval_time:.2f} Sekunden
+        """
+        
+        if use_time_windows:
+            windows = search_result.metadata.get('windows', [])
+            info_text += f"""
+            **Zeitfenster**: {len(windows)} Fenster à {time_window_size} Jahre
+            **Fenster**: {', '.join([f"{w[0]}-{w[1]}" for w in windows[:5]])}{'...' if len(windows) > 5 else ''}
             """
-            
-            # Add agent-specific info
-            if use_agent_retrieval:
-                info_text += f"""
-                
-                **Agent-Prozess**:
-                - Initiale Dokumentanzahl: {initial_chunk_count}
-                - Finale Dokumentanzahl: {num_chunks}
-                - Filterungsphasen: {len(filtering_stages)}
-                """
-                
-                # Add progress information
-                if progress_updates:
-                    info_text += "\n**Fortschritt**:\n"
-                    for update in progress_updates:
-                        info_text += f"- {update['message']}\n"
-        else:
+        
+        if keywords_cleaned:
+            info_text += f"""
+            **Schlagwörter**: {keywords_cleaned}
+            **Semantische Erweiterung**: {'Ja' if use_semantic_expansion else 'Nein'}
+            """
+        
+        if num_chunks == 0:
             info_text = f"""
             ### Keine passenden Quellen gefunden
             
             Versuchen Sie es mit einer anderen Inhaltsbeschreibung oder erweitern Sie die Filter.
+            - Zeitraum: {year_start} - {year_end}
+            - Methode: {method_name}
             """
         
         return info_text, results
@@ -225,31 +161,18 @@ def perform_retrieval(
     except Exception as e:
         logger.error(f"Error in retrieval: {e}", exc_info=True)
         return f"Error: {str(e)}", None
-    
 
 def perform_analysis(
     question: str,
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
     openai_api_key: str,
-    system_prompt: Optional[str] = None,  # Add new parameters
+    system_prompt: Optional[str] = None,
     temperature: float = 0.3,
     max_tokens: Optional[int] = None
 ) -> Tuple[str, str, str]:
     """
-    Perform analysis on previously retrieved chunks.
-    
-    Args:
-        question: Question to answer based on retrieved chunks
-        retrieved_chunks: Dict with previously retrieved chunks
-        model_selection: Selected LLM model
-        openai_api_key: OpenAI API key (if applicable)
-        system_prompt: Custom system prompt (if provided)
-        temperature: Generation temperature (0.0-1.0)
-        max_tokens: Maximum tokens to generate
-        
-    Returns:
-        Tuple of (answer text, chunks text, metadata text)
+    Perform analysis on previously retrieved chunks using the new engine.
     """
     try:
         if not rag_engine:
@@ -261,6 +184,20 @@ def perform_analysis(
         start_time = time.time()
         logger.info(f"Starting analysis with question: '{question}'")
         
+        # Convert UI chunks back to Document format
+        from langchain.docstore.document import Document
+        
+        chunks_data = retrieved_chunks.get('chunks', [])
+        documents = []
+        for chunk_data in chunks_data:
+            doc = Document(
+                page_content=chunk_data['content'],
+                metadata=chunk_data['metadata']
+            )
+            documents.append(doc)
+        
+        logger.info(f"Converted {len(documents)} chunks for analysis")
+        
         # Handle model selection
         model_to_use = "hu-llm"  # Default
         if model_selection == "openai-gpt4o":
@@ -268,38 +205,38 @@ def perform_analysis(
         elif model_selection == "openai-gpt35":
             model_to_use = "gpt-3.5-turbo"
         
-        # Perform analysis with new parameters
-        results = rag_engine.analyze(
+        # Perform analysis with new engine
+        analysis_result = rag_engine.analyze(
             question=question,
+            chunks=documents,
             model=model_to_use,
-            openai_api_key=openai_api_key,
-            with_citations=False,
-            system_prompt=system_prompt,    # Pass new parameters
+            system_prompt=system_prompt,
             temperature=temperature,
-            max_tokens=max_tokens
+            max_tokens=max_tokens,
+            openai_api_key=openai_api_key if model_to_use.startswith("gpt") else None
         )
         
         analysis_time = time.time() - start_time
         logger.info(f"Analysis completed in {analysis_time:.2f} seconds")
         
-        # Get chunks from the retrieval results
-        chunks = retrieved_chunks.get('chunks', [])
-        
         # Format results
-        answer_text = results.get('answer', 'No answer generated')
-        chunks_text = format_chunks(chunks)
+        answer_text = analysis_result.answer
+        chunks_text = format_chunks(chunks_data)
         
         # Format metadata
-        from src.ui.utils.ui_helpers import format_analysis_metadata
-        metadata_text = format_analysis_metadata(
-            question=question,
-            model=model_to_use,
-            analysis_time=analysis_time,
-            retrieved_info=retrieved_chunks.get('metadata', {}),
-            temperature=temperature,     # Include new parameters in metadata
-            max_tokens=max_tokens,
-            system_prompt=system_prompt
-        )
+        metadata_text = f"""
+        ## Analyseparameter
+        - **Model**: {analysis_result.model}
+        - **Frage**: {question}
+        - **Analysezeit**: {analysis_time:.2f} Sekunden
+        - **Temperatur**: {temperature}
+        - **Max Tokens**: {max_tokens or "Standardwert"}
+
+        ## Quellen-Metadaten
+        - **Anzahl Quellen**: {len(documents)}
+        - **Retrieval-Methode**: {retrieved_chunks.get('metadata', {}).get('retrieval_method', 'Unbekannt')}
+        - **Original-Suchzeit**: {retrieved_chunks.get('metadata', {}).get('search_time', 0):.2f} Sekunden
+        """
         
         return answer_text, chunks_text, metadata_text
         
@@ -324,17 +261,8 @@ def perform_retrieval_and_update_ui(
 ) -> Tuple[str, Dict[str, Any], str, gr.Accordion, gr.Accordion, gr.Accordion]:
     """
     Perform retrieval and update UI accordions.
-    
-    Returns:
-        Tuple containing:
-        - Retrieved info text
-        - Retrieved chunks state
-        - Formatted chunks for display
-        - Retrieval accordion state (collapsed)
-        - Retrieved texts accordion state (expanded)
-        - Question accordion state (expanded)
     """
-    # First, perform the retrieval
+    # Perform the retrieval
     info_text, retrieved_chunks = perform_retrieval(
         content_description, chunk_size, year_start, year_end,
         keywords, search_in, use_semantic_expansion,
@@ -344,7 +272,14 @@ def perform_retrieval_and_update_ui(
     
     # Format the retrieved chunks for display
     if retrieved_chunks and retrieved_chunks.get('chunks'):
-        formatted_chunks = format_chunks(retrieved_chunks.get('chunks'))
+        formatted_chunks = format_chunks(
+            retrieved_chunks.get('chunks'),
+            keywords_to_use=keywords,
+            use_time_windows=use_time_windows,
+            time_window_size=time_window_size,
+            year_start=year_start,
+            year_end=year_end
+        )
         num_chunks = len(retrieved_chunks.get('chunks'))
     else:
         formatted_chunks = "Keine Texte gefunden."
@@ -352,16 +287,11 @@ def perform_retrieval_and_update_ui(
     
     # Update UI accordions based on retrieval success
     if num_chunks > 0:
-        # Collapse retrieval section
         retrieval_state = gr.update(open=False)
-        # Expand retrieved texts section
         retrieved_texts_state = gr.update(open=True)
-        # Expand question section
         question_state = gr.update(open=True)
     else:
-        # Keep retrieval section expanded if no results
         retrieval_state = gr.update(open=True)
-        # Collapse other sections
         retrieved_texts_state = gr.update(open=False)
         question_state = gr.update(open=False)
     
@@ -379,13 +309,6 @@ def perform_analysis_and_update_ui(
 ) -> Tuple[str, str, gr.Accordion, gr.Accordion]:
     """
     Perform analysis and update UI accordions.
-    
-    Returns:
-        Tuple containing:
-        - Answer text
-        - Metadata text
-        - Question accordion state (collapsed)
-        - Results accordion state (expanded)
     """
     # Determine which system prompt to use
     if custom_system_prompt.strip():
@@ -393,7 +316,7 @@ def perform_analysis_and_update_ui(
     else:
         system_prompt = settings.SYSTEM_PROMPTS.get(system_prompt_template, settings.SYSTEM_PROMPTS["default"])
     
-    # Perform the analysis - note the proper unpacking of return values
+    # Perform the analysis
     answer_text, chunks_text, metadata_text = perform_analysis(
         question=question,
         retrieved_chunks=retrieved_chunks,
@@ -405,9 +328,7 @@ def perform_analysis_and_update_ui(
     )
     
     # Update UI accordions
-    # Collapse question section
     question_state = gr.update(open=False)
-    # Expand results section
     results_state = gr.update(open=True)
     
     return answer_text, metadata_text, question_state, results_state
@@ -422,21 +343,8 @@ def format_chunks(
     year_end: int = 1979
 ) -> str:
     """
-    Format retrieved chunks for display.
-    
-    Args:
-        chunks: List of chunk dictionaries
-        keywords_to_use: Keywords used in search
-        expanded_words: Dictionary of expanded words
-        use_time_windows: Whether time windows were used
-        time_window_size: Size of time windows
-        year_start: Start year of search range
-        year_end: End year of search range
-        
-    Returns:
-        Formatted markdown string with chunks information
+    Format retrieved chunks for display with enhanced time window support.
     """
-    chunks_text = ""
     if not chunks:
         return "Keine passenden Texte gefunden."
     
@@ -448,16 +356,17 @@ def format_chunks(
             chunks_by_year[year] = []
         chunks_by_year[year].append(chunk)
     
-    # Calculate time windows for better visualization
-    time_windows = []
+    chunks_text = ""
+    
+    # Display chunks grouped by time window if using time windows
     if use_time_windows:
+        chunks_text += "# Ergebnisse nach Zeitfenstern\n\n"
+        
+        # Create time windows
+        time_windows = []
         for window_start in range(year_start, year_end + 1, time_window_size):
             window_end = min(window_start + time_window_size - 1, year_end)
             time_windows.append((window_start, window_end))
-    
-    # Display chunks grouped by time window if using time windows
-    if use_time_windows and time_windows:
-        chunks_text += "# Ergebnisse nach Zeitfenstern\n\n"
         
         # Group years into their respective time windows
         for window_start, window_end in time_windows:
@@ -473,7 +382,7 @@ def format_chunks(
             if window_chunks:
                 chunks_text += window_label
                 
-                # Count chunks per year in this window for statistics
+                # Count chunks per year in this window
                 window_year_counts = {}
                 for y, _, _ in window_chunks:
                     window_year_counts[y] = window_year_counts.get(y, 0) + 1
@@ -483,12 +392,11 @@ def format_chunks(
                 chunks_text += ", ".join([f"{y}: {count} Texte" for y, count in sorted(window_year_counts.items())])
                 chunks_text += "\n\n"
                 
-                # Add each chunk under its year heading
+                # Add each chunk
                 current_year = None
                 chunk_in_year = 1
                 
                 for year, _, chunk in sorted(window_chunks):
-                    # Add year subheading when year changes
                     if year != current_year:
                         chunks_text += f"### {year}\n\n"
                         current_year = year
@@ -498,43 +406,24 @@ def format_chunks(
                     chunks_text += f"#### {chunk_in_year}. {metadata.get('Artikeltitel', 'Kein Titel')}\n\n"
                     chunks_text += f"**Datum**: {metadata.get('Datum', 'Unbekannt')} | "
                     chunks_text += f"**Relevanz**: {chunk['relevance_score']:.3f}"
+                    
                     url = metadata.get('URL')
                     if url and url != 'Keine URL':
                         chunks_text += f" | [**Link zum Artikel**]({url})"
-
-                    chunks_text += "\n\n"
-                      
-                    # Highlight the keywords if found
-                    if keywords_to_use:
-                        content = chunk['content']
-                        keywords_list = [k.strip().lower() for k in keywords_to_use.split('AND')]
-                        if expanded_words:
-                            all_keywords = []
-                            for k in keywords_list:
-                                all_keywords.append(k)
-                                if k in expanded_words:
-                                    all_keywords.extend(expanded_words[k])
-                            
-                            # Add a note about which keywords were found
-                            found_keywords = []
-                            for k in all_keywords:
-                                if k.lower() in content.lower():
-                                    found_keywords.append(k)
-                            
-                            if found_keywords:
-                                chunks_text += f"**Schlagwörter gefunden**: {', '.join(found_keywords)}\n\n"
                     
+                    chunks_text += "\n\n"
                     chunks_text += f"**Text**:\n{chunk['content']}\n\n"
                     chunks_text += "---\n\n"
                     chunk_in_year += 1
                 
                 chunks_text += "\n"
             else:
-                # No chunks found for this window
                 chunks_text += window_label
                 chunks_text += "Keine Texte gefunden in diesem Zeitfenster.\n\n"
     else:
         # Regular display by year when not using time windows
+        chunks_text += f"# Gefundene Texte ({len(chunks)})\n\n"
+        
         for year in sorted(chunks_by_year.keys()):
             chunks_text += f"## {year}\n\n"
             for i, chunk in enumerate(chunks_by_year[year], 1):
@@ -542,31 +431,12 @@ def format_chunks(
                 chunks_text += f"### {i}. {metadata.get('Artikeltitel', 'Kein Titel')}\n\n"
                 chunks_text += f"**Datum**: {metadata.get('Datum', 'Unbekannt')} | "
                 chunks_text += f"**Relevanz**: {chunk['relevance_score']:.3f}"
+                
                 url = metadata.get('URL')
                 if url and url != 'Keine URL':
                     chunks_text += f" | [**Link zum Artikel**]({url})"
+                
                 chunks_text += "\n\n"
-                
-                # Highlight the keywords if found
-                if keywords_to_use:
-                    content = chunk['content']
-                    keywords_list = [k.strip().lower() for k in keywords_to_use.split('AND')]
-                    if expanded_words:
-                        all_keywords = []
-                        for k in keywords_list:
-                            all_keywords.append(k)
-                            if k in expanded_words:
-                                all_keywords.extend(expanded_words[k])
-                        
-                        # Add a note about which keywords were found
-                        found_keywords = []
-                        for k in all_keywords:
-                            if k.lower() in content.lower():
-                                found_keywords.append(k)
-                        
-                        if found_keywords:
-                            chunks_text += f"**Schlagwörter gefunden**: {', '.join(found_keywords)}\n\n"
-                
                 chunks_text += f"**Text**:\n{chunk['content']}\n\n"
                 chunks_text += "---\n\n"
     
