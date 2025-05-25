@@ -1,6 +1,8 @@
+# src/core/vector_store.py
 """
 ChromaDB interface for Spiegel RAG.
 Connects to a remote ChromaDB instance with Ollama embeddings.
+FIXED VERSION - addresses parameter handling and search issues
 """
 import logging
 from typing import Dict, List, Optional, Tuple, Union, Any
@@ -18,9 +20,7 @@ class ChromaDBInterface:
     """Interface for remote ChromaDB operations."""
     
     def __init__(self):
-        """
-        Initialize remote ChromaDB interface.
-        """
+        """Initialize remote ChromaDB interface."""
         # Initialize the Ollama embedding model
         self.embedding_model = OllamaEmbeddings(
             model=settings.OLLAMA_MODEL_NAME,
@@ -42,33 +42,21 @@ class ChromaDBInterface:
         # Cache for vectorstores to avoid reloading
         self._vectorstore_cache: Dict[str, Chroma] = {}
     
+    def get_collection_name(self, chunk_size: int) -> str:
+        """Generate standardized collection name."""
+        # Use the exact format that exists in your database
+        overlap_map = {2000: 400, 3000: 300}
+        overlap = overlap_map.get(chunk_size, 300)  # Default to 300 if unknown
+        return f"recursive_chunks_{chunk_size}_{overlap}_TH_cosine_{settings.OLLAMA_MODEL_NAME}"
+    
     def get_vectorstore(self, chunk_size: int, chunk_overlap: Optional[int] = None) -> Chroma:
-        """
-        Get a vectorstore for a specific chunk size.
-        
-        Args:
-            chunk_size: Size of chunks in the collection
-            chunk_overlap: Overlap size (defaults to specific values based on chunk size)
-            
-        Returns:
-            Chroma: The vectorstore instance
-        """
-        # Behandle spezielle Fälle für die zwei verfügbaren Sammlungen
-        if chunk_size == 2000:
-            chunk_overlap = 400  # Spezieller Fall für 2000 chunk size
-        elif chunk_size == 3000:
-            chunk_overlap = 300  # Spezieller Fall für 3000 chunk size
-        else:
-            # Fallback zu einer der verfügbaren Größen
-            nearest_size = min(settings.AVAILABLE_CHUNK_SIZES, key=lambda x: abs(x - chunk_size))
-            logger.warning(f"Chunk size {chunk_size} not available, using nearest size {nearest_size}")
-            chunk_size = nearest_size
-            chunk_overlap = 400 if chunk_size == 2000 else 300
-            
-        collection_name = f"recursive_chunks_{chunk_size}_{chunk_overlap}_TH_cosine_nomic-embed-text"
+        """Get a vectorstore for a specific chunk size."""
+        # Use standardized collection name
+        collection_name = self.get_collection_name(chunk_size)
         
         # Check cache first
         if collection_name in self._vectorstore_cache:
+            logger.debug(f"Using cached vectorstore for {collection_name}")
             return self._vectorstore_cache[collection_name]
         
         # Load vectorstore if not in cache
@@ -85,6 +73,18 @@ class ChromaDBInterface:
             logger.error(f"Error loading vectorstore for collection {collection_name}: {e}")
             raise
     
+    def clean_parameter(self, param: Any) -> Optional[str]:
+        """Safely clean UI parameters that might be None, 'None', '', etc."""
+        if param is None:
+            return None
+        if isinstance(param, str):
+            param = param.strip()
+            # Be more specific about what we consider "empty"
+            if param == '' or param.lower() in ['none', 'null', 'undefined']:
+                return None
+            return param
+        return None
+    
     def similarity_search(
         self, 
         query: str, 
@@ -98,32 +98,24 @@ class ChromaDBInterface:
     ) -> List[Tuple[Document, float]]:
         """
         Perform similarity search with relevance scores and keyword filtering.
-        Robust handling of UI parameter conversion issues.
+        FIXED VERSION with better parameter handling and error reporting.
         """
         
-        # ROBUST PARAMETER CLEANING - Handle UI conversion issues
-        def clean_keyword_param(kw):
-            """Clean keyword parameter from potential UI conversion issues."""
-            if kw is None:
-                return None
-            if isinstance(kw, str):
-                kw = kw.strip()
-                # Handle common UI conversion issues
-                if kw == '' or kw.lower() in ['none', 'null', 'undefined']:
-                    return None
-                return kw
-            return None  # Fallback for unexpected types
+        # Clean the keywords parameter safely
+        cleaned_keywords = self.clean_parameter(keywords)
         
-        # Clean the keywords parameter
-        cleaned_keywords = clean_keyword_param(keywords)
-        
-        logger.info(f"Starting similarity search for query: '{query}', k={k}")
+        logger.info(f"=== SIMILARITY SEARCH DEBUG ===")
+        logger.info(f"Query: '{query}'")
+        logger.info(f"Chunk size: {chunk_size}")
+        logger.info(f"k: {k}")
         logger.info(f"Keywords (raw): {repr(keywords)} -> (cleaned): {repr(cleaned_keywords)}")
         logger.info(f"Enforce keywords: {enforce_keywords}")
+        logger.info(f"Min relevance score: {min_relevance_score}")
+        logger.info(f"Filter dict: {filter_dict}")
         
         try:
             vectorstore = self.get_vectorstore(chunk_size)
-            logger.info("Got vectorstore, performing search")
+            logger.info(f"Got vectorstore for collection: {self.get_collection_name(chunk_size)}")
             
             # Determine if we should apply keyword filtering
             should_filter_keywords = (
@@ -136,11 +128,16 @@ class ChromaDBInterface:
             
             if not should_filter_keywords:
                 # Standard search without keyword filtering
-                logger.info(f"Performing standard search (no keyword filtering)")
+                logger.info("Performing standard search (no keyword filtering)")
                 try:
+                    # Get more results initially for better filtering
+                    search_k = max(k * 2, 20)  # Get at least 20 results
+                    
                     results = vectorstore.similarity_search_with_relevance_scores(
-                        query, k=k*2, filter=filter_dict  # Get extra results for filtering
+                        query, k=search_k, filter=filter_dict
                     )
+                    
+                    logger.info(f"Raw search returned {len(results)} results")
                     
                     # Filter by minimum relevance score
                     filtered_results = [
@@ -148,8 +145,19 @@ class ChromaDBInterface:
                         if score >= min_relevance_score
                     ]
                     
-                    logger.info(f"Standard search returned {len(filtered_results)} results after relevance filtering")
-                    return filtered_results[:k]  # Limit to requested amount
+                    logger.info(f"After relevance filtering: {len(filtered_results)} results")
+                    
+                    # Return top k results
+                    final_results = filtered_results[:k]
+                    logger.info(f"Final results: {len(final_results)}")
+                    
+                    # Log some details about the results
+                    if final_results:
+                        logger.info("Sample results:")
+                        for i, (doc, score) in enumerate(final_results[:3]):
+                            logger.info(f"  {i+1}. Score: {score:.4f}, Title: {doc.metadata.get('Artikeltitel', 'No title')}")
+                    
+                    return final_results
                     
                 except Exception as e:
                     logger.error(f"Error in standard similarity search: {e}", exc_info=True)
@@ -198,7 +206,12 @@ class ChromaDBInterface:
                 
         except Exception as e:
             logger.error(f"Critical error in similarity_search: {e}", exc_info=True)
-            raise
+            # Don't raise, return empty list with detailed error message
+            logger.error(f"SEARCH FAILED COMPLETELY - Check:")
+            logger.error(f"  1. ChromaDB connection: {settings.CHROMA_DB_HOST}:{settings.CHROMA_DB_PORT}")
+            logger.error(f"  2. Collection exists: {self.get_collection_name(chunk_size)}")
+            logger.error(f"  3. Ollama embedding service: {settings.OLLAMA_BASE_URL}")
+            return []
 
     def _parse_keywords_safely(self, keywords: str) -> Dict[str, List[str]]:
         """Safely parse keywords with fallback to simple parsing."""
@@ -206,34 +219,30 @@ class ChromaDBInterface:
             return {"must": [], "should": [], "must_not": []}
             
         try:
-            # Try to use embedding service if available
-            if hasattr(self, 'embedding_service') and self.embedding_service:
-                return self.embedding_service.parse_boolean_expression(keywords)
+            # Simple fallback parsing for AND/OR/NOT
+            logger.info("Using simple keyword parsing")
+            
+            # Handle NOT terms first
+            parts = keywords.split(' NOT ')
+            main_expr = parts[0].strip()
+            must_not = [p.strip() for p in parts[1:] if p.strip()] if len(parts) > 1 else []
+            
+            # Handle OR terms
+            if ' OR ' in main_expr:
+                should = [p.strip() for p in main_expr.split(' OR ') if p.strip()]
+                must = []
+            # Handle AND terms  
+            elif ' AND ' in main_expr:
+                must = [p.strip() for p in main_expr.split(' AND ') if p.strip()]
+                should = []
+            # Single term
             else:
-                # Simple fallback parsing for AND/OR/NOT
-                logger.info("Using simple keyword parsing (no embedding service)")
-                
-                # Handle NOT terms first
-                parts = keywords.split(' NOT ')
-                main_expr = parts[0].strip()
-                must_not = [p.strip() for p in parts[1:] if p.strip()] if len(parts) > 1 else []
-                
-                # Handle OR terms
-                if ' OR ' in main_expr:
-                    should = [p.strip() for p in main_expr.split(' OR ') if p.strip()]
-                    must = []
-                # Handle AND terms  
-                elif ' AND ' in main_expr:
-                    must = [p.strip() for p in main_expr.split(' AND ') if p.strip()]
-                    should = []
-                # Single term
-                else:
-                    must = [main_expr.strip()] if main_expr.strip() else []
-                    should = []
-                
-                result = {"must": must, "should": should, "must_not": must_not}
-                logger.info(f"Simple parsing result: {result}")
-                return result
+                must = [main_expr.strip()] if main_expr.strip() else []
+                should = []
+            
+            result = {"must": must, "should": should, "must_not": must_not}
+            logger.info(f"Simple parsing result: {result}")
+            return result
                 
         except Exception as e:
             logger.error(f"Error parsing keywords '{keywords}': {e}")
@@ -315,23 +324,14 @@ class ChromaDBInterface:
         
         return True
     
+    # Keep your existing methods for formatting and building filters
     def format_search_results(
         self,
         results: List[Tuple[Document, float]],
         with_citations: bool = False,
         start_index: int = 0
     ) -> Tuple[List[str], List[str]]:
-        """
-        Format search results for use in prompts and display.
-        
-        Args:
-            results: List of (Document, score) tuples from similarity_search
-            with_citations: Whether to format for citation references
-            start_index: Starting index for citations
-            
-        Returns:
-            Tuple of (context_list, citation_list)
-        """
+        """Format search results for use in prompts and display."""
         context_list = []
         citation_list = []
         
@@ -358,17 +358,7 @@ class ChromaDBInterface:
         keywords: Optional[str] = None,
         search_in: Optional[List[str]] = None,
     ) -> Optional[Dict]:
-        """
-        Build a metadata filter for ChromaDB with enhanced keyword support.
-        
-        Args:
-            year_range: Range of years [start, end]
-            keywords: Boolean expression of keywords (e.g. "berlin AND (wall OR mauer) NOT soviet")
-            search_in: Where to search for keywords (e.g. "Artikeltitel", "Text")
-            
-        Returns:
-            Filter dictionary or None if no filters
-        """
+        """Build a metadata filter for ChromaDB with enhanced keyword support."""
         where_conditions = []
         
         # Add year range filter if provided
@@ -380,71 +370,6 @@ class ChromaDBInterface:
                 {"Jahrgang": {"$lte": end_year}}
             ]}
             where_conditions.append(year_filter)
-        
-        # Add keyword filter if provided
-        if keywords and isinstance(keywords, str):
-            try:
-                # This would use the WordEmbeddingService.parse_boolean_expression method
-                if hasattr(self, 'embedding_service') and self.embedding_service:
-                    parsed_query = self.embedding_service.parse_boolean_expression(keywords)
-                    
-                    keyword_conditions = []
-                    
-                    # Process MUST terms
-                    for term in parsed_query["must"]:
-                        if search_in:
-                            field_conditions = []
-                            for field in search_in:
-                                field_conditions.append({field: {"$contains": term}})
-                            if field_conditions:
-                                keyword_conditions.append({"$or": field_conditions})
-                        else:
-                            # Default to searching in Text if no fields specified
-                            keyword_conditions.append({"Text": {"$contains": term}})
-                    
-                    # Process SHOULD terms (at least one should match)
-                    should_conditions = []
-                    for term in parsed_query["should"]:
-                        if search_in:
-                            for field in search_in:
-                                should_conditions.append({field: {"$contains": term}})
-                        else:
-                            should_conditions.append({"Text": {"$contains": term}})
-                    
-                    if should_conditions:
-                        keyword_conditions.append({"$or": should_conditions})
-                    
-                    # Process MUST NOT terms
-                    for term in parsed_query["must_not"]:
-                        if search_in:
-                            field_conditions = []
-                            for field in search_in:
-                                field_conditions.append({field: {"$not": {"$contains": term}}})
-                            if field_conditions:
-                                keyword_conditions.append({"$and": field_conditions})
-                        else:
-                            keyword_conditions.append({"Text": {"$not": {"$contains": term}}})
-                    
-                    if keyword_conditions:
-                        # If we have multiple conditions, combine with $and
-                        if len(keyword_conditions) > 1:
-                            where_conditions.append({"$and": keyword_conditions})
-                        else:
-                            where_conditions.append(keyword_conditions[0])
-                else:
-                    # Fallback to simple keyword matching without boolean parsing
-                    if search_in:
-                        field_conditions = []
-                        for field in search_in:
-                            field_conditions.append({field: {"$contains": keywords}})
-                        if field_conditions:
-                            where_conditions.append({"$or": field_conditions})
-                    else:
-                        where_conditions.append({"Text": {"$contains": keywords}})
-            except Exception as e:
-                logger.error(f"Error parsing keywords '{keywords}': {e}")
-                # Add simple contains filter as fallback
-                where_conditions.append({"Text": {"$contains": keywords}})
         
         # If no conditions were added, return None
         if not where_conditions:
