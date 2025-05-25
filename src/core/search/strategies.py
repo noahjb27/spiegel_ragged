@@ -9,6 +9,8 @@ from typing import Dict, List, Optional, Tuple, Any, Callable
 import logging
 import time
 
+from src.core.retrieval_agent import RetrievalAgent
+
 from langchain.docstore.document import Document
 
 logger = logging.getLogger(__name__)
@@ -291,8 +293,8 @@ class AgentSearchStrategy(SearchStrategy):
         self.llm_service = llm_service
         self.model = model
         
-        # Import and initialize RetrievalAgent
-        from src.core.retrieval_agent import RetrievalAgent
+        # initialize RetrievalAgent
+        
         if llm_service:
             # We'll need the vector store too, but we'll get it in the search method
             self.retrieval_agent_class = RetrievalAgent
@@ -300,13 +302,11 @@ class AgentSearchStrategy(SearchStrategy):
             raise ValueError("LLM service required for agent search")
     
     def search(self, 
-              config: SearchConfig, 
-              vector_store: Any,
-              progress_callback: Optional[Callable] = None,
-              **kwargs) -> SearchResult:
-        """
-        Execute agent-based search with progressive filtering using RetrievalAgent
-        """
+            config: SearchConfig, 
+            vector_store: Any,
+            progress_callback: Optional[Callable] = None,
+            **kwargs) -> SearchResult:
+        """Execute agent-based search with progressive filtering using RetrievalAgent"""
         
         start_time = time.time()
         
@@ -317,8 +317,10 @@ class AgentSearchStrategy(SearchStrategy):
         logger.info(f"Filter stages: {self.filter_stages}")
         
         try:
-            # Initialize RetrievalAgent with vector store and LLM service
-            retrieval_agent = self.retrieval_agent_class(vector_store, self.llm_service)
+            # Use the original RetrievalAgent instead of ImprovedRetrievalAgent for now
+            # to avoid the format parameter issue
+            from src.core.retrieval_agent import RetrievalAgent
+            retrieval_agent = RetrievalAgent(vector_store, self.llm_service)
             
             # Extract additional parameters from kwargs
             question = kwargs.get('question')
@@ -350,35 +352,49 @@ class AgentSearchStrategy(SearchStrategy):
                 progress_callback("Processing agent results...", 0.8)
             
             # Convert the agent results to the expected format
-            # refined_chunks format: List[Tuple[Document, float, Optional[str]]]
-            # SearchResult expects: List[Tuple[Document, float]]
-            
+            # Handle different tuple lengths flexibly
             final_chunks = []
             evaluations = []
             
             for item in refined_chunks:
-                if len(item) == 3:
-                    doc, vector_score, eval_text = item
-                    final_chunks.append((doc, vector_score))
-                    
-                    # Store evaluation for metadata
-                    evaluations.append({
-                        "title": doc.metadata.get('Artikeltitel', 'Unknown'),
-                        "date": doc.metadata.get('Datum', 'Unknown'),
-                        "relevance_score": vector_score,
-                        "evaluation": eval_text or "No evaluation available"
-                    })
+                # Handle different tuple formats flexibly
+                if len(item) == 2:
+                    # (Document, score)
+                    doc, vector_score = item
+                    llm_eval_score = 0.5  # Default
+                    eval_text = "No LLM evaluation available"
+                elif len(item) == 3:
+                    # (Document, vector_score, eval_text) OR (Document, vector_score, llm_eval_score)
+                    doc, vector_score, third_item = item
+                    if isinstance(third_item, str):
+                        # It's eval_text
+                        llm_eval_score = 0.5  # Default
+                        eval_text = third_item
+                    else:
+                        # It's llm_eval_score
+                        llm_eval_score = third_item
+                        eval_text = "LLM evaluation available"
+                elif len(item) >= 4:
+                    # (Document, vector_score, llm_eval_score, eval_text)
+                    doc, vector_score, llm_eval_score, eval_text = item[:4]
                 else:
-                    # Handle case where evaluation text is not available
-                    doc, vector_score = item[:2]
-                    final_chunks.append((doc, vector_score))
-                    
-                    evaluations.append({
-                        "title": doc.metadata.get('Artikeltitel', 'Unknown'),
-                        "date": doc.metadata.get('Datum', 'Unknown'),
-                        "relevance_score": vector_score,
-                        "evaluation": "Evaluation not available"
-                    })
+                    # Fallback for unexpected formats
+                    doc = item[0]
+                    vector_score = 0.5
+                    llm_eval_score = 0.5
+                    eval_text = "Unknown evaluation format"
+                
+                final_chunks.append((doc, vector_score))
+                
+                # Store evaluation for metadata - USE LLM SCORE, NOT VECTOR SCORE
+                evaluations.append({
+                    "title": doc.metadata.get('Artikeltitel', 'Unknown'),
+                    "date": doc.metadata.get('Datum', 'Unknown'),
+                    "vector_similarity_score": vector_score,      # Keep vector score for reference
+                    "llm_evaluation_score": llm_eval_score,       # The important score
+                    "relevance_score": llm_eval_score,            # This is what gets displayed
+                    "evaluation": eval_text or "No evaluation available"
+                })
             
             if progress_callback:
                 progress_callback(f"Agent search completed: {len(final_chunks)} chunks", 1.0)

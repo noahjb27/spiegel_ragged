@@ -72,24 +72,11 @@ class LLMService:
         preprompt: str = "",
         postprompt: str = "",
         stream: bool = False,
-        openai_api_key: Optional[str] = None
+        openai_api_key: Optional[str] = None,
+        response_format: Optional[Dict] = None  # Add this parameter
     ) -> Dict[str, Any]:
         """
-        Generate a response from the selected LLM.
-        
-        Args:
-            question: User question
-            context: Retrieved context for RAG
-            model: Model to use (hu-llm, gpt-4o, gpt-3.5-turbo, etc.)
-            system_prompt: Optional system prompt, otherwise uses default
-            temperature: Model temperature (0-1)
-            preprompt: Optional text to add before the main prompt
-            postprompt: Optional text to add after the main prompt
-            stream: Whether to stream the response (not implemented yet)
-            openai_api_key: Optional OpenAI API key for this request
-            
-        Returns:
-            Dict with response text and metadata
+        Generate a response from the selected LLM with optional response format.
         """
         if system_prompt is None:
             system_prompt = settings.SYSTEM_PROMPTS["default"]
@@ -105,28 +92,35 @@ class LLMService:
         
         # Process request based on model
         if model.startswith("gpt-") or model == "openai":
-            # Use OpenAI
             if openai_api_key and not self.openai_client:
-                # Try to set API key if provided
                 self.set_openai_api_key(openai_api_key)
                 
             if not self.openai_client:
                 raise ValueError("OpenAI API key not set or invalid")
                 
-            # Set default model if just "openai" was specified
             if model == "openai":
                 model = "gpt-4o"
                 
             try:
-                chat_completion = self.openai_client.chat.completions.create(
-                    messages=[
+                # Build request parameters
+                request_params = {
+                    "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": prompt}
                     ],
-                    model=model,
-                    temperature=temperature,
-                    max_tokens=max_tokens
-                )
+                    "model": model,
+                    "temperature": temperature
+                }
+                
+                # Add max_tokens if specified
+                if max_tokens:
+                    request_params["max_tokens"] = max_tokens
+                    
+                # Add response_format for OpenAI if specified
+                if response_format:
+                    request_params["response_format"] = response_format
+                
+                chat_completion = self.openai_client.chat.completions.create(**request_params)
                 
                 return {
                     "text": chat_completion.choices[0].message.content,
@@ -138,22 +132,29 @@ class LLMService:
                 logger.error(f"Error generating OpenAI response: {e}")
                 raise
         else:
-            # Use HU-LLM
+            # Use HU-LLM - don't use format parameter as it's not supported
             if not self.hu_llm_models or not self.hu_llm_models.data:
                 raise ValueError("No HU-LLM models available")
             
             model_id = self.hu_llm_models.data[0].id
             
             try:
-                chat_completion = self.hu_llm_client.chat.completions.create(
-                    messages=[
+                # Build request parameters without format
+                request_params = {
+                    "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": prompt}
                     ],
-                    model=model_id,
-                    temperature=temperature,
-                    max_tokens=max_tokens
-                )
+                    "model": model_id,
+                    "temperature": temperature
+                }
+                
+                # Add max_tokens if specified
+                if max_tokens:
+                    request_params["max_tokens"] = max_tokens
+                
+                # Note: HU-LLM doesn't support format parameter
+                chat_completion = self.hu_llm_client.chat.completions.create(**request_params)
                 
                 return {
                     "text": chat_completion.choices[0].message.content,

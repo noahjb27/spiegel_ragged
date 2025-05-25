@@ -1,4 +1,4 @@
-# src/ui/handlers/agent_handlers.py - Updated for new architecture
+# src/ui/handlers/agent_handlers.py
 """
 Updated agent handlers to work with the new strategy-based architecture
 """
@@ -122,7 +122,6 @@ def perform_agent_search_and_analysis(
         logger.info(f"Analyzing {len(search_result.chunks)} chunks...")
         
         # Convert search result chunks to Document format for analysis
-        from langchain.docstore.document import Document
         documents = [doc for doc, score in search_result.chunks]
         
         analysis_result = rag_engine.analyze(
@@ -205,26 +204,59 @@ def format_process_visualization(results: Dict[str, Any]) -> str:
     return html
 
 def format_evaluations(results: Dict[str, Any]) -> str:
-    """Format the chunk evaluations as HTML."""
+    """Format evaluations with detailed score breakdown."""
     evaluations = results.get("evaluations", [])
     
     if not evaluations:
         return "<div>Keine Bewertungen verfügbar.</div>"
     
     html = "<div class='evaluations'>"
-    html += f"<h3>Bewertungen der {len(evaluations)} ausgewählten Texte</h3>"
+    html += f"<h3>Detaillierte Bewertungen der {len(evaluations)} ausgewählten Texte</h3>"
+    
+    # Add explanation of scoring
+    html += """
+    <div style='background-color: #e3f2fd; padding: 10px; margin-bottom: 15px; border-radius: 5px;'>
+        <h4>Score-Erklärung:</h4>
+        <ul>
+            <li><strong>LLM-Bewertung (0-1):</strong> Vom Sprachmodell vergebene Relevanz für Ihre Frage - <em>entscheidend für finale Auswahl</em></li>
+            <li><strong>Vektor-Ähnlichkeit (0-1):</strong> Semantische Ähnlichkeit zur Suchanfrage - <em>für initiale Filterung</em></li>
+            <li><strong>Ursprünglicher LLM-Score:</strong> Bewertung auf 0-10 Skala vor Normalisierung</li>
+        </ul>
+    </div>
+    """
     
     for i, eval_data in enumerate(evaluations):
         title = eval_data.get("title", "Unbekannter Titel")
         date = eval_data.get("date", "Unbekanntes Datum")
-        score = eval_data.get("relevance_score", 0.0)
+        
+        llm_score = eval_data.get("llm_evaluation_score", eval_data.get("relevance_score", 0.0))
+        vector_score = eval_data.get("vector_similarity_score", 0.0)
+        
+        # Calculate original 0-10 score for display
+        original_llm_score = llm_score * 10
+        
         evaluation = eval_data.get("evaluation", "Keine Bewertung verfügbar")
         
+        # Color code based on LLM score quality
+        if llm_score >= 0.8:
+            border_color = "#4caf50"  # Green for high relevance
+            bg_color = "#f1f8e9"
+        elif llm_score >= 0.6:
+            border_color = "#ff9800"  # Orange for medium relevance
+            bg_color = "#fff8e1"
+        else:
+            border_color = "#f44336"  # Red for lower relevance
+            bg_color = "#ffebee"
+        
         html += f"""
-        <div class='evaluation-card' style='border-left: 4px solid #3498db; padding: 10px; margin-bottom: 10px; background-color: #f8f9fa;'>
+        <div class='evaluation-card' style='border-left: 4px solid {border_color}; padding: 10px; margin-bottom: 10px; background-color: {bg_color};'>
             <h4>{i+1}. {title} ({date})</h4>
-            <p><strong>Relevanz:</strong> {score:.3f}</p>
-            <p><strong>Bewertung:</strong> {evaluation}</p>
+            <div style='display: flex; gap: 20px; margin-bottom: 10px;'>
+                <div><strong>LLM-Bewertung:</strong> {llm_score:.3f}</div>
+                <div><strong>Ursprünglicher Score:</strong> {original_llm_score:.1f}/10</div>
+                <div><strong>Vektor-Ähnlichkeit:</strong> {vector_score:.3f}</div>
+            </div>
+            <p><strong>Begründung:</strong> {evaluation}</p>
         </div>
         """
     
