@@ -1,7 +1,7 @@
-# src/core/retrieval_agent_improved.py
+# src/core/retrieval_agent.py - FIXED VERSION
 """
-Enhanced RetrievalAgent with robust JSON handling and structured evaluation.
-Drop-in replacement for the existing RetrievalAgent.
+Fixed RetrievalAgent with proper JSON handling that works with both HU-LLM and OpenAI.
+The main fix is removing the unsupported 'format' parameter and using proper prompting.
 """
 import logging
 import json
@@ -61,15 +61,15 @@ class EvaluationResponse(BaseModel):
 
 class RetrievalAgent:
     """
-    Enhanced RetrievalAgent with robust structured evaluation.
-    Direct replacement for the original RetrievalAgent.
+    Fixed RetrievalAgent with proper JSON handling for both HU-LLM and OpenAI.
+    Main fix: removed unsupported 'format' parameter and improved prompting.
     """
     
     def __init__(self, vector_store: ChromaDBInterface, llm_service: LLMService):
         self.vector_store = vector_store
         self.llm_service = llm_service
         self.evaluation_adapter = TypeAdapter(EvaluationResponse)
-        logger.info("Initialized ImprovedRetrievalAgent with structured evaluation")
+        logger.info("Initialized Fixed RetrievalAgent with proper JSON handling")
     
     def retrieve_and_refine(
         self,
@@ -85,10 +85,9 @@ class RetrievalAgent:
         model: str = "hu-llm",
         openai_api_key: Optional[str] = None,
         with_evaluations: bool = True
-    ) -> Tuple[List[Tuple[Document, float, Optional[str]]], Dict[str, Any]]:
+    ) -> Tuple[List[Tuple[Document, float, float, str]], Dict[str, Any]]:
         """
-        Enhanced retrieval and refinement with structured evaluation.
-        Maintains same interface as original for compatibility.
+        Fixed retrieval and refinement with proper JSON handling.
         """
         start_time = time.time()
         stage_times = []
@@ -98,10 +97,10 @@ class RetrievalAgent:
         chunk_size = chunk_size or settings.DEFAULT_CHUNK_SIZE
         year_range = year_range or [settings.MIN_YEAR, settings.MAX_YEAR]
         
-        logger.info(f"Starting enhanced retrieval agent with question: '{question}'")
+        logger.info(f"Starting fixed retrieval agent with question: '{question}'")
         logger.info(f"Initial retrieval count: {initial_retrieval_count}, Filter stages: {filter_stages}")
         
-        # Step 1: Initial retrieval (same as original)
+        # Step 1: Initial retrieval
         retrieval_start = time.time()
         filter_dict = self.vector_store.build_metadata_filter(
             year_range=year_range,
@@ -138,7 +137,7 @@ class RetrievalAgent:
         
         current_chunks = initial_chunks
         
-        # Step 2: Enhanced iterative refinement
+        # Step 2: Fixed iterative refinement
         for i, target_count in enumerate(filter_stages):
             stage_start = time.time()
             
@@ -146,15 +145,15 @@ class RetrievalAgent:
                 logger.info(f"Skipping filter stage {i+1} as we already have {len(current_chunks)} ≤ {target_count} chunks")
                 continue
                 
-            logger.info(f"Starting enhanced filter stage {i+1}: {len(current_chunks)} → {target_count} chunks")
+            logger.info(f"Starting fixed filter stage {i+1}: {len(current_chunks)} → {target_count} chunks")
             
-            # Use enhanced evaluation
-            evaluated_chunks = self._evaluate_chunks_structured(
+            # Use fixed evaluation
+            evaluated_chunks = self._evaluate_chunks_fixed(
                 question=question,
                 chunks=current_chunks,
                 model=model,
                 openai_api_key=openai_api_key,
-                batch_size=min(20, len(current_chunks))  # Smaller batches for better reliability
+                batch_size=min(15, len(current_chunks))  # Smaller batches for reliability
             )
             
             # Sort by evaluation score and keep top chunks
@@ -162,14 +161,14 @@ class RetrievalAgent:
             current_chunks = [(doc, score, eval_text) for doc, score, eval_score, eval_text in evaluated_chunks[:target_count]]
             
             stage_time = time.time() - stage_start
-            stage_times.append((f"Enhanced Filter Stage {i+1}", stage_time))
+            stage_times.append((f"Fixed Filter Stage {i+1}", stage_time))
             stage_results.append(len(current_chunks))
             
-            logger.info(f"Completed enhanced filter stage {i+1}: reduced to {len(current_chunks)} chunks in {stage_time:.2f}s")
+            logger.info(f"Completed fixed filter stage {i+1}: reduced to {len(current_chunks)} chunks in {stage_time:.2f}s")
         
         # Return final results
         total_time = time.time() - start_time
-        logger.info(f"Enhanced retrieval agent completed in {total_time:.2f}s")
+        logger.info(f"Fixed retrieval agent completed in {total_time:.2f}s")
         
         if not with_evaluations:
             final_chunks = [(doc, score, None) for doc, score, eval_text in current_chunks]
@@ -184,50 +183,50 @@ class RetrievalAgent:
             "initial_retrieval_count": initial_retrieval_count,
             "filter_stages": filter_stages,
             "final_chunk_count": len(final_chunks),
-            "enhancement": "structured_evaluation"
+            "enhancement": "fixed_json_handling"
         }
         
         return final_chunks, metadata
     
-    def _evaluate_chunks_structured(
+    def _evaluate_chunks_fixed(
         self,
         question: str,
         chunks: List,
         model: str = "hu-llm",
         openai_api_key: Optional[str] = None,
-        batch_size: int = 20
+        batch_size: int = 15
     ) -> List[Tuple[Document, float, float, str]]:
         """
-        Enhanced chunk evaluation with structured JSON responses.
-        Replacement for the original _evaluate_chunks method.
+        Fixed chunk evaluation that works with both HU-LLM and OpenAI.
+        Main fix: removed unsupported format parameter.
         """
         if not chunks:
             return []
             
         all_evaluated_chunks = []
         
-        # Process chunks in batches
+        # Process chunks in smaller batches for reliability
         chunk_batches = [chunks[i:i + batch_size] for i in range(0, len(chunks), batch_size)]
-        logger.info(f"Evaluating chunks in {len(chunk_batches)} batches using structured approach")
+        logger.info(f"Evaluating chunks in {len(chunk_batches)} batches using fixed approach")
         
         for batch_idx, batch in enumerate(chunk_batches):
-            logger.info(f"Processing structured evaluation batch {batch_idx + 1}/{len(chunk_batches)}")
-            batch_result = self._evaluate_batch_structured(question, batch, model, openai_api_key)
+            logger.info(f"Processing fixed evaluation batch {batch_idx + 1}/{len(chunk_batches)}")
+            batch_result = self._evaluate_batch_fixed(question, batch, model, openai_api_key)
             all_evaluated_chunks.extend(batch_result)
             
         return all_evaluated_chunks
     
-    def _evaluate_batch_structured(
+    def _evaluate_batch_fixed(
         self,
         question: str,
         chunks: List,
         model: str,
         openai_api_key: Optional[str] = None,
-        max_retries: int = 3
+        max_retries: int = 2
     ) -> List[Tuple[Document, float, float, str]]:
         """
-        Evaluate a batch of chunks using structured JSON output.
-        Enhanced version with robust error handling and schema validation.
+        Fixed batch evaluation that works with both HU-LLM and OpenAI.
+        Key fix: removed format parameter and improved prompting.
         """
         # Prepare chunk data for evaluation
         chunk_summaries = []
@@ -237,95 +236,83 @@ class RetrievalAgent:
             else:
                 doc, score, _ = chunk_data
             
-            # Create structured chunk summary
             chunk_summaries.append({
                 "id": i + 1,
                 "title": doc.metadata.get('Artikeltitel', 'No title')[:100],
                 "date": doc.metadata.get('Datum', 'Unknown'),
-                "content_preview": doc.page_content[:300] + "..." if len(doc.page_content) > 300 else doc.page_content
+                "content_preview": doc.page_content[:400] + "..." if len(doc.page_content) > 400 else doc.page_content
             })
         
-        # Prepare structured messages
-        messages = [
-            {
-                "role": "system",
-                "content": """Du bist ein Experte für die Bewertung historischer Dokumente. 
-                Bewerte jeden Textabschnitt für seine Relevanz zur Forschungsfrage auf einer Skala von 0-10.
-                Berücksichtige: faktische Relevanz, historischen Kontext, Spezifität und zeitliche Relevanz.
-                Antworte AUSSCHLIESSLICH mit gültigem JSON im angegebenen Format.
-                Sei kritisch - die meisten Chunks sollten 3-7 bekommen, nur außergewöhnliche erhalten 8-10."""
-            },
-            {
-                "role": "user",
-                "content": f"""Forschungsfrage: {question}
+        # Use LLM service's generate_response method instead of direct API calls
+        system_prompt = """Du bist ein Experte für die Bewertung historischer Dokumente. 
+Bewerte jeden Textabschnitt für seine Relevanz zur Forschungsfrage auf einer Skala von 0-10.
+Berücksichtige: faktische Relevanz, historischen Kontext, Spezifität und zeitliche Relevanz.
 
-                Bewerte diese {len(chunk_summaries)} Textabschnitte:
+WICHTIG: Antworte AUSSCHLIESSLICH mit gültigem JSON im folgenden Format:
+{
+  "evaluations": [
+    {
+      "chunk_id": 1,
+      "score": 7.5,
+      "explanation": "Kurze Begründung der Bewertung",
+      "confidence": "high"
+    }
+  ],
+  "batch_summary": "Kurze Zusammenfassung des Bewertungsansatzes"
+}
 
-                {json.dumps(chunk_summaries, indent=2, ensure_ascii=False)}
+Sei kritisch - die meisten Chunks sollten 3-7 bekommen, nur außergewöhnliche erhalten 8-10."""
 
-                Gib für jeden Chunk eine strukturierte Bewertung zurück. Format:
-                {{
-                "evaluations": [
-                    {{
-                    "chunk_id": 1,
-                    "score": 7.5,
-                    "explanation": "Klare Begründung für die Bewertung",
-                    "confidence": "high"
-                    }}
-                ],
-                "batch_summary": "Kurze Zusammenfassung des Bewertungsansatzes"
-                }}"""
-            }
-        ]
-        
-        # Attempt structured evaluation with retries
+        user_prompt = f"""Forschungsfrage: {question}
+
+Bewerte diese {len(chunk_summaries)} Textabschnitte:
+
+{json.dumps(chunk_summaries, indent=2, ensure_ascii=False)}
+
+Gib für jeden Chunk eine strukturierte Bewertung zurück."""
+
+        # Attempt evaluation with retries
         for attempt in range(max_retries):
             try:
-                logger.info(f"Structured evaluation attempt {attempt + 1}")
+                logger.info(f"Fixed evaluation attempt {attempt + 1}")
                 
-                # Generate response with appropriate method
-                if model.startswith("gpt"):
-                    # OpenAI with JSON mode
-                    response = self.llm_service.openai_client.chat.completions.create(
-                        messages=messages,
-                        model=model,
-                        temperature=0.2,
-                        response_format={"type": "json_object"}
-                    )
-                    response_text = response.choices[0].message.content
-                else:
-                    # HU-LLM or other models with schema enforcement
-                    response = self.llm_service.hu_llm_client.chat.completions.create(
-                        messages=messages,
-                        model=model,
-                        temperature=0.2,
-                        format=self.evaluation_adapter.json_schema() if hasattr(self.evaluation_adapter, 'json_schema') else ""
-                    )
-                    response_text = response.choices[0].message.content
+                # Use the LLM service's generate_response method
+                response = self.llm_service.generate_response(
+                    question=user_prompt,
+                    context="",  # No additional context needed
+                    model=model,
+                    system_prompt=system_prompt,
+                    temperature=0.2,
+                    max_tokens=2000,  # Ensure enough tokens for JSON response
+                    openai_api_key=openai_api_key,
+                    response_format={"type": "json_object"} if model.startswith("gpt") else None
+                )
+                
+                response_text = response.get('text', '')
                 
                 # Extract and validate JSON
-                validated_response = self._extract_and_validate_json(response_text)
+                validated_response = self._extract_and_validate_json_fixed(response_text)
                 
                 if validated_response:
-                    logger.info(f"Successfully parsed structured evaluation for batch")
-                    return self._process_structured_response(chunks, validated_response)
+                    logger.info(f"Successfully parsed fixed evaluation for batch")
+                    return self._process_fixed_response(chunks, validated_response)
                 else:
                     raise ValueError("Failed to extract valid JSON from response")
                 
             except Exception as e:
-                logger.warning(f"Structured evaluation attempt {attempt + 1} failed: {e}")
+                logger.warning(f"Fixed evaluation attempt {attempt + 1} failed: {e}")
                 if attempt == max_retries - 1:
-                    logger.error(f"All structured evaluation attempts failed, using fallback")
-                    return self._fallback_evaluation(chunks)
+                    logger.error(f"All fixed evaluation attempts failed, using simple evaluation")
+                    return self._simple_evaluation(chunks, question, model, openai_api_key)
         
-        return self._fallback_evaluation(chunks)
+        return self._simple_evaluation(chunks, question, model, openai_api_key)
     
-    def _extract_and_validate_json(self, response_text: str) -> Optional[EvaluationResponse]:
+    def _extract_and_validate_json_fixed(self, response_text: str) -> Optional[EvaluationResponse]:
         """
-        Extract and validate JSON from LLM response using multiple methods.
+        Fixed JSON extraction that's more robust.
         """
         try:
-            # Method 1: Direct JSON parsing (cleanest response)
+            # Method 1: Direct JSON parsing
             try:
                 json_data = json.loads(response_text.strip())
                 return self.evaluation_adapter.validate_python(json_data)
@@ -334,16 +321,29 @@ class RetrievalAgent:
             
             # Method 2: Use jsonfinder for robust extraction
             if jsonfinder:
-                json_objects = [obj for _, _, obj in jsonfinder.jsonfinder(response_text) if obj is not None]
-                if json_objects:
-                    return self.evaluation_adapter.validate_python(json_objects[0])
+                try:
+                    json_objects = [obj for _, _, obj in jsonfinder.jsonfinder(response_text) if obj is not None]
+                    if json_objects:
+                        return self.evaluation_adapter.validate_python(json_objects[0])
+                except Exception:
+                    pass
             
             # Method 3: Regex extraction as fallback
-            json_match = re.search(r'```json\s*\n(.*?)\n\s*```|(\{[\s\S]*\})', response_text, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(1) or json_match.group(2)
-                json_data = json.loads(json_str)
-                return self.evaluation_adapter.validate_python(json_data)
+            json_patterns = [
+                r'```json\s*\n(.*?)\n\s*```',
+                r'```\s*\n(\{[\s\S]*?\})\s*\n```',
+                r'(\{[\s\S]*"evaluations"[\s\S]*\})'
+            ]
+            
+            for pattern in json_patterns:
+                match = re.search(pattern, response_text, re.DOTALL)
+                if match:
+                    try:
+                        json_str = match.group(1)
+                        json_data = json.loads(json_str)
+                        return self.evaluation_adapter.validate_python(json_data)
+                    except Exception:
+                        continue
             
             logger.warning("No valid JSON found in response")
             return None
@@ -352,12 +352,12 @@ class RetrievalAgent:
             logger.error(f"JSON extraction failed: {e}")
             return None
     
-    def _process_structured_response(
+    def _process_fixed_response(
         self, 
         chunks: List, 
         validated_response: EvaluationResponse
     ) -> List[Tuple[Document, float, float, str]]:
-        """Process validated structured response into expected format"""
+        """Process validated response into expected format"""
         results = []
         
         for chunk_data, evaluation in zip(chunks, validated_response.evaluations):
@@ -380,30 +380,65 @@ class RetrievalAgent:
             
             results.append((doc, vector_score, weighted_score, eval_text))
         
-        logger.info(f"Processed {len(results)} structured evaluations")
+        logger.info(f"Processed {len(results)} fixed evaluations with meaningful scores")
         return results
     
-    def _fallback_evaluation(self, chunks: List) -> List[Tuple[Document, float, float, str]]:
-        """Fallback evaluation when structured approach fails"""
-        logger.warning("Using fallback evaluation due to structured evaluation failure")
+    def _simple_evaluation(
+        self,
+        chunks: List,
+        question: str,
+        model: str,
+        openai_api_key: Optional[str] = None
+    ) -> List[Tuple[Document, float, float, str]]:
+        """
+        Simple evaluation fallback that still provides meaningful scores.
+        """
+        logger.info("Using simple evaluation fallback with LLM scoring")
         
         results = []
+        
         for chunk_data in chunks:
             if len(chunk_data) == 2:
                 doc, vector_score = chunk_data
             else:
                 doc, vector_score, _ = chunk_data
             
-            # Assign neutral evaluation with indication of fallback
-            fallback_score = 0.5
-            eval_text = "Fallback evaluation used (structured evaluation failed)"
+            try:
+                # Create a simple relevance prompt
+                simple_prompt = f"""Bewerte die Relevanz dieses Textabschnitts für die Frage "{question}" auf einer Skala von 0-10.
+Antworte nur mit einer Zahl zwischen 0 und 10.
+
+Text: {doc.page_content[:500]}...
+
+Score (0-10):"""
+                
+                response = self.llm_service.generate_response(
+                    question=simple_prompt,
+                    context="",
+                    model=model,
+                    system_prompt="Du bist ein Experte für Dokumentenbewertung. Antworte nur mit einer Zahl.",
+                    temperature=0.1,
+                    max_tokens=5,
+                    openai_api_key=openai_api_key
+                )
+                
+                # Extract score from response
+                score_text = response.get('text', '5').strip()
+                try:
+                    simple_score = float(re.findall(r'\d+\.?\d*', score_text)[0])
+                    simple_score = max(0, min(10, simple_score))  # Clamp to 0-10
+                    eval_score = simple_score / 10.0  # Normalize to 0-1
+                except (ValueError, IndexError):
+                    eval_score = 0.5  # Default fallback
+                
+                eval_text = f"Simple evaluation score: {simple_score}/10"
+                
+            except Exception as e:
+                logger.warning(f"Simple evaluation failed for chunk: {e}")
+                eval_score = 0.5
+                eval_text = "Simple evaluation failed, using default score"
             
-            results.append((doc, vector_score, fallback_score, eval_text))
+            results.append((doc, vector_score, eval_score, eval_text))
         
+        logger.info(f"Completed simple evaluation for {len(results)} chunks")
         return results
-
-
-# Drop-in replacement function for easy migration
-def create_improved_retrieval_agent(vector_store: ChromaDBInterface, llm_service: LLMService):
-    """Factory function to create improved retrieval agent"""
-    return RetrievalAgent(vector_store, llm_service)
