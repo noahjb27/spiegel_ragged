@@ -14,18 +14,29 @@ from langchain.docstore.document import Document
 logger = logging.getLogger(__name__)
 
 
+
 @dataclass
 class SearchConfig:
-    """Unified configuration for all search types"""
+    """Unified configuration for all search types with consistent field names"""
     content_description: str
     year_range: Tuple[int, int] = (1948, 1979)
     chunk_size: int = 3000
     keywords: Optional[str] = None
-    search_fields: List[str] = field(default_factory=lambda: ["Text"])
+    search_fields: List[str] = field(default_factory=lambda: ["Text"])  # Changed from search_in
     enforce_keywords: bool = True
     top_k: int = 10
     min_relevance_score: float = 0.3
     
+    # Add compatibility property for legacy code
+    @property
+    def search_in(self) -> List[str]:
+        """Compatibility property for legacy code that uses 'search_in'"""
+        return self.search_fields
+    
+    @search_in.setter
+    def search_in(self, value: List[str]):
+        """Compatibility setter for legacy code"""
+        self.search_fields = value
 
 @dataclass
 class SearchResult:
@@ -139,20 +150,27 @@ class TimeWindowSearchStrategy(SearchStrategy):
             window_end = min(window_start + self.window_size - 1, end_year)
             windows.append((window_start, window_end))
         
-        logger.info(f"Searching across {len(windows)} time windows")
+        logger.info(f"Searching across {len(windows)} time windows of size {self.window_size}")
+        logger.info(f"Windows: {windows}")
         
         if progress_callback:
             progress_callback(f"Searching {len(windows)} time windows...", 0.0)
         
-        # Calculate results per window
-        results_per_window = max(1, config.top_k // len(windows))
+        # Calculate results per window - ensure we get at least 1 result per window
+        base_results_per_window = max(1, config.top_k // len(windows))
+        # Add some extra to account for filtering and ensure we have enough
+        results_per_window = base_results_per_window + 2
+        
         all_chunks = []
+        window_counts = {}
         
         # Search each window
         for i, (window_start, window_end) in enumerate(windows):
             if progress_callback:
                 progress = (i / len(windows))
                 progress_callback(f"Searching {window_start}-{window_end}...", progress)
+            
+            logger.info(f"Searching window {i+1}/{len(windows)}: {window_start}-{window_end}")
             
             # Create window-specific filter
             window_filter = vector_store.build_metadata_filter(
@@ -161,28 +179,85 @@ class TimeWindowSearchStrategy(SearchStrategy):
                 search_in=None
             )
             
-            # Search this window
-            window_chunks = vector_store.similarity_search(
-                query=config.content_description,
-                chunk_size=config.chunk_size,
-                k=results_per_window,
-                filter_dict=window_filter,
-                min_relevance_score=config.min_relevance_score,
-                keywords=config.keywords,
-                search_in=config.search_fields,
-                enforce_keywords=config.enforce_keywords
-            )
+            logger.info(f"Window filter: {window_filter}")
             
-            all_chunks.extend(window_chunks)
+            try:
+                # Search this window
+                window_chunks = vector_store.similarity_search(
+                    query=config.content_description,
+                    chunk_size=config.chunk_size,
+                    k=results_per_window,
+                    filter_dict=window_filter,
+                    min_relevance_score=config.min_relevance_score,
+                    keywords=config.keywords,
+                    search_in=config.search_fields,
+                    enforce_keywords=config.enforce_keywords
+                )
+                
+                logger.info(f"Window {window_start}-{window_end}: found {len(window_chunks)} chunks")
+                
+                # Track window statistics
+                window_key = f"{window_start}-{window_end}"
+                window_counts[window_key] = len(window_chunks)
+                
+                # Add window metadata to each chunk
+                for doc, score in window_chunks:
+                    # Add window info to metadata
+                    doc.metadata['time_window'] = window_key
+                    doc.metadata['window_start'] = window_start
+                    doc.metadata['window_end'] = window_end
+                
+                all_chunks.extend(window_chunks)
+                
+            except Exception as e:
+                logger.error(f"Error searching window {window_start}-{window_end}: {e}")
+                window_counts[f"{window_start}-{window_end}"] = 0
+                # Continue with other windows
+                continue
         
-        # Sort by relevance and take top_k
+        logger.info(f"Total chunks from all windows: {len(all_chunks)}")
+        logger.info(f"Window distribution: {window_counts}")
+        
+        if not all_chunks:
+            logger.warning("No chunks found in any time window")
+            if progress_callback:
+                progress_callback("No results found", 1.0)
+            
+            return SearchResult(
+                chunks=[],
+                metadata={
+                    "strategy": "time_window",
+                    "search_time": time.time() - start_time,
+                    "window_size": self.window_size,
+                    "windows": windows,
+                    "window_counts": window_counts,
+                    "error": "No results found in any time window",
+                    "config": {
+                        "year_range": config.year_range,
+                        "chunk_size": config.chunk_size,
+                        "keywords": config.keywords
+                    }
+                }
+            )
+        
+        # Sort by relevance score (highest first) and take top_k
         all_chunks.sort(key=lambda x: x[1], reverse=True)
         final_chunks = all_chunks[:config.top_k]
+        
+        logger.info(f"Final selection: {len(final_chunks)} chunks")
         
         if progress_callback:
             progress_callback(f"Found {len(final_chunks)} chunks", 1.0)
         
         search_time = time.time() - start_time
+        
+        # Log final distribution
+        final_window_dist = {}
+        for doc, score in final_chunks:
+            window_key = doc.metadata.get('time_window', 'unknown')
+            final_window_dist[window_key] = final_window_dist.get(window_key, 0) + 1
+        
+        logger.info(f"Final distribution across windows: {final_window_dist}")
         
         return SearchResult(
             chunks=final_chunks,
@@ -191,6 +266,10 @@ class TimeWindowSearchStrategy(SearchStrategy):
                 "search_time": search_time,
                 "window_size": self.window_size,
                 "windows": windows,
+                "window_counts": window_counts,
+                "final_distribution": final_window_dist,
+                "total_chunks_found": len(all_chunks),
+                "final_chunks_selected": len(final_chunks),
                 "config": {
                     "year_range": config.year_range,
                     "chunk_size": config.chunk_size,
@@ -199,9 +278,8 @@ class TimeWindowSearchStrategy(SearchStrategy):
             }
         )
 
-
 class AgentSearchStrategy(SearchStrategy):
-    """Multi-stage filtered search with LLM evaluation"""
+    """Multi-stage filtered search with LLM evaluation using existing RetrievalAgent"""
     
     def __init__(self, 
                  initial_count: int = 100,
@@ -212,106 +290,135 @@ class AgentSearchStrategy(SearchStrategy):
         self.filter_stages = filter_stages or [50, 20, 10]
         self.llm_service = llm_service
         self.model = model
+        
+        # Import and initialize RetrievalAgent
+        from src.core.retrieval_agent import RetrievalAgent
+        if llm_service:
+            # We'll need the vector store too, but we'll get it in the search method
+            self.retrieval_agent_class = RetrievalAgent
+        else:
+            raise ValueError("LLM service required for agent search")
     
     def search(self, 
               config: SearchConfig, 
               vector_store: Any,
-              progress_callback: Optional[Callable] = None) -> SearchResult:
-        """Execute agent-based search with progressive filtering"""
-        
-        if not self.llm_service:
-            raise ValueError("LLM service required for agent search")
+              progress_callback: Optional[Callable] = None,
+              **kwargs) -> SearchResult:
+        """
+        Execute agent-based search with progressive filtering using RetrievalAgent
+        """
         
         start_time = time.time()
-        stage_times = []
         
         if progress_callback:
-            progress_callback("Starting agent search...", 0.0)
+            progress_callback("Initializing agent search...", 0.0)
         
-        # Stage 1: Initial broad retrieval
-        stage_start = time.time()
-        filter_dict = self._build_metadata_filter(vector_store, config.year_range)
+        logger.info(f"Starting agent search with {self.initial_count} initial chunks")
+        logger.info(f"Filter stages: {self.filter_stages}")
         
-        initial_chunks = vector_store.similarity_search(
-            query=config.content_description,
-            chunk_size=config.chunk_size,
-            k=self.initial_count,
-            filter_dict=filter_dict,
-            min_relevance_score=0.25,  # Lower threshold for initial retrieval
-            keywords=config.keywords,
-            search_in=config.search_fields,
-            enforce_keywords=config.enforce_keywords
-        )
-        
-        stage_times.append(("Initial Retrieval", time.time() - stage_start))
-        
-        if not initial_chunks:
+        try:
+            # Initialize RetrievalAgent with vector store and LLM service
+            retrieval_agent = self.retrieval_agent_class(vector_store, self.llm_service)
+            
+            # Extract additional parameters from kwargs
+            question = kwargs.get('question')
+            openai_api_key = kwargs.get('openai_api_key')
+            
+            # Use content_description as the question if no specific question provided
+            search_question = question or config.content_description
+            
+            if progress_callback:
+                progress_callback("Running agent retrieval and refinement...", 0.2)
+            
+            # Call the existing retrieve_and_refine method
+            refined_chunks, agent_metadata = retrieval_agent.retrieve_and_refine(
+                question=search_question,
+                content_description=config.content_description,
+                year_range=list(config.year_range),
+                chunk_size=config.chunk_size,
+                keywords=config.keywords,
+                search_in=config.search_fields,
+                enforce_keywords=config.enforce_keywords,
+                initial_retrieval_count=self.initial_count,
+                filter_stages=self.filter_stages,
+                model=self.model,
+                openai_api_key=openai_api_key,
+                with_evaluations=True
+            )
+            
+            if progress_callback:
+                progress_callback("Processing agent results...", 0.8)
+            
+            # Convert the agent results to the expected format
+            # refined_chunks format: List[Tuple[Document, float, Optional[str]]]
+            # SearchResult expects: List[Tuple[Document, float]]
+            
+            final_chunks = []
+            evaluations = []
+            
+            for item in refined_chunks:
+                if len(item) == 3:
+                    doc, vector_score, eval_text = item
+                    final_chunks.append((doc, vector_score))
+                    
+                    # Store evaluation for metadata
+                    evaluations.append({
+                        "title": doc.metadata.get('Artikeltitel', 'Unknown'),
+                        "date": doc.metadata.get('Datum', 'Unknown'),
+                        "relevance_score": vector_score,
+                        "evaluation": eval_text or "No evaluation available"
+                    })
+                else:
+                    # Handle case where evaluation text is not available
+                    doc, vector_score = item[:2]
+                    final_chunks.append((doc, vector_score))
+                    
+                    evaluations.append({
+                        "title": doc.metadata.get('Artikeltitel', 'Unknown'),
+                        "date": doc.metadata.get('Datum', 'Unknown'),
+                        "relevance_score": vector_score,
+                        "evaluation": "Evaluation not available"
+                    })
+            
+            if progress_callback:
+                progress_callback(f"Agent search completed: {len(final_chunks)} chunks", 1.0)
+            
+            search_time = time.time() - start_time
+            
+            logger.info(f"Agent search completed: {len(final_chunks)} final chunks in {search_time:.2f}s")
+            
+            return SearchResult(
+                chunks=final_chunks,
+                metadata={
+                    "strategy": "agent",
+                    "search_time": search_time,
+                    "initial_count": self.initial_count,
+                    "filter_stages": self.filter_stages,
+                    "agent_metadata": agent_metadata,
+                    "evaluations": evaluations,
+                    "model_used": self.model,
+                    "question": search_question,
+                    "config": {
+                        "year_range": config.year_range,
+                        "chunk_size": config.chunk_size,
+                        "keywords": config.keywords
+                    }
+                }
+            )
+            
+        except Exception as e:
+            logger.error(f"Agent search failed: {e}", exc_info=True)
+            
+            if progress_callback:
+                progress_callback(f"Agent search failed: {str(e)}", 1.0)
+            
             return SearchResult(
                 chunks=[],
                 metadata={
                     "strategy": "agent",
-                    "error": "No initial chunks found",
-                    "search_time": time.time() - start_time
+                    "search_time": time.time() - start_time,
+                    "error": str(e),
+                    "initial_count": self.initial_count,
+                    "filter_stages": self.filter_stages
                 }
             )
-        
-        # Progressive filtering stages
-        current_chunks = initial_chunks
-        evaluations = []
-        
-        for i, target_count in enumerate(self.filter_stages):
-            if len(current_chunks) <= target_count:
-                continue
-            
-            stage_start = time.time()
-            
-            if progress_callback:
-                progress = (i + 1) / (len(self.filter_stages) + 1)
-                progress_callback(f"Filtering stage {i+1}: {len(current_chunks)} → {target_count}", progress)
-            
-            # Evaluate chunks with LLM
-            evaluated_chunks = self._evaluate_chunks(
-                chunks=current_chunks,
-                question=config.content_description,
-                top_k=target_count
-            )
-            
-            current_chunks = evaluated_chunks[:target_count]
-            evaluations.extend(evaluated_chunks)
-            
-            stage_times.append((f"Filter Stage {i+1}", time.time() - stage_start))
-        
-        if progress_callback:
-            progress_callback(f"Completed with {len(current_chunks)} chunks", 1.0)
-        
-        search_time = time.time() - start_time
-        
-        return SearchResult(
-            chunks=current_chunks,
-            metadata={
-                "strategy": "agent",
-                "search_time": search_time,
-                "initial_count": self.initial_count,
-                "filter_stages": self.filter_stages,
-                "stage_times": stage_times,
-                "evaluations": evaluations[:len(current_chunks)],
-                "config": {
-                    "year_range": config.year_range,
-                    "chunk_size": config.chunk_size,
-                    "keywords": config.keywords
-                }
-            }
-        )
-    
-    def _evaluate_chunks(self, 
-                        chunks: List[Tuple[Document, float]], 
-                        question: str,
-                        top_k: int) -> List[Tuple[Document, float]]:
-        """
-        Evaluate chunks using LLM (simplified version).
-        In production, this would batch evaluate chunks.
-        """
-        # This is a simplified placeholder
-        # The actual implementation would use the LLM to score chunks
-        # For now, just return sorted by existing scores
-        return sorted(chunks, key=lambda x: x[1], reverse=True)[:top_k]
