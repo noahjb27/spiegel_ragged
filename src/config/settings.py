@@ -1,92 +1,307 @@
 """
-Application settings loaded from environment variables.
+Enhanced application settings for Spiegel RAG System (1948-1979).
+Cleaned up version with enhanced system prompts for historical analysis.
 """
 import os
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, List, Optional
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
+# =============================================================================
+# API SETTINGS
+# =============================================================================
+
 # LLM API Settings
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 HU_LLM_API_URL = os.getenv("HU_LLM_API_URL", "https://llm3-compute.cms.hu-berlin.de/v1/")
 
-# Vector Database Settings - REMOTE ONLY
+# Remote ChromaDB Settings
 CHROMA_DB_HOST = os.getenv("CHROMA_DB_HOST", "dighist.geschichte.hu-berlin.de")
 CHROMA_DB_PORT = int(os.getenv("CHROMA_DB_PORT", "8000"))
 CHROMA_DB_SSL = os.getenv("CHROMA_DB_SSL", "true").lower() == "true"
-
-# Local path only needed for cache
 CHROMA_DB_CACHE_DIR = os.getenv("CHROMA_DB_CACHE_DIR", "./cache")
 
-# Embedding Settings - REMOTE OLLAMA ONLY 
+# Remote Ollama Embedding Settings
 OLLAMA_MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "nomic-embed-text")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "https://dighist.geschichte.hu-berlin.de:11434")
+
+# =============================================================================
+# PATH SETTINGS
+# =============================================================================
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WORD_EMBEDDING_MODEL_PATH = os.path.join(BASE_DIR, "models", "fasttext_model_spiegel_corpus_neu_50epochs_2.model")
 
-# Chunk Settings
+# =============================================================================
+# SEARCH AND RETRIEVAL SETTINGS
+# =============================================================================
+
+# Chunk Settings - Only these sizes are available in ChromaDB
 DEFAULT_CHUNK_SIZE = int(os.getenv("DEFAULT_CHUNK_SIZE", "3000"))
 DEFAULT_CHUNK_OVERLAP_PERCENTAGE = int(os.getenv("DEFAULT_CHUNK_OVERLAP_PERCENTAGE", "10"))
-AVAILABLE_CHUNK_SIZES = [2000, 3000]  # Nur diese beiden Größen sind verfügbar
+AVAILABLE_CHUNK_SIZES = [2000, 3000]
 
-# Default LLM Model
-DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "hu-llm")
-AVAILABLE_LLM_MODELS = ["hu-llm", "gpt4o"]
-
-# Time range settings
+# Time Range Settings - Spiegel Archive Coverage
 MIN_YEAR = 1948
 MAX_YEAR = 1979
 
-# Application Settings
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+# Default Search Settings
+DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "hu-llm")
+AVAILABLE_LLM_MODELS = ["hu-llm", "openai-gpt4o", "openai-gpt35"]
 
-# Collection name format (used in vector_store.py)
+# Semantic Expansion Settings
+ENABLE_SEMANTIC_EXPANSION = True
+DEFAULT_SEMANTIC_EXPANSION_FACTOR = 3
+
+# =============================================================================
+# COLLECTION NAME GENERATION
+# =============================================================================
+
 def get_collection_name(
     chunk_size: int, 
     chunk_overlap: Optional[int] = None,
     embedding_model: str = "nomic-embed-text"
 ) -> str:
     """Generate collection name based on chunk size and overlap."""
-    # Verwende die spezifischen Überlappungswerte für die verfügbaren Kollektionen
+    # Use specific overlap values for available collections
     if chunk_overlap is None:
-        if chunk_size == 2000:
-            chunk_overlap = 400
-        elif chunk_size == 3000:
-            chunk_overlap = 300
-        else:
-            # Fallback zur ursprünglichen Berechnung
-            chunk_overlap = chunk_size // 10
+        overlap_map = {2000: 400, 3000: 300}
+        chunk_overlap = overlap_map.get(chunk_size, 300)
     
     return f"recursive_chunks_{chunk_size}_{chunk_overlap}_TH_cosine_{embedding_model}"
 
-# Add feature flags
+# =============================================================================
+# ENHANCED SYSTEM PROMPTS FOR HISTORICAL ANALYSIS
+# =============================================================================
+
+SYSTEM_PROMPTS = {
+    "default": """Du bist ein spezialisierter Assistent für die historische Analyse von SPIEGEL-Artikeln aus den Jahren 1948-1979. 
+
+Deine Aufgabe:
+- Beantworte Fragen ausschließlich basierend auf den bereitgestellten Textauszügen
+- Berücksichtige den historischen Kontext der Nachkriegszeit und frühen Bundesrepublik
+- Verweise präzise auf Quellen mit Datum und Titel
+- Achte auf zeitgenössische Perspektiven und Terminologie
+- Bei unzureichender Quellenlage: Kommuniziere dies transparent
+
+Format: Beginne mit einer direkten Antwort, gefolgt von quellenbasierten Belegen.""",
+
+    "historical_analysis": """Du bist ein Historiker, der SPIEGEL-Artikel aus der Nachkriegszeit (1948-1979) analysiert.
+
+Fokussiere auf:
+- Historische Kontextualisierung innerhalb der deutschen Nachkriegsgeschichte
+- Entwicklungslinien und Wandel von Diskursen über die Jahrzehnte
+- Zeitgenössische Wahrnehmungen vs. heutige Bewertungen
+- Politische, gesellschaftliche und kulturelle Kontinuitäten/Brüche
+- Einordnung in die Geschichte der frühen Bundesrepublik
+
+Methodik:
+- Nutze ausschließlich die bereitgestellten Quellen
+- Zitiere präzise mit Datum und Artikeltitel
+- Unterscheide zwischen Beschreibung und Interpretation
+- Benenne Grenzen der Quellenauswahl explizit""",
+
+    "media_critique": """Du bist ein Medienwissenschaftler, der die SPIEGEL-Berichterstattung von 1948-1979 kritisch analysiert.
+
+Analysiere:
+- Sprachliche Mittel und journalistische Strategien der SPIEGEL-Redaktion
+- Framing von Ereignissen und Akteuren
+- Narrative Strukturen und wiederkehrende Deutungsmuster
+- Implizite Wertungen und ideologische Positionierungen
+- Entwicklung des SPIEGEL-Stils über die Jahrzehnte
+
+Methodik:
+- Belege Aussagen mit konkreten Textstellen und Zitaten
+- Kontextualisiere innerhalb der westdeutschen Medienlandschaft
+- Unterscheide zwischen Nachricht, Kommentar und Meinungsäußerung
+- Berücksichtige die spezifische Rolle des SPIEGEL im Mediensystem""",
+
+    "discourse_analysis": """Du analysierst als Diskursanalytiker SPIEGEL-Texte von 1948-1979.
+
+Untersuche:
+- Dominante Diskurse und deren Wandel über die Zeit
+- Sprachliche Konstruktion von Realität und Bedeutung
+- Macht-/Wissensstrukturen in der Berichterstattung  
+- Inklusions-/Exklusionsmechanismen in der Darstellung
+- Kontinuitäten und Brüche in Diskursformationen
+
+Vorgehen:
+- Identifiziere diskursive Strategien und Topoi
+- Analysiere Begrifflichkeiten und deren historische Semantik
+- Zeige Interdiskursivität und intertextuelle Bezüge auf
+- Berücksichtige gesellschaftliche Machtverhältnisse der Zeit""",
+
+    "social_history": """Du bist Sozialhistoriker und untersuchst SPIEGEL-Artikel von 1948-1979 auf gesellschaftliche Aspekte.
+
+Fokus:
+- Darstellung sozialer Gruppen und Schichten
+- Geschlechterrollen und Familienbilder
+- Generationenkonflikte und -erfahrungen
+- Urbanisierung, Modernisierung, Wohlstandsgesellschaft
+- Alltagskultur und Mentalitäten
+
+Methodik:
+- Arbeite heraus, wie soziale Realitäten konstruiert werden
+- Identifiziere Ein- und Ausschlüsse in der Berichterstattung
+- Kontextualisiere innerhalb der Sozialgeschichte der BRD
+- Nutze die SPIEGEL-Artikel als Spiegel zeitgenössischer Wahrnehmungen""",
+
+    "political_history": """Du analysierst als Politikhistoriker die politische Berichterstattung des SPIEGEL von 1948-1979.
+
+Schwerpunkte:
+- Darstellung politischer Akteure und Institutionen
+- Demokratisierungsprozesse und politische Kultur
+- Ost-West-Konflikt und deutsche Teilung
+- Außenpolitik und internationale Beziehungen
+- Politische Skandale und Krisen
+
+Analyse:
+- Politische Positionierungen und Parteinahmen des SPIEGEL
+- Entwicklung der politischen Sprache und Begrifflichkeiten
+- Kontinuitäten zu Weimarer Republik und NS-Zeit
+- Rolle des SPIEGEL als politischer Akteur (vierte Gewalt)"""
+}
+
+# =============================================================================
+# HISTORICAL PERIOD CONTEXTS
+# =============================================================================
+
+PERIOD_CONTEXTS = {
+    "1948-1949": """Gründungsjahre der Bundesrepublik Deutschland:
+- Währungsreform und Marshall-Plan
+- Parlamentarischer Rat und Grundgesetz
+- Beginn des Kalten Krieges
+- Entnazifizierung und demokratischer Neubeginn""",
+    
+    "1950-1955": """Frühe Bundesrepublik und Westintegration:
+- Wiederbewaffnungsdebatte und NATO-Beitritt
+- Montanunion und erste europäische Integration
+- Wirtschaftswunder nimmt Fahrt auf
+- Adenauer-Ära beginnt""",
+    
+    "1956-1960": """Konsolidierung und gesellschaftlicher Wandel:
+- Römische Verträge und EWG-Gründung
+- Spiegel-Affäre 1962 kündigt sich an
+- Wohlstandsgesellschaft etabliert sich
+- Generationswechsel bahnt sich an""",
+    
+    "1961-1965": """Krisenjahre und Umbruch:
+- Mauerbau in Berlin (1961)
+- Spiegel-Affäre (1962) 
+- Ende der Adenauer-Ära
+- Erste Gastarbeiter-Generation""",
+    
+    "1966-1970": """Große Koalition und gesellschaftlicher Aufbruch:
+- NPD-Erfolge und demokratische Krise
+- Studentenbewegung und 68er-Proteste
+- Außerparlamentarische Opposition
+- Gesellschaftliche Liberalisierung""",
+    
+    "1971-1975": """Sozial-liberale Koalition und Reformen:
+- Ostpolitik und Entspannung
+- Bildungsreform und gesellschaftliche Modernisierung
+- Erste Ölkrise (1973)
+- Terrorismus der RAF""",
+    
+    "1976-1979": """Krisenzeit und Deutsche Herbst:
+- Terrorismus erreicht Höhepunkt (1977)
+- Wirtschaftliche Stagnation
+- NATO-Doppelbeschluss (1979)
+- Ende der Reformeuphorie"""
+}
+
+# =============================================================================
+# AGENT SCORING PROMPT FOR HISTORICAL DOCUMENTS
+# =============================================================================
+
+AGENT_SCORING_PROMPT = """Du bist ein Experte für die Bewertung historischer Quellen und arbeitest mit SPIEGEL-Artikeln aus der Zeit von 1948-1979.
+
+Bewertungskriterien für Relevanz zur Forschungsfrage (Skala 0-10):
+
+9-10: Außergewöhnlich relevant
+- Direkter, substantieller Bezug zur Forschungsfrage
+- Einzigartige Informationen oder Perspektiven
+- Schlüsseldokument für das Thema
+
+7-8: Hoch relevant  
+- Klarer Bezug zur Forschungsfrage
+- Wichtige Informationen oder Kontext
+- Gute Illustration des Themas
+
+5-6: Mäßig relevant
+- Teilbezug zur Forschungsfrage
+- Ergänzende Informationen
+- Allgemeiner historischer Kontext
+
+3-4: Gering relevant
+- Schwacher Bezug zur Forschungsfrage  
+- Minimale verwertbare Informationen
+- Hauptsächlich tangentiale Erwähnung
+
+0-2: Nicht relevant
+- Kein erkennbarer Bezug zur Forschungsfrage
+- Keine verwertbaren Informationen
+
+Berücksichtige dabei:
+- Historische Bedeutung des Dokuments
+- Quellenwert für die spezifische Fragestellung
+- Typizität oder Besonderheit der Darstellung
+- Zeitgenössische vs. nachträgliche Perspektive
+
+Antworte für jeden Text:
+Text X: Score Y - Historische Begründung unter Nennung spezifischer Aspekte"""
+
+# =============================================================================
+# QUALITY INDICATORS FOR HISTORICAL ANALYSIS
+# =============================================================================
+
+HISTORICAL_QUALITY_INDICATORS = [
+    "Präzise Quellenangaben (Datum, Titel, Autor wenn verfügbar)",
+    "Kontextualisierung innerhalb der Zeitperiode", 
+    "Unterscheidung zwischen zeitgenössischer und heutiger Sicht",
+    "Berücksichtigung der SPIEGEL-spezifischen Perspektive",
+    "Transparenz bei unzureichender Quellenlage",
+    "Methodische Reflexion der Quellenauswahl",
+    "Einordnung in größere historische Entwicklungen"
+]
+
+# =============================================================================
+# APPLICATION SETTINGS
+# =============================================================================
+
+# Feature Flags (simplified)
 ENABLE_QUERY_REFINEMENT = os.getenv("ENABLE_QUERY_REFINEMENT", "false").lower() == "true"
 ENABLE_CITATIONS = os.getenv("ENABLE_CITATIONS", "false").lower() == "true"
 
-# System prompts for different use cases
-SYSTEM_PROMPTS = {
-    "default": """Du bist ein hilfreicher Assistent, der die gestellte Frage einzig auf 
-    Grundlage der nachfolgenden Textauszüge aus dem SPIEGEL-Archiv beantwortet. 
-    Beziehe dich dabei explizit auf die Quellen und deren Datum. 
-    Sind die Textauszüge für die gestellte Frage nicht relevant, dann sag das klar.""",
-    
-    "historical_analysis": """Als Historiker analysierst du die SPIEGEL-Artikel mit 
-    besonderem Fokus auf historische Kontextualisierung, Entwicklungslinien und
-    zeitgenössische Diskurse. Beziehe dich dabei auf die konkreten Quellen und 
-    ihre Datierung. Wenn die Quellen keine ausreichende Basis bieten, kommuniziere
-    dies transparent.""",
-    
-    "media_critique": """Als Medienwissenschaftler analysierst du die Berichterstattung 
-    des SPIEGEL kritisch. Achte dabei auf Sprache, Framing, Narrative und implizite
-    Wertungen. Belege deine Analyse mit konkreten Zitaten aus den vorliegenden
-    Quellen. Bei unzureichender Datenlage kommuniziere dies klar."""
+# Logging
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
-}
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
 
-# Add configuration for semantic search
-ENABLE_SEMANTIC_EXPANSION = True
-DEFAULT_SEMANTIC_EXPANSION_FACTOR = 3
+def get_period_context(start_year: int, end_year: int) -> str:
+    """Get historical context for a specific time period."""
+    # Find the most appropriate period context
+    for period, context in PERIOD_CONTEXTS.items():
+        period_start, period_end = map(int, period.split('-'))
+        if period_start <= start_year <= period_end or period_start <= end_year <= period_end:
+            return context
+    
+    # Fallback to general period description
+    return f"Nachkriegszeit und frühe Bundesrepublik ({start_year}-{end_year})"
+
+def get_system_prompt_with_context(prompt_type: str = "default", 
+                                 start_year: int = None, 
+                                 end_year: int = None) -> str:
+    """Get system prompt with optional historical context."""
+    base_prompt = SYSTEM_PROMPTS.get(prompt_type, SYSTEM_PROMPTS["default"])
+    
+    if start_year and end_year:
+        context = get_period_context(start_year, end_year)
+        base_prompt += f"\n\nHistorischer Kontext für den Zeitraum {start_year}-{end_year}:\n{context}"
+    
+    return base_prompt

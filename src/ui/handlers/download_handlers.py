@@ -1,11 +1,11 @@
 # src/ui/handlers/download_handlers.py
 """
-Download handlers for exporting retrieved chunks and metadata.
-Provides JSON and CSV export functionality for found texts.
+Fixed download handlers that properly create temporary files for Gradio downloads.
 """
 import json
 import csv
-import io
+import os
+import tempfile
 import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -14,7 +14,7 @@ import gradio as gr
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> gr.File:
+def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
     """
     Create a JSON file for download containing retrieved chunks and metadata.
     
@@ -22,12 +22,12 @@ def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> gr.File:
         retrieved_chunks: Dictionary containing chunks and metadata from search
         
     Returns:
-        gr.File: Gradio file component for download
+        str: Path to the created temporary file, or None if no data
     """
     try:
         if not retrieved_chunks or not retrieved_chunks.get('chunks'):
             logger.warning("No chunks available for JSON download")
-            return gr.File(value=None, visible=False)
+            return None
         
         # Prepare data for JSON export
         export_data = {
@@ -66,29 +66,33 @@ def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> gr.File:
             }
             export_data["chunks"].append(chunk_data)
         
-        # Create JSON string with proper formatting
-        json_content = json.dumps(export_data, ensure_ascii=False, indent=2)
-        
-        # Generate filename with timestamp
+        # Create temporary file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"spiegel_rag_results_{timestamp}.json"
         
-        # Create temporary file
-        temp_file = io.StringIO(json_content)
-        
-        logger.info(f"Created JSON download with {len(export_data['chunks'])} chunks")
-        
-        return gr.File(
-            value=json_content,
-            visible=True,
-            file_count="single"
+        # Create temporary file with proper name
+        temp_file = tempfile.NamedTemporaryFile(
+            mode='w', 
+            suffix='.json', 
+            prefix='spiegel_rag_', 
+            delete=False,  # Important: don't delete automatically
+            encoding='utf-8'
         )
+        
+        # Write JSON content to temporary file
+        json.dump(export_data, temp_file, ensure_ascii=False, indent=2)
+        temp_file.close()
+        
+        logger.info(f"Created JSON download with {len(export_data['chunks'])} chunks at {temp_file.name}")
+        
+        # Return the file path
+        return temp_file.name
         
     except Exception as e:
         logger.error(f"Error creating JSON download: {e}")
-        return gr.File(value=None, visible=False)
+        return None
 
-def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> gr.File:
+def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
     """
     Create a CSV file for download containing retrieved chunks and metadata.
     
@@ -96,16 +100,27 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> gr.File:
         retrieved_chunks: Dictionary containing chunks and metadata from search
         
     Returns:
-        gr.File: Gradio file component for download
+        str: Path to the created temporary file, or None if no data
     """
     try:
         if not retrieved_chunks or not retrieved_chunks.get('chunks'):
             logger.warning("No chunks available for CSV download")
-            return gr.File(value=None, visible=False)
+            return None
         
-        # Create CSV content
-        output = io.StringIO()
-        writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        # Create temporary file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        temp_file = tempfile.NamedTemporaryFile(
+            mode='w', 
+            suffix='.csv', 
+            prefix='spiegel_rag_', 
+            delete=False,  # Important: don't delete automatically
+            encoding='utf-8',
+            newline=''  # Important for CSV files on Windows
+        )
+        
+        # Create CSV writer
+        writer = csv.writer(temp_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         
         # Write CSV header
         headers = [
@@ -162,26 +177,18 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> gr.File:
             
             writer.writerow(row)
         
-        csv_content = output.getvalue()
-        output.close()
+        temp_file.close()
         
-        # Generate filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"spiegel_rag_results_{timestamp}.csv"
+        logger.info(f"Created CSV download with {len(retrieved_chunks.get('chunks', []))} chunks at {temp_file.name}")
         
-        logger.info(f"Created CSV download with {len(retrieved_chunks.get('chunks', []))} chunks")
-        
-        return gr.File(
-            value=csv_content,
-            visible=True,
-            file_count="single"
-        )
+        # Return the file path
+        return temp_file.name
         
     except Exception as e:
         logger.error(f"Error creating CSV download: {e}")
-        return gr.File(value=None, visible=False)
+        return None
 
-def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> gr.File:
+def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> str:
     """
     Create a JSON file for download containing agent search results with evaluations.
     
@@ -189,12 +196,12 @@ def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> gr.Fi
         agent_results: Dictionary containing agent search results and evaluations
         
     Returns:
-        gr.File: Gradio file component for download
+        str: Path to the created temporary file, or None if no data
     """
     try:
         if not agent_results or not agent_results.get('chunks'):
             logger.warning("No agent results available for JSON download")
-            return gr.File(value=None, visible=False)
+            return None
         
         # Prepare data for JSON export
         export_data = {
@@ -242,24 +249,49 @@ def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> gr.Fi
             
             export_data["chunks"].append(chunk_data)
         
-        # Create JSON string with proper formatting
-        json_content = json.dumps(export_data, ensure_ascii=False, indent=2)
-        
-        # Generate filename with timestamp
+        # Create temporary file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"spiegel_rag_agent_results_{timestamp}.json"
         
-        logger.info(f"Created agent JSON download with {len(export_data['chunks'])} chunks")
-        
-        return gr.File(
-            value=json_content,
-            visible=True,
-            file_count="single"
+        temp_file = tempfile.NamedTemporaryFile(
+            mode='w', 
+            suffix='.json', 
+            prefix='spiegel_rag_agent_', 
+            delete=False,  # Important: don't delete automatically
+            encoding='utf-8'
         )
+        
+        # Write JSON content
+        json.dump(export_data, temp_file, ensure_ascii=False, indent=2)
+        temp_file.close()
+        
+        logger.info(f"Created agent JSON download with {len(export_data['chunks'])} chunks at {temp_file.name}")
+        
+        # Return the file path
+        return temp_file.name
         
     except Exception as e:
         logger.error(f"Error creating agent JSON download: {e}")
-        return gr.File(value=None, visible=False)
+        return None
+
+def cleanup_temp_files():
+    """
+    Clean up old temporary files (optional utility function).
+    You might want to call this periodically or on app shutdown.
+    """
+    try:
+        temp_dir = tempfile.gettempdir()
+        for filename in os.listdir(temp_dir):
+            if filename.startswith('spiegel_rag_') and (filename.endswith('.json') or filename.endswith('.csv')):
+                file_path = os.path.join(temp_dir, filename)
+                # Delete files older than 1 hour
+                if os.path.getctime(file_path) < (datetime.now().timestamp() - 3600):
+                    try:
+                        os.remove(file_path)
+                        logger.info(f"Cleaned up old temp file: {filename}")
+                    except Exception as e:
+                        logger.warning(f"Could not delete temp file {filename}: {e}")
+    except Exception as e:
+        logger.error(f"Error during temp file cleanup: {e}")
 
 def format_download_summary(chunks_count: int, format_type: str) -> str:
     """

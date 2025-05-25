@@ -265,9 +265,10 @@ def create_app():
                     download_json_btn = gr.Button("📥 Als JSON herunterladen", elem_classes=["download-button"])
                     download_csv_btn = gr.Button("📊 Als CSV herunterladen", elem_classes=["download-button"])
                 
-                # Hidden download components
-                download_json_file = gr.File(visible=False)
-                download_csv_file = gr.File(visible=False)
+                # Download status and files - FIXED
+                download_status = gr.Markdown("", visible=False)
+                download_json_file = gr.File(label="JSON Download", visible=False)
+                download_csv_file = gr.File(label="CSV Download", visible=False)
         
         with gr.Tab("2. Quellen analysieren"):
             with gr.Accordion("Frage stellen", open=True) as question_accordion:
@@ -391,17 +392,61 @@ def create_app():
             ]
         )
         
-        # DOWNLOAD FUNCTIONALITY - Connect buttons to handlers
+        # JSON Download
+        def handle_json_download(retrieved_chunks_state):
+            """Handle JSON download with proper status updates."""
+            try:
+                file_path = create_download_json(retrieved_chunks_state)
+                if file_path:
+                    return (
+                        gr.update(value="✅ JSON-Datei wurde erstellt und kann heruntergeladen werden.", visible=True),
+                        gr.update(value=file_path, visible=True)
+                    )
+                else:
+                    return (
+                        gr.update(value="❌ Fehler: Keine Daten zum Herunterladen verfügbar.", visible=True),
+                        gr.update(visible=False)
+                    )
+            except Exception as e:
+                logger.error(f"JSON download error: {e}")
+                return (
+                    gr.update(value=f"❌ Fehler beim Erstellen der JSON-Datei: {str(e)}", visible=True),
+                    gr.update(visible=False)
+                )
+        
+        # CSV Download  
+        def handle_csv_download(retrieved_chunks_state):
+            """Handle CSV download with proper status updates."""
+            try:
+                file_path = create_download_csv(retrieved_chunks_state)
+                if file_path:
+                    return (
+                        gr.update(value="✅ CSV-Datei wurde erstellt und kann heruntergeladen werden.", visible=True),
+                        gr.update(value=file_path, visible=True)
+                    )
+                else:
+                    return (
+                        gr.update(value="❌ Fehler: Keine Daten zum Herunterladen verfügbar.", visible=True),
+                        gr.update(visible=False)
+                    )
+            except Exception as e:
+                logger.error(f"CSV download error: {e}")
+                return (
+                    gr.update(value=f"❌ Fehler beim Erstellen der CSV-Datei: {str(e)}", visible=True),
+                    gr.update(visible=False)
+                )
+        
+        # Connect download events - FIXED
         download_json_btn.click(
-            create_download_json,
+            handle_json_download,
             inputs=[search_components["retrieved_chunks_state"]],
-            outputs=[download_json_file]
+            outputs=[download_status, download_json_file]
         )
         
         download_csv_btn.click(
-            create_download_csv,
+            handle_csv_download,
             inputs=[search_components["retrieved_chunks_state"]],
-            outputs=[download_csv_file]
+            outputs=[download_status, download_csv_file]
         )
         
         logger.info("Enhanced Gradio interface created successfully")
