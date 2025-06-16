@@ -1,4 +1,4 @@
-# src/ui/components/agent_panel.py
+# src/ui/components/agent_panel.py - Fixed version
 """
 Agent panel component for the Spiegel RAG application.
 This component defines the UI elements for the agent-based search approach.
@@ -17,7 +17,7 @@ def create_agent_panel(
     
     Args:
         agent_search_callback: Function to call for agent-based search
-        toggle_api_key_callback: Function to toggle API key visibility
+        toggle_api_key_callback: Function to toggle API key visibility (not used anymore)
         
     Returns:
         Dictionary of UI components
@@ -76,8 +76,9 @@ def create_agent_panel(
                 )
             
             with gr.Row():
+                # FIXED: Added 500 chunk size option
                 agent_chunk_size = gr.Dropdown(
-                    choices=[2000, 3000],
+                    choices=[500, 2000, 3000],
                     value=3000,
                     label="Textgröße",
                     info="Größe der Textabschnitte in Zeichen."
@@ -152,21 +153,16 @@ def create_agent_panel(
         
         # Model settings
         with gr.Accordion("LLM-Einstellungen", open=False):
+            # FIXED: Updated model choices
             with gr.Row():
                 agent_model = gr.Radio(
-                    choices=["hu-llm", "openai-gpt4o", "openai-gpt35"],
-                    value="hu-llm",
+                    choices=["hu-llm1", "hu-llm3", "openai-gpt4o", "gemini-pro"],
+                    value="hu-llm3",
                     label="LLM-Modell",
                     info="Wählen Sie das zu verwendende Sprachmodell."
                 )
             
-            with gr.Row(visible=False) as agent_openai_key_row:
-                agent_openai_api_key = gr.Textbox(
-                    label="OpenAI API-Schlüssel",
-                    placeholder="sk-...",
-                    type="password",
-                    info="Ihr OpenAI API-Schlüssel wird nur für diese Sitzung gespeichert."
-                )
+            # REMOVED: API key input field completely
             
             with gr.Row():
                 agent_system_prompt_template = gr.Dropdown(
@@ -193,14 +189,9 @@ def create_agent_panel(
         # State for storing results
         agent_results_state = gr.State(None)
     
-    # Connect model selection to API key visibility
-    agent_model.change(
-        fn=toggle_api_key_callback,
-        inputs=[agent_model],
-        outputs=[agent_openai_key_row]
-    )
+    # REMOVED: Model selection API key visibility toggle
     
-    # Define all components to be returned
+    # Define all components to be returned - FIXED: Removed API key related components
     components = {
         "agent_question": agent_question,
         "agent_content_description": agent_content_description,
@@ -215,13 +206,11 @@ def create_agent_panel(
         "agent_filter_stage2": agent_filter_stage2,
         "agent_filter_stage3": agent_filter_stage3,
         "agent_model": agent_model,
-        "agent_openai_api_key": agent_openai_api_key,
         "agent_system_prompt_template": agent_system_prompt_template,
         "agent_custom_system_prompt": agent_custom_system_prompt,
         "agent_search_btn": agent_search_btn,
         "agent_status": agent_status,
-        "agent_results_state": agent_results_state,
-        "agent_openai_key_row": agent_openai_key_row
+        "agent_results_state": agent_results_state
     }
     
     return components

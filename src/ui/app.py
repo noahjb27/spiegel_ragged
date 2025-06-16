@@ -1,4 +1,4 @@
-# src/ui/app.py
+# src/ui/app.py - Fixed version
 """
 Enhanced app with improved button styling, download functionality, and fixed text visibility
 """
@@ -346,7 +346,6 @@ def create_app():
                 question_components["question"],
                 search_components["retrieved_chunks_state"],
                 question_components["model_selection"],
-                question_components["openai_api_key"],
                 question_components["system_prompt_template"],
                 question_components["custom_system_prompt"],
                 question_components["temperature"],
@@ -377,7 +376,6 @@ def create_app():
                 agent_components["agent_filter_stage2"],
                 agent_components["agent_filter_stage3"],
                 agent_components["agent_model"],
-                agent_components["agent_openai_api_key"],
                 agent_components["agent_system_prompt_template"],
                 agent_components["agent_custom_system_prompt"]
             ],

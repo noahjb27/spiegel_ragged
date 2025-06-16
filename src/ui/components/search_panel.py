@@ -1,5 +1,4 @@
 # src/ui/components/search_panel.py
-# src/ui/components/search_panel.py - simplified version
 """
 Search panel component for the Spiegel RAG application.
 This component defines the UI elements for retrieval only.
@@ -57,7 +56,7 @@ def create_search_panel(
             
             with gr.Row():
                 chunk_size = gr.Dropdown(
-                    choices=[2000, 3000],
+                    choices=[500, 2000, 3000],
                     value=3000,
                     label="Textgröße",
                     info="Größe der Textabschnitte in Zeichen. Kleinere Abschnitte sind präziser, größere bieten mehr Kontext."

@@ -1,6 +1,6 @@
 """
 Enhanced application settings for Spiegel RAG System (1948-1979).
-Cleaned up version with enhanced system prompts for historical analysis.
+Updated version with multiple LLM options and expanded chunk sizes.
 """
 import os
 from typing import Dict, List, Optional
@@ -15,7 +15,11 @@ load_dotenv()
 
 # LLM API Settings
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-HU_LLM_API_URL = os.getenv("HU_LLM_API_URL", "https://llm3-compute.cms.hu-berlin.de/v1/")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+# HU LLM Settings - Multiple endpoints
+HU_LLM1_API_URL = os.getenv("HU_LLM1_API_URL", "https://llm1-compute.cms.hu-berlin.de/v1/")
+HU_LLM3_API_URL = os.getenv("HU_LLM3_API_URL", "https://llm3-compute.cms.hu-berlin.de/v1/")
 
 # Remote ChromaDB Settings
 CHROMA_DB_HOST = os.getenv("CHROMA_DB_HOST", "dighist.geschichte.hu-berlin.de")
@@ -38,18 +42,26 @@ WORD_EMBEDDING_MODEL_PATH = os.path.join(BASE_DIR, "models", "fasttext_model_spi
 # SEARCH AND RETRIEVAL SETTINGS
 # =============================================================================
 
-# Chunk Settings - Only these sizes are available in ChromaDB
+# Chunk Settings - Available sizes with their overlap values
 DEFAULT_CHUNK_SIZE = int(os.getenv("DEFAULT_CHUNK_SIZE", "3000"))
 DEFAULT_CHUNK_OVERLAP_PERCENTAGE = int(os.getenv("DEFAULT_CHUNK_OVERLAP_PERCENTAGE", "10"))
-AVAILABLE_CHUNK_SIZES = [2000, 3000]
+AVAILABLE_CHUNK_SIZES = [500, 2000, 3000]
 
 # Time Range Settings - Spiegel Archive Coverage
 MIN_YEAR = 1948
 MAX_YEAR = 1979
 
 # Default Search Settings
-DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "hu-llm")
-AVAILABLE_LLM_MODELS = ["hu-llm", "openai-gpt4o", "openai-gpt35"]
+DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "hu-llm3")
+AVAILABLE_LLM_MODELS = ["hu-llm1", "hu-llm3", "openai-gpt4o", "gemini-pro"]
+
+# LLM Display Names for UI
+LLM_DISPLAY_NAMES = {
+    "hu-llm1": "HU-LLM 1 (Berlin)",
+    "hu-llm3": "HU-LLM 3 (Berlin)", 
+    "openai-gpt4o": "OpenAI GPT-4o",
+    "gemini-pro": "Google Gemini Pro"
+}
 
 # Semantic Expansion Settings
 ENABLE_SEMANTIC_EXPANSION = True
@@ -67,10 +79,43 @@ def get_collection_name(
     """Generate collection name based on chunk size and overlap."""
     # Use specific overlap values for available collections
     if chunk_overlap is None:
-        overlap_map = {2000: 400, 3000: 300}
+        overlap_map = {500: 100, 2000: 400, 3000: 300}
         chunk_overlap = overlap_map.get(chunk_size, 300)
     
     return f"recursive_chunks_{chunk_size}_{chunk_overlap}_TH_cosine_{embedding_model}"
+
+# =============================================================================
+# LLM CONFIGURATION MAPPING
+# =============================================================================
+
+def get_llm_config(model_name: str) -> Dict[str, str]:
+    """Get LLM configuration for a given model name."""
+    configs = {
+        "hu-llm1": {
+            "type": "hu-llm",
+            "base_url": HU_LLM1_API_URL,
+            "model_id": "llm1",
+            "api_key": "required-but-not-used"
+        },
+        "hu-llm3": {
+            "type": "hu-llm", 
+            "base_url": HU_LLM3_API_URL,
+            "model_id": "llm3",
+            "api_key": "required-but-not-used"
+        },
+        "openai-gpt4o": {
+            "type": "openai",
+            "model_id": "gpt-4o",
+            "api_key": OPENAI_API_KEY
+        },
+        "gemini-pro": {
+            "type": "gemini",
+            "model_id": "gemini-pro",
+            "api_key": GEMINI_API_KEY
+        }
+    }
+    
+    return configs.get(model_name, configs["hu-llm3"])
 
 # =============================================================================
 # ENHANCED SYSTEM PROMPTS FOR HISTORICAL ANALYSIS

@@ -1,4 +1,4 @@
-# src/core/engine.py - Refactored version
+# src/core/engine.py - Fixed version
 """
 Simplified RAG Engine with clear separation of concerns.
 """
@@ -86,13 +86,13 @@ class SpiegelRAG:
     def analyze(self,
                 question: str,
                 chunks: Optional[List[Document]] = None,
-                model: str = "hu-llm",
+                model: str = "hu-llm3",
                 system_prompt: Optional[str] = None,
                 temperature: float = 0.3,
-                max_tokens: Optional[int] = None,
-                openai_api_key: Optional[str] = None) -> AnalysisResult:
+                max_tokens: Optional[int] = None) -> AnalysisResult:
         """
         Analyze chunks with LLM to answer a question.
+        FIXED: Removed openai_api_key parameter
         
         Args:
             question: Question to answer
@@ -101,7 +101,6 @@ class SpiegelRAG:
             system_prompt: Custom system prompt
             temperature: Generation temperature
             max_tokens: Maximum tokens to generate
-            openai_api_key: OpenAI API key if needed
             
         Returns:
             AnalysisResult with answer and metadata
@@ -134,8 +133,7 @@ class SpiegelRAG:
                 model=model,
                 system_prompt=system_prompt,
                 temperature=temperature,
-                max_tokens=max_tokens,
-                openai_api_key=openai_api_key
+                max_tokens=max_tokens
             )
             
             return AnalysisResult(

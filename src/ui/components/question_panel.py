@@ -1,4 +1,4 @@
-# src/ui/components/question_panel.py
+# src/ui/components/question_panel.py - Fixed version
 """
 Question panel component for the Spiegel RAG application.
 This component defines the UI elements for asking questions about retrieved content.
@@ -27,30 +27,29 @@ def create_question_panel() -> Dict[str, Any]:
         
         # Model selection settings
         with gr.Accordion("LLM-Einstellungen", open=False):
+            # FIXED: Updated model description
             gr.Markdown("""
             ### Modellauswahl
             
             Sie können zwischen verschiedenen LLM-Modellen wählen:
-            - **HU-LLM**: Lokales Modell (kein API-Schlüssel erforderlich, HU-Netzwerk erforderlich)
-            - **OpenAI GPT-4o**: Leistungsstärkstes OpenAI-Modell (erfordert API-Schlüssel)
-            - **OpenAI GPT-3.5 Turbo**: Schnelles OpenAI-Modell (erfordert API-Schlüssel)
+            - **HU-LLM 1**: Lokales Modell (HU-Netzwerk erforderlich)
+            - **HU-LLM 3**: Lokales Modell (HU-Netzwerk erforderlich)  
+            - **OpenAI GPT-4o**: Leistungsstärkstes OpenAI-Modell
+            - **Google Gemini Pro**: Google's neuestes Sprachmodell mit großem Kontextfenster
+            
+            API-Schlüssel sind vorkonfiguriert.
             """)
             
+            # FIXED: Updated model choices and default
             with gr.Row():
                 model_selection = gr.Radio(
-                    choices=["hu-llm", "openai-gpt4o", "openai-gpt35"],
-                    value="hu-llm",
+                    choices=["hu-llm1", "hu-llm3", "openai-gpt4o", "gemini-pro"],
+                    value="hu-llm3",
                     label="LLM-Modell",
                     info="Wählen Sie das zu verwendende Sprachmodell"
                 )
             
-            with gr.Row(visible=False) as openai_key_row:
-                openai_api_key = gr.Textbox(
-                    label="OpenAI API-Schlüssel",
-                    placeholder="sk-...",
-                    type="password",
-                    info="Ihr OpenAI API-Schlüssel wird nur für diese Sitzung gespeichert"
-                )
+            # REMOVED: API key input field completely
             
             # System prompt selection
             with gr.Row():
@@ -95,24 +94,17 @@ def create_question_panel() -> Dict[str, Any]:
         
         analyze_btn = gr.Button("Frage beantworten", variant="primary")
         
-    # Connect model selection to API key visibility
-    model_selection.change(
-        fn=lambda model_choice: gr.update(visible=model_choice.startswith("openai")),
-        inputs=[model_selection],
-        outputs=[openai_key_row]
-    )
+    # REMOVED: Model selection API key visibility toggle
     
-    # Define all components to be returned
+    # Define all components to be returned - FIXED: Removed API key related components
     components = {
         "question": question,
         "model_selection": model_selection,
-        "openai_api_key": openai_api_key,
         "system_prompt_template": system_prompt_template,
         "custom_system_prompt": custom_system_prompt,
         "temperature": temperature,
         "max_tokens": max_tokens,
-        "analyze_btn": analyze_btn,
-        "openai_key_row": openai_key_row
+        "analyze_btn": analyze_btn
     }
     
     return components

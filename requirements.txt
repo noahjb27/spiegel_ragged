@@ -12,6 +12,7 @@ langchain-chroma>=0.0.1  # For Chroma integration
 langchain-ollama>=0.0.1  # For Ollama embeddings
 sentence-transformers>=2.2.2
 openai>=1.0.0
+google-generativeai>=0.3.0  # For Gemini support
 jsonfinder==0.4.2  # For parsing JSON from LLM outputs
 termcolor>=2.0.0  # For colored terminal output
 

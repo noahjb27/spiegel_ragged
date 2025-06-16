@@ -1,4 +1,4 @@
-# src/core/retrieval_agent.py - SIMPLIFIED VERSION
+# src/core/retrieval_agent.py - Fixed version
 """
 Simplified RetrievalAgent that works reliably with HU-LLM.
 No complex JSON schemas - just simple, reliable scoring.
@@ -39,12 +39,12 @@ class RetrievalAgent:
         enforce_keywords: bool = True,
         initial_retrieval_count: int = 100,
         filter_stages: List[int] = [50, 20, 10],
-        model: str = "hu-llm",
-        openai_api_key: Optional[str] = None,
+        model: str = "hu-llm3",  # FIXED: Updated default model
         with_evaluations: bool = True
     ) -> Tuple[List[Tuple[Document, float, float, str]], Dict[str, Any]]:
         """
         Simplified retrieval and refinement that works reliably with HU-LLM.
+        FIXED: Removed openai_api_key parameter
         """
         start_time = time.time()
         stage_times = []
@@ -104,12 +104,11 @@ class RetrievalAgent:
                 
             logger.info(f"Starting simplified filter stage {i+1}: {len(current_chunks)} → {target_count} chunks")
             
-            # Use simplified batch evaluation
+            # Use simplified batch evaluation - FIXED: Removed openai_api_key parameter
             evaluated_chunks = self._evaluate_chunks_simple_batch(
                 question=question,
                 chunks=current_chunks,
-                model=model,
-                openai_api_key=openai_api_key
+                model=model
             )
             
             # Sort by evaluation score and keep top chunks
@@ -151,13 +150,13 @@ class RetrievalAgent:
         self,
         question: str,
         chunks: List,
-        model: str = "hu-llm",
-        openai_api_key: Optional[str] = None,
+        model: str = "hu-llm3",  # FIXED: Updated default model
         batch_size: int = 10  # Smaller batches
     ) -> List[Tuple[Document, float, float, str]]:
         """
         Simplified batch evaluation that works reliably with HU-LLM.
         Uses simple text-based scoring instead of JSON schemas.
+        FIXED: Removed openai_api_key parameter
         """
         if not chunks:
             return []
@@ -172,7 +171,8 @@ class RetrievalAgent:
             logger.info(f"Processing batch {batch_idx + 1}/{len(chunk_batches)} with {len(batch)} chunks")
             
             try:
-                batch_result = self._evaluate_single_batch(question, batch, model, openai_api_key)
+                # FIXED: Removed openai_api_key parameter
+                batch_result = self._evaluate_single_batch(question, batch, model)
                 all_evaluated_chunks.extend(batch_result)
                 
                 # Add small delay to avoid overwhelming the service
@@ -196,11 +196,11 @@ class RetrievalAgent:
         self,
         question: str,
         batch: List,
-        model: str,
-        openai_api_key: Optional[str] = None
+        model: str
     ) -> List[Tuple[Document, float, float, str]]:
         """
         Evaluate a single batch using simple text-based approach.
+        FIXED: Removed openai_api_key parameter
         """
         # Create a simple evaluation prompt
         system_prompt = """Du bist ein Experte für die Bewertung historischer Dokumente. 
@@ -232,15 +232,14 @@ Sei kritisch - die meisten Texte sollten 3-7 bekommen, nur außergewöhnliche er
         batch_content += f"Bewerte alle {len(batch)} Texte in dem angegebenen Format."
         
         try:
-            # Use LLM service
+            # Use LLM service - FIXED: Removed openai_api_key parameter
             response = self.llm_service.generate_response(
                 question=batch_content,
                 context="",
                 model=model,
                 system_prompt=system_prompt,
                 temperature=0.2,
-                max_tokens=1000,  # Enough for simple responses
-                openai_api_key=openai_api_key
+                max_tokens=10000  # Enough for simple responses
             )
             
             response_text = response.get('text', '')

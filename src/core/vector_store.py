@@ -44,8 +44,8 @@ class ChromaDBInterface:
     
     def get_collection_name(self, chunk_size: int) -> str:
         """Generate standardized collection name."""
-        # Use the exact format that exists in your database
-        overlap_map = {2000: 400, 3000: 300}
+        # Use the exact format that exists database
+        overlap_map = {500: 100, 2000: 400, 3000: 300}
         overlap = overlap_map.get(chunk_size, 300)  # Default to 300 if unknown
         return f"recursive_chunks_{chunk_size}_{overlap}_TH_cosine_{settings.OLLAMA_MODEL_NAME}"
     

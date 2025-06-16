@@ -22,6 +22,7 @@ from src.core.search.strategies import (
 from src.config import settings
 
 # Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global reference to the RAG engine
@@ -166,7 +167,6 @@ def perform_analysis(
     question: str,
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
-    openai_api_key: str,
     system_prompt: Optional[str] = None,
     temperature: float = 0.3,
     max_tokens: Optional[int] = None
@@ -198,22 +198,17 @@ def perform_analysis(
         
         logger.info(f"Converted {len(documents)} chunks for analysis")
         
-        # Handle model selection
-        model_to_use = "hu-llm"  # Default
-        if model_selection == "openai-gpt4o":
-            model_to_use = "gpt-4o"
-        elif model_selection == "openai-gpt35":
-            model_to_use = "gpt-3.5-turbo"
+        # Handle model selection - FIXED: Use model name directly
+        model_to_use = model_selection
         
-        # Perform analysis with new engine
+        # Perform analysis with new engine - FIXED: Removed openai_api_key parameter
         analysis_result = rag_engine.analyze(
             question=question,
             chunks=documents,
             model=model_to_use,
             system_prompt=system_prompt,
             temperature=temperature,
-            max_tokens=max_tokens,
-            openai_api_key=openai_api_key if model_to_use.startswith("gpt") else None
+            max_tokens=max_tokens
         )
         
         analysis_time = time.time() - start_time
@@ -301,7 +296,6 @@ def perform_analysis_and_update_ui(
     question: str,
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
-    openai_api_key: str,
     system_prompt_template: str,
     custom_system_prompt: str,
     temperature: float,
@@ -316,12 +310,11 @@ def perform_analysis_and_update_ui(
     else:
         system_prompt = settings.SYSTEM_PROMPTS.get(system_prompt_template, settings.SYSTEM_PROMPTS["default"])
     
-    # Perform the analysis
+    # Perform the analysis - FIXED: Removed openai_api_key parameter
     answer_text, chunks_text, metadata_text = perform_analysis(
         question=question,
         retrieved_chunks=retrieved_chunks,
         model_selection=model_selection,
-        openai_api_key=openai_api_key,
         system_prompt=system_prompt,
         temperature=temperature,
         max_tokens=max_tokens

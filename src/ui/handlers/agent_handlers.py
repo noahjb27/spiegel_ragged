@@ -1,4 +1,4 @@
-# src/ui/handlers/agent_handlers.py
+# src/ui/handlers/agent_handlers.py - Fixed version
 """
 Fixed agent handlers with proper HTML formatting for text visibility
 """
@@ -12,6 +12,7 @@ from src.core.search.strategies import AgentSearchStrategy, SearchConfig
 from src.config import settings
 
 # Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global reference to the RAG engine
@@ -36,12 +37,12 @@ def perform_agent_search_and_analysis(
     filter_stage2: int,
     filter_stage3: int,
     model: str,
-    openai_api_key: str,
     system_prompt_template: str,
     custom_system_prompt: str
 ) -> Tuple[Dict[str, Any], str, str, str, str, str]:
     """
     Perform agent search and analysis in one step using the new architecture.
+    FIXED: Removed openai_api_key parameter
     
     Returns:
         Tuple of (results_state, status, answer_output, process_output, evaluations_output, chunks_output, metadata_output)
@@ -70,11 +71,7 @@ def perform_agent_search_and_analysis(
         logger.info(f"Filter stages: {filter_stages}")
         
         # Determine model
-        model_to_use = "hu-llm"
-        if model == "openai-gpt4o":
-            model_to_use = "gpt-4o"
-        elif model == "openai-gpt35":
-            model_to_use = "gpt-3.5-turbo"
+        model_to_use = model
         
         # Determine system prompt
         if custom_system_prompt.strip():
@@ -103,12 +100,11 @@ def perform_agent_search_and_analysis(
         
         logger.info("Executing agent search...")
         
-        # Call the strategy directly with additional parameters
+        # Call the strategy directly 
         search_result = agent_strategy.search(
             config=config,
             vector_store=rag_engine.vector_store,
-            question=question,
-            openai_api_key=openai_api_key if model_to_use.startswith("gpt") else None
+            question=question
         )
         
         search_time = time.time() - start_time
@@ -129,8 +125,7 @@ def perform_agent_search_and_analysis(
             chunks=documents,
             model=model_to_use,
             system_prompt=system_prompt,
-            temperature=0.3,
-            openai_api_key=openai_api_key if model_to_use.startswith("gpt") else None
+            temperature=0.3
         )
         
         total_time = time.time() - start_time

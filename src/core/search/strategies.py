@@ -1,4 +1,4 @@
-# src/core/search/strategies.py
+# src/core/search/strategies.py - Fixed version
 """
 Search strategy implementations following the Strategy pattern.
 Each strategy encapsulates a different search approach.
@@ -287,7 +287,7 @@ class AgentSearchStrategy(SearchStrategy):
                  initial_count: int = 100,
                  filter_stages: List[int] = None,
                  llm_service: Any = None,
-                 model: str = "hu-llm"):
+                 model: str = "hu-llm3"): 
         self.initial_count = initial_count
         self.filter_stages = filter_stages or [50, 20, 10]
         self.llm_service = llm_service
@@ -324,7 +324,6 @@ class AgentSearchStrategy(SearchStrategy):
             
             # Extract additional parameters from kwargs
             question = kwargs.get('question')
-            openai_api_key = kwargs.get('openai_api_key')
             
             # Use content_description as the question if no specific question provided
             search_question = question or config.content_description
@@ -344,7 +343,6 @@ class AgentSearchStrategy(SearchStrategy):
                 initial_retrieval_count=self.initial_count,
                 filter_stages=self.filter_stages,
                 model=self.model,
-                openai_api_key=openai_api_key,
                 with_evaluations=True
             )
             
