@@ -1,6 +1,6 @@
-# src/ui/handlers/search_handlers.py - Fixed version
+# src/ui/handlers/search_handlers.py - Updated for editable system prompts
 """
-Handler functions for search operations - Fixed for new strategy-based architecture
+Handler functions for search operations - Updated to use editable system prompt text areas
 """
 import json
 import logging
@@ -167,12 +167,13 @@ def perform_analysis(
     question: str,
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
-    system_prompt: Optional[str] = None,
+    system_prompt: str,  # UPDATED: Now always receives the actual prompt text
     temperature: float = 0.3,
     max_tokens: Optional[int] = None
 ) -> Tuple[str, str, str]:
     """
-    Perform analysis on previously retrieved chunks using the new engine.
+    Perform analysis on previously retrieved chunks using the provided system prompt.
+    UPDATED: Now uses the system_prompt parameter directly (which contains the edited template)
     """
     try:
         if not rag_engine:
@@ -183,6 +184,7 @@ def perform_analysis(
         
         start_time = time.time()
         logger.info(f"Starting analysis with question: '{question}'")
+        logger.info(f"Using system prompt: {system_prompt[:100]}...")  # Log first 100 chars
         
         # Convert UI chunks back to Document format
         from langchain.docstore.document import Document
@@ -198,15 +200,12 @@ def perform_analysis(
         
         logger.info(f"Converted {len(documents)} chunks for analysis")
         
-        # Handle model selection - FIXED: Use model name directly
-        model_to_use = model_selection
-        
-        # Perform analysis with new engine - FIXED: Removed openai_api_key parameter
+        # Perform analysis with new engine using the provided system prompt directly
         analysis_result = rag_engine.analyze(
             question=question,
             chunks=documents,
-            model=model_to_use,
-            system_prompt=system_prompt,
+            model=model_selection,
+            system_prompt=system_prompt,  # Use the edited template directly
             temperature=temperature,
             max_tokens=max_tokens
         )
@@ -226,6 +225,11 @@ def perform_analysis(
         - **Analysezeit**: {analysis_time:.2f} Sekunden
         - **Temperatur**: {temperature}
         - **Max Tokens**: {max_tokens or "Standardwert"}
+
+        ## System Prompt (verwendet)
+        ```
+        {system_prompt[:500]}{'...' if len(system_prompt) > 500 else ''}
+        ```
 
         ## Quellen-Metadaten
         - **Anzahl Quellen**: {len(documents)}
@@ -296,26 +300,32 @@ def perform_analysis_and_update_ui(
     question: str,
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
-    system_prompt_template: str,
-    custom_system_prompt: str,
+    system_prompt_template: str,  # UPDATED: Still receive this for backward compatibility
+    system_prompt_text: str,      # UPDATED: Now use this directly (the edited template)
     temperature: float,
     max_tokens: int
 ) -> Tuple[str, str, gr.Accordion, gr.Accordion]:
     """
     Perform analysis and update UI accordions.
+    UPDATED: Now uses system_prompt_text directly (the edited template)
     """
-    # Determine which system prompt to use
-    if custom_system_prompt.strip():
-        system_prompt = custom_system_prompt
-    else:
-        system_prompt = settings.SYSTEM_PROMPTS.get(system_prompt_template, settings.SYSTEM_PROMPTS["default"])
+    # UPDATED: Use the edited system prompt text directly
+    # No longer check for custom vs template - always use the text area content
+    system_prompt = system_prompt_text.strip()
     
-    # Perform the analysis - FIXED: Removed openai_api_key parameter
+    # Fallback to default if somehow empty (shouldn't happen with new UI)
+    if not system_prompt:
+        logger.warning("System prompt text is empty, falling back to default")
+        system_prompt = settings.SYSTEM_PROMPTS["default"]
+    
+    logger.info(f"Using system prompt text directly (length: {len(system_prompt)} chars)")
+    
+    # Perform the analysis
     answer_text, chunks_text, metadata_text = perform_analysis(
         question=question,
         retrieved_chunks=retrieved_chunks,
         model_selection=model_selection,
-        system_prompt=system_prompt,
+        system_prompt=system_prompt,  # Pass the edited template directly
         temperature=temperature,
         max_tokens=max_tokens
     )

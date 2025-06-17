@@ -1,7 +1,7 @@
-# src/ui/handlers/agent_handlers.py
+# src/ui/handlers/agent_handlers.py - Updated for editable system prompts
 """
 Handlers for the redesigned agent search functionality.
-Integrates time-windowed agent search with the main search workflow.
+Updated to use editable system prompt text areas.
 """
 import json
 import logging
@@ -41,12 +41,12 @@ def perform_agent_search(
     agent_search_in: List[str],
     agent_enforce_keywords: bool,
     agent_model: str,
-    agent_system_prompt_template: str,
-    agent_custom_system_prompt: str,
+    agent_system_prompt_text: str,  # UPDATED: Now receives the actual prompt text directly
     progress_callback: Optional[Any] = None
 ) -> Tuple[str, Dict[str, Any]]:
     """
     Perform agent search with time windowing.
+    UPDATED: Now uses agent_system_prompt_text directly (the edited template)
     
     Returns:
         Tuple of (status_message, search_results)
@@ -68,14 +68,16 @@ def perform_agent_search(
         keywords_cleaned = agent_keywords.strip() if agent_keywords else None
         search_fields = agent_search_in if agent_search_in else ["Text"]
         
-        # Determine system prompt
-        if agent_custom_system_prompt.strip():
-            system_prompt = agent_custom_system_prompt.strip()
-        else:
-            system_prompt = settings.ALL_SYSTEM_PROMPTS.get(
-                agent_system_prompt_template, 
-                settings.AGENT_SYSTEM_PROMPTS["agent_default"]
-            )
+        # UPDATED: Use the system prompt text directly (no more template/custom logic)
+        system_prompt = agent_system_prompt_text.strip()
+        
+        # Fallback to default if somehow empty (shouldn't happen with new UI)
+        if not system_prompt:
+            logger.warning("Agent system prompt text is empty, falling back to default")
+            system_prompt = settings.AGENT_SYSTEM_PROMPTS["agent_default"]
+        
+        logger.info(f"Using agent system prompt text directly (length: {len(system_prompt)} chars)")
+        logger.info(f"System prompt preview: {system_prompt[:200]}...")
         
         # Create search configurations
         search_config = SearchConfig(
@@ -94,7 +96,7 @@ def perform_agent_search(
             chunks_per_window_initial=chunks_per_window_initial,
             chunks_per_window_final=chunks_per_window_final,
             agent_model=agent_model,
-            agent_system_prompt=system_prompt
+            agent_system_prompt=system_prompt  # Use the edited template directly
         )
         
         # Create and execute agent strategy
@@ -150,6 +152,7 @@ def perform_agent_search(
                 'year_range': [year_start, year_end],
                 'keywords': keywords_cleaned,
                 'retrieval_method': 'agent_time_windowed' if agent_use_time_windows else 'agent_global',
+                'system_prompt_used': system_prompt[:500] + ('...' if len(system_prompt) > 500 else ''),  # Store truncated version
                 **search_result.metadata  # Include all agent metadata
             }
         }
@@ -168,6 +171,7 @@ def perform_agent_search(
         **Anzahl ausgewählter Quellen**: {num_chunks}  
         **Suchzeit**: {search_time:.2f} Sekunden  
         **Bewertungsmodell**: {agent_model}
+        **System Prompt**: Bearbeitet (Länge: {len(system_prompt)} Zeichen)
         """
         
         if agent_use_time_windows:
@@ -216,11 +220,12 @@ def perform_agent_search_threaded(
     agent_search_in: List[str],
     agent_enforce_keywords: bool,
     agent_model: str,
-    agent_system_prompt_template: str,
-    agent_custom_system_prompt: str
+    agent_system_prompt_template: str,  # UPDATED: Still receive for backward compatibility
+    agent_system_prompt_text: str       # UPDATED: Now use this directly (the edited template)
 ) -> Tuple[str, Dict[str, Any], str, gr.update, gr.update, gr.update, gr.update, gr.update, gr.update]:
     """
     Perform agent search in a thread with UI updates.
+    UPDATED: Now uses agent_system_prompt_text directly (the edited template)
     
     Returns:
         Tuple for UI updates: (search_status, retrieved_chunks_state, formatted_chunks, 
@@ -243,13 +248,23 @@ def perform_agent_search_threaded(
             # Update progress display
             return gr.update(value=f"**Fortschritt**: {message} ({progress*100:.0f}%)")
         
+        # UPDATED: Use the system prompt text directly (no more template logic)
+        system_prompt = agent_system_prompt_text.strip()
+        
+        # Fallback to default if somehow empty (shouldn't happen with new UI)
+        if not system_prompt:
+            logger.warning("Agent system prompt text is empty, falling back to default")
+            system_prompt = settings.AGENT_SYSTEM_PROMPTS["agent_default"]
+        
+        logger.info(f"Using agent system prompt text in threaded search (length: {len(system_prompt)} chars)")
+        
         # Run search
         search_status, retrieved_chunks = perform_agent_search(
             content_description, chunk_size, year_start, year_end,
             agent_use_time_windows, agent_time_window_size,
             chunks_per_window_initial, chunks_per_window_final,
             agent_keywords, agent_search_in, agent_enforce_keywords,
-            agent_model, agent_system_prompt_template, agent_custom_system_prompt,
+            agent_model, system_prompt,  # Pass the edited template directly
             progress_callback
         )
         
@@ -325,6 +340,11 @@ def format_agent_chunks(retrieved_chunks: Dict[str, Any]) -> str:
     use_time_windows = len(chunks_by_window) > 1 or 'Global' not in chunks_by_window
     
     formatted_text = f"# KI-bewertete Quellen ({len(chunks)} ausgewählt)\n\n"
+    
+    # Add system prompt info if available
+    system_prompt_used = metadata.get('system_prompt_used', '')
+    if system_prompt_used:
+        formatted_text += f"**System Prompt verwendet**: {system_prompt_used}\n\n"
     
     # Add summary information
     if use_time_windows:
@@ -404,7 +424,8 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
                 "keywords": metadata.get('keywords', ''),
                 "time_windows": metadata.get('time_windows', []),
                 "agent_config": metadata.get('agent_config', {}),
-                "search_time": metadata.get('search_time', 0)
+                "search_time": metadata.get('search_time', 0),
+                "system_prompt_used": metadata.get('system_prompt_used', '')  # Include system prompt info
             },
             "retrieval_summary": {
                 "total_initial_chunks": metadata.get('total_initial_chunks', 0),
