@@ -1,7 +1,8 @@
-# src/ui/components/question_panel.py - Fixed version
+# src/ui/components/question_panel.py - Updated with DeepSeek R1 support
 """
 Question panel component for the Spiegel RAG application.
 This component defines the UI elements for asking questions about retrieved content.
+Updated to include DeepSeek R1 model option.
 """
 import gradio as gr
 from typing import Dict, Any
@@ -10,7 +11,7 @@ from src.config import settings
 
 def create_question_panel() -> Dict[str, Any]:
     """
-    Create the question panel UI components.
+    Create the question panel UI components with DeepSeek R1 support.
     
     Returns:
         Dictionary of UI components
@@ -27,29 +28,28 @@ def create_question_panel() -> Dict[str, Any]:
         
         # Model selection settings
         with gr.Accordion("LLM-Einstellungen", open=False):
-            # FIXED: Updated model description
+            # UPDATED: Model description with DeepSeek R1
             gr.Markdown("""
             ### Modellauswahl
             
             Sie können zwischen verschiedenen LLM-Modellen wählen:
             - **HU-LLM 1**: Lokales Modell (HU-Netzwerk erforderlich)
             - **HU-LLM 3**: Lokales Modell (HU-Netzwerk erforderlich)  
+            - **DeepSeek R1 32B**: Fortschrittliches Reasoning-Modell via Ollama (HU-Netzwerk erforderlich)
             - **OpenAI GPT-4o**: Leistungsstärkstes OpenAI-Modell
             - **Google Gemini Pro**: Google's neuestes Sprachmodell mit großem Kontextfenster
             
-            API-Schlüssel sind vorkonfiguriert.
+            **Empfehlung**: DeepSeek R1 für komplexe analytische Aufgaben, die mehrstufiges Denken erfordern.
             """)
             
-            # FIXED: Updated model choices and default
+            # UPDATED: Model choices to include DeepSeek R1
             with gr.Row():
                 model_selection = gr.Radio(
-                    choices=["hu-llm1", "hu-llm3", "openai-gpt4o", "gemini-pro"],
+                    choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
                     value="hu-llm3",
                     label="LLM-Modell",
-                    info="Wählen Sie das zu verwendende Sprachmodell"
+                    info="Wählen Sie das zu verwendende Sprachmodell. DeepSeek R1 ist besonders gut für analytische Aufgaben."
                 )
-            
-            # REMOVED: API key input field completely
             
             # System prompt selection
             with gr.Row():
@@ -78,7 +78,7 @@ def create_question_panel() -> Dict[str, Any]:
                     value=0.3,
                     step=0.1,
                     label="Temperatur",
-                    info="Kontrolliert die Kreativität der Antworten. Höhere Werte = kreativere Antworten."
+                    info="Kontrolliert die Kreativität der Antworten. Höhere Werte = kreativere Antworten. DeepSeek R1 funktioniert oft gut mit niedrigeren Werten (0.1-0.4)."
                 )
             
             # Add max tokens slider
@@ -89,14 +89,12 @@ def create_question_panel() -> Dict[str, Any]:
                     value=1000,
                     step=100,
                     label="Maximale Antwortlänge",
-                    info="Maximale Anzahl der Token in der Antwort."
+                    info="Maximale Anzahl der Token in der Antwort. DeepSeek R1 kann längere, detailliertere Antworten generieren."
                 )
         
         analyze_btn = gr.Button("Frage beantworten", variant="primary")
         
-    # REMOVED: Model selection API key visibility toggle
-    
-    # Define all components to be returned - FIXED: Removed API key related components
+    # Define all components to be returned
     components = {
         "question": question,
         "model_selection": model_selection,

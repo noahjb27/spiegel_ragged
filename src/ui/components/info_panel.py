@@ -1,13 +1,12 @@
-# src/ui/components/info_panel.py
+# src/ui/components/info_panel.py - Updated with DeepSeek R1 information
 """
-Info panel component for the Spiegel RAG application.
-This component defines the UI elements for the information tab.
+Updated info panel component reflecting the integrated agent search approach and DeepSeek R1 model.
 """
 import gradio as gr
 
 def create_info_panel():
     """
-    Create the info panel UI component.
+    Create the updated info panel UI component with DeepSeek R1 information.
     """
     gr.Markdown("""
     # Über das Spiegel RAG-System
@@ -23,91 +22,212 @@ def create_info_panel():
     1. **Retrieval**: Das System sucht zunächst relevante Textabschnitte aus dem Archiv
     2. **Generation**: Ein Sprachmodell analysiert diese Abschnitte und generiert eine Antwort
     
+    ## Zwei Suchmethoden
+    
+    Das System bietet zwei parallele Ansätze zur Quellenauswahl:
+    
+    ### Standard-Suche (Schnell & Direkt)
+    - **Vektorsimilarität**: Findet Inhalte basierend auf semantischer Ähnlichkeit
+    - **Schlagwort-Filterung**: Boolesche Operatoren (AND, OR, NOT) für präzise Filterung
+    - **Semantische Erweiterung**: Automatische Berücksichtigung ähnlicher Begriffe
+    - **Zeitfenster-Suche**: Ausgewogene Abdeckung verschiedener Zeitperioden
+    - **Geschwindigkeit**: Schnelle Ergebnisse für direkte Informationssuche
+    
+    ### Agenten-Suche (KI-gestützte Bewertung)
+    - **Intelligente Vorauswahl**: Zunächst mehr Quellen abrufen (z.B. 50 pro Zeitfenster)
+    - **KI-Bewertung**: Sprachmodell bewertet jeden Text hinsichtlich der Relevanz
+    - **Selektive Filterung**: Nur die besten Texte werden ausgewählt (z.B. 20 pro Zeitfenster)
+    - **Transparente Begründungen**: Nachvollziehbare Erklärungen für jede Auswahl
+    - **Zeitfenster-Integration**: Gleichmäßige Verteilung über verschiedene Perioden
+    - **Anpassbare Bewertungskriterien**: Verschiedene Prompt-Vorlagen für unterschiedliche Analysezwecke
+    
+    ## Verfügbare KI-Modelle
+    
+    Das System unterstützt verschiedene Sprachmodelle für unterschiedliche Anwendungszwecke:
+    
+    ### Lokale Modelle (HU-Netzwerk erforderlich)
+    - **HU-LLM 1 & 3**: Schnelle, zuverlässige Modelle für Standard-Analysen
+    - **DeepSeek R1 32B**: **Neu!** Fortschrittliches Reasoning-Modell für komplexe analytische Aufgaben
+    
+    ### Externe Modelle (API-Schlüssel erforderlich)
+    - **OpenAI GPT-4o**: Vielseitiges, leistungsstarkes Modell
+    - **Google Gemini Pro**: Großes Kontextfenster für umfangreiche Textanalysen
+    
+    ## DeepSeek R1: Das neue Reasoning-Modell
+    
+    **DeepSeek R1** ist ein hochmodernes Sprachmodell, das speziell für analytisches Denken und komplexe Problemlösung entwickelt wurde:
+    
+    ### Besondere Stärken von DeepSeek R1:
+    - **Mehrstufiges Denken**: Kann komplexe Probleme in logische Schritte unterteilen
+    - **Kritische Analyse**: Hinterfragt Annahmen und betrachtet verschiedene Perspektiven
+    - **Quellenvergleich**: Besonders gut im Vergleich und der Synthese verschiedener Textquellen
+    - **Historische Kontextualisierung**: Versteht zeitliche Entwicklungen und historische Zusammenhänge
+    - **Argumentationsqualität**: Erstellt strukturierte, gut begründete Analysen
+    
+    ### Wann DeepSeek R1 verwenden?
+    
+    **Besonders empfohlen für:**
+    - **Diskursanalysen**: "Wie entwickelte sich die Darstellung der DDR über die Jahrzehnte?"
+    - **Vergleichende Studien**: "Unterschiede in der Berichterstattung über verschiedene politische Parteien"
+    - **Kritische Quellenanalyse**: "Welche Perspektiven und Vorurteile zeigt die Berichterstattung?"
+    - **Komplexe historische Fragen**: "Wie spiegelt sich der gesellschaftliche Wandel in der Mediensprache wider?"
+    - **Methodische Reflexion**: "Welche Grenzen hat diese Quellenauswahl?"
+    
+    **Weniger geeignet für:**
+    - Einfache Faktenfragen
+    - Schnelle Übersichten
+    - Standardzusammenfassungen
+    
+    ### Optimale Einstellungen für DeepSeek R1:
+    - **Temperatur**: 0.1-0.4 (niedrig für analytische Präzision)
+    - **Max. Token**: 1500-3000 (für ausführliche Analysen)
+    - **System-Prompt**: "historical_analysis" oder "discourse_analysis" für beste Ergebnisse
+    
     ## Hauptfunktionen
     
-    - **Semantische Suche**: Findet Inhalte basierend auf ihrer Bedeutung, nicht nur nach Schlüsselwörtern
-    - **Schlagwort-Filterung**: Verwenden Sie boolesche Operatoren (AND, OR, NOT) für präzise Filterung
-    - **Semantische Erweiterung**: Findet und berücksichtigt automatisch ähnliche Begriffe
-    - **Zeitfenster-Suche**: Analysiert Inhalte über verschiedene Zeitperioden hinweg
-    - **Anpassbare Textgrößen**: Optimieren Sie die Suche mit verschiedenen Chunk-Größen
-    - **Flexible LLM-Auswahl**: Wählen Sie zwischen HU-LLM (lokal) oder OpenAI-Modellen
-    - **Zweistufiger Prozess**: Quellen gezielt abrufen und dann Fragen dazu stellen
-    - **Agenten-basierte Suche**: Fortschrittliche mehrstufige Filterung mit LLM-gestützter Bewertung
+    - **Semantische Suche**: Findet Inhalte basierend auf Bedeutung, nicht nur nach Schlüsselwörtern
+    - **Zeitfenster-Analyse**: Ausgewogene Abdeckung verschiedener historischer Perioden
+    - **Flexible Textgrößen**: Optimieren Sie die Suche mit verschiedenen Chunk-Größen (500, 2000, 3000 Zeichen)
+    - **Vier leistungsstarke LLM-Optionen**: HU-LLM, DeepSeek R1, OpenAI GPT-4o, Google Gemini Pro
+    - **Umfassende Downloads**: JSON/CSV-Export mit Metadaten und KI-Bewertungen
+    - **Integrierter Workflow**: Beide Suchmethoden führen nahtlos zur Analyse
     
     ## So nutzen Sie die Anwendung
     
-    ### Standard-Suche (Zweistufiger Prozess)
+    ### 1. Quellen abrufen
     
-    1. Geben Sie eine **Inhaltsbeschreibung** ein, was Sie im Archiv finden möchten
-    2. Stellen Sie den **Zeitraum** ein (1948-1979)
-    3. Nutzen Sie **Schlagwort-Filterung** mit booleschen Ausdrücken für präzisere Ergebnisse
-    4. Aktivieren Sie die **Semantische Erweiterung** für ähnliche Begriffe
-    5. Probieren Sie die **Zeitfenster-Suche** für eine ausgewogene zeitliche Abdeckung
-    6. Klicken Sie auf **"Quellen abrufen"** - diese werden unter "Gefundene Texte" angezeigt
+    **Schritt 1: Suchmethode wählen**
+    - **Standard-Suche**: Für schnelle, direkte Informationssuche
+    - **Agenten-Suche**: Für sorgfältige, KI-gestützte Quellenauswahl (empfohlen mit DeepSeek R1)
     
-    Anschließend:
+    **Schritt 2: Suchparameter konfigurieren**
+    - Geben Sie eine **Inhaltsbeschreibung** ein
+    - Stellen Sie den **Zeitraum** ein (1948-1979)
+    - Wählen Sie die **Textgröße** (Chunk-Größe)
     
-    1. Stellen Sie eine **konkrete Frage** zu den gefundenen Texten
-    2. Wählen Sie ein **Sprachmodell** (HU-LLM oder OpenAI)
-    3. Für OpenAI-Modelle ist ein **API-Schlüssel** erforderlich
-    4. Passen Sie bei Bedarf den **System-Prompt** und die **Temperatur** an
-    5. Klicken Sie auf **"Frage beantworten"**
+    **Für Standard-Suche zusätzlich:**
+    - **Anzahl Ergebnisse** festlegen (1-50)
+    - Optional: **Schlagwort-Filterung** mit booleschen Ausdrücken
+    - Optional: **Semantische Erweiterung** für ähnliche Begriffe
+    - Optional: **Zeitfenster-Suche** für ausgewogene zeitliche Abdeckung
     
-    ### Agenten-basierte Suche (Fortgeschritten)
+    **Für Agenten-Suche zusätzlich:**
+    - **Zeitfenster** konfigurieren (standardmäßig aktiviert)
+    - **Chunks pro Fenster** einstellen (Initial → Final, z.B. 50 → 20)
+    - **KI-Modell** für Bewertung wählen (DeepSeek R1 empfohlen für komplexe Analysen)
+    - **Bewertungs-Prompt** anpassen (vordefinierte Vorlagen verfügbar)
     
-    Die Agenten-basierte Suche kombiniert Retrieval und Analyse in einem mehrstufigen Prozess:
+    **Schritt 3: Suche starten**
+    - Bei Standard-Suche: Sofortige Ergebnisse
+    - Bei Agenten-Suche: Fortschrittsanzeige mit Zeitfenster-Updates
     
-    1. Geben Sie Ihre **Frage** ein
-    2. Optional: Geben Sie eine **Inhaltsbeschreibung** ein, die sich von der Frage unterscheidet
-       - Die Inhaltsbeschreibung definiert die Art der Inhalte, die gesucht werden sollen
-       - Die Frage bestimmt, wie diese Inhalte bewertet und analysiert werden
-    3. Konfigurieren Sie die **Filtereinstellungen**:
-       - **Initiale Textmenge**: Wie viele Texte zunächst abgerufen werden (z.B. 100)
-       - **Filterstufen**: Wie die Menge der Texte schrittweise reduziert wird (z.B. 50 → 20 → 10)
-    4. Wählen Sie ein **LLM-Modell** für die Bewertung und Analyse
-    5. Klicken Sie auf **"Agenten-Suche starten"**
+    ### 2. Ergebnisse prüfen und herunterladen
     
-    In diesem Modus:
-    - Werden zunächst mehr Texte abgerufen als bei der Standard-Suche
-    - Das LLM bewertet jeden Text hinsichtlich seiner Relevanz für Ihre Frage
-    - Sie erhalten detaillierte Bewertungen und Begründungen für jeden ausgewählten Text
-    - Die finale Antwort basiert auf den bestbewerteten Texten
+    - **Gefundene Texte** werden automatisch angezeigt
+    - **Download-Optionen**:
+      - **JSON/CSV**: Standard-Downloads für alle Suchmethoden
+      - **Umfassender Agent-Download**: Zusätzlich bei Agenten-Suche mit allen abgerufenen Texten und KI-Bewertungen
+    
+    ### 3. Quellen analysieren
+    
+    - Stellen Sie eine **konkrete Frage** zu den gefundenen Texten
+    - Wählen Sie ein **Sprachmodell** für die Analyse (DeepSeek R1 für komplexe Analysen)
+    - Passen Sie bei Bedarf **System-Prompt** und **Parameter** an
+    - Erhalten Sie eine **fundierte Antwort** basierend auf den ausgewählten Quellen
+    
+    ## Wann welche Suchmethode und welches Modell verwenden?
+    
+    ### Standard-Suche + HU-LLM:
+    - **Schnelle Informationssuche**: Direkter Zugriff auf relevante Inhalte
+    - **Explorative Recherche**: Überblick über verfügbare Materialien
+    - **Einfache Faktenfragen**: Wer, was, wann, wo?
+    - **Bekannte Themen**: Wenn Sie wissen, wonach Sie suchen
+    
+    ### Standard-Suche + DeepSeek R1:
+    - **Komplexe Einzelfragen**: Tiefe Analyse weniger Quellen
+    - **Kritische Quellenbetrachtung**: Bewertung von Perspektiven und Vorurteilen
+    - **Detaillierte Interpretation**: Wenn Sie präzise Textanalyse benötigen
+    
+    ### Agenten-Suche + HU-LLM:
+    - **Qualitative Auswahl**: Wenn die Güte der Quellen entscheidend ist
+    - **Zeitübergreifende Studien**: Entwicklungen über mehrere Jahre
+    - **Ausgewogene Darstellung**: Verschiedene Perspektiven berücksichtigen
+    
+    ### Agenten-Suche + DeepSeek R1:
+    - **Komplexe Diskursanalysen**: Vielschichtige historische Fragestellungen
+    - **Vergleichende Medienanalysen**: Unterschiedliche Darstellungsmuster
+    - **Theoriegeleitete Forschung**: Wenn methodische Reflexion wichtig ist
+    - **Wissenschaftliche Untersuchungen**: Publikationsreife Analysen
+    
+    ## Anwendungsbeispiele mit Modellempfehlungen
+    
+    ### Einfache Recherche (Standard + HU-LLM):
+    - "Finde Artikel über den Mauerbau 1961"
+    - "Welche Autoren schrieben über die Studentenbewegung?"
+    - "Übersicht zur Wirtschaftspolitik der 1970er Jahre"
+    
+    ### Analytische Einzelfragen (Standard + DeepSeek R1):
+    - "Wie wird Willy Brandt in diesem Artikel charakterisiert?"
+    - "Welche Metaphern verwendet der Spiegel für die deutsche Teilung?"
+    - "Was sind die impliziten Wertungen in dieser Berichterstattung?"
+    
+    ### Systematische Untersuchungen (Agent + HU-LLM):
+    - "Sammle ausgewogene Quellen zur Ost-West-Beziehungen"
+    - "Finde repräsentative Texte über gesellschaftlichen Wandel"
+    - "Suche Artikel über Terrorismus aus verschiedenen Jahrzehnten"
+    
+    ### Wissenschaftliche Analysen (Agent + DeepSeek R1):
+    - "Wie entwickelte sich die Darstellung der DDR zwischen den 1950er und 1970er Jahren?"
+    - "Welche diskursiven Strategien nutzte der Spiegel bei der Berichterstattung über politische Skandale?"
+    - "Inwiefern spiegelt die Mediensprache gesellschaftliche Modernisierungsprozesse wider?"
+    - "Wie veränderte sich die Rolle der Frau in der Spiegel-Berichterstattung?"
+    
+    ## Technische Details
+    
+    ### Datengrundlage
+    - **Zeitraum**: Der Spiegel-Artikel 1948-1979
+    - **Textverarbeitung**: Artikel in semantisch durchsuchbare Abschnitte unterteilt
+    - **Chunk-Größen**: 500, 2000 oder 3000 Zeichen pro Abschnitt
+    
+    ### KI-Modelle im Detail
+    - **HU-LLM 1 & 3**: Lokale Modelle für Standard-Aufgaben (HU-Netzwerk erforderlich)
+    - **DeepSeek R1 32B**: Reasoning-Modell via Ollama für analytische Aufgaben (HU-Netzwerk erforderlich)
+    - **OpenAI GPT-4o**: Vielseitigstes externes Modell für alle Aufgabentypen
+    - **Google Gemini Pro**: Großes Kontextfenster für umfangreiche Texte
+    
+    ### Einbettungsmodelle
+    - **Ollama nomic-embed-text**: Für semantische Vektorsuche
+    - **FastText**: Für Wortähnlichkeiten und semantische Erweiterung
     
     ## Tipps für optimale Ergebnisse
     
-    1. **Präzise Suchanfragen**: Je genauer Ihre Inhaltsbeschreibung, desto relevanter die Quellen
-    2. **Konkrete Fragen**: Formulieren Sie spezifische Fragen zu den gefundenen Texten
-    3. **Schlagwort-Filterung**: Nutzen Sie boolesche Ausdrücke wie `berlin AND mauer NOT sowjet`
-    4. **Semantische Erweiterung**: Findet automatisch verwandte Begriffe wie „DDR" für „Ostdeutschland"
-    5. **Zeitfenster-Suche**: Besonders nützlich bei längeren Zeiträumen (>10 Jahre)
-    6. **Agenten-Modus für komplexe Fragen**: Nutzen Sie den Agenten-Modus für analytische Fragen, die eine sorgfältigere Auswahl der Quellen erfordern
-    7. **Unterschiedliche Inhaltsbeschreibung und Frage**: Im Agenten-Modus können Sie mit einer breiteren Inhaltsbeschreibung und einer spezifischen Frage noch bessere Ergebnisse erzielen
+    ### DeepSeek R1 optimal nutzen:
+    1. **Niedrige Temperatur**: 0.1-0.4 für präzise analytische Antworten
+    2. **Ausreichend Token**: 1500-3000 für detaillierte Analysen
+    3. **Spezifische Prompts**: Nutzen Sie "historical_analysis" oder "discourse_analysis"
+    4. **Komplexe Fragen**: Formulieren Sie mehrdimensionale, analytische Fragestellungen
+    5. **Zeit einplanen**: DeepSeek R1 braucht etwas länger, liefert aber tiefere Analysen
     
-    ## Anwendungsbeispiele
+    ### Allgemeine Empfehlungen:
+    1. **Präzise Beschreibungen**: Je spezifischer Ihre Inhaltsbeschreibung, desto relevanter die Ergebnisse
+    2. **Angemessene Zeiträume**: Nicht zu große Spannen wählen (max. 10-15 Jahre)
+    3. **Passende Chunk-Größe**: 3000 für Kontext, 2000 für Balance, 500 für Präzision
+    4. **Modell-Matching**: Einfache Aufgaben → HU-LLM, komplexe Analysen → DeepSeek R1
     
-    - **Historische Analysen**: Wie hat sich die Berichterstattung zur deutschen Teilung über die Jahre verändert?
-    - **Medienkritik**: Wie wurden politische Ereignisse im Spiegel dargestellt?
-    - **Diskursanalyse**: Welche Sprache und Konzepte wurden verwendet, um über den Kalten Krieg zu berichten?
-    - **Ereignisrecherche**: Wie wurde über den Bau der Berliner Mauer berichtet?
-    - **Vergleichende Analyse** (Agenten-Modus): Wie unterschied sich die Berichterstattung über westliche und östliche Politiker?
-    - **Musteridentifikation** (Agenten-Modus): Welche Arten von Skandalen wurden im Spiegel behandelt und in welchem Tonfall?
+    ## Systemvoraussetzungen
     
-    ## Wann welchen Modus verwenden?
+    - **Netzwerk**: HU-Eduroam oder VPN für lokale LLM-Modelle (HU-LLM 1, 3, DeepSeek R1)
+    - **Browser**: Moderne Browser (Chrome, Firefox, Safari, Edge)
+    - **API-Schlüssel**: Nur für OpenAI/Gemini Modelle erforderlich (optional)
     
-    **Standard-Suche** ist ideal für:
-    - Schnelle, direkte Informationssuche
-    - Exploratives Durchsuchen des Archivs
-    - Einfachere, faktische Fragen
+    ## Datenschutz und Nutzung
     
-    **Agenten-basierte Suche** ist besser für:
-    - Komplexe, analytische Fragestellungen
-    - Vergleichende Betrachtungen
-    - Untersuchungen von Mustern oder Entwicklungen
-    - Fragen, die tiefere Textverständnis erfordern
-    - Situationen, in denen die Qualität der Quellenauswahl besonders wichtig ist
+    - **Lokale Verarbeitung**: HU-LLM und DeepSeek R1 laufen lokal, keine externen Übertragungen
+    - **Externe APIs**: OpenAI/Gemini nur bei expliziter Auswahl
+    - **Archivdaten**: Unterliegen den Nutzungsbedingungen des Spiegel-Archivs
+    - **Forschungszwecke**: System optimiert für akademische Nutzung
     
-    ## Datengrundlage
+    ---
     
-    Die Datenbank enthält Der Spiegel-Artikel aus den Jahren 1948 bis 1979, die aus dem Spiegel-Archiv erschlossen wurden.
-    Die Texte sind in Abschnitte (Chunks) unterteilt und semantisch durchsuchbar.
+    **Neu in dieser Version:** DeepSeek R1 Reasoning-Modell für erweiterte analytische Kapazitäten!
     """)

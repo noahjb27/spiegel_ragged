@@ -1,7 +1,9 @@
 """
-Enhanced LLM service supporting multiple providers: HU-LLM (multiple endpoints), OpenAI, and Gemini.
+Enhanced LLM service supporting multiple providers: HU-LLM, OpenAI, Gemini, and Ollama (DeepSeek R1).
 """
 import logging
+import requests
+import json
 from typing import Dict, List, Optional, Any
 
 import openai
@@ -13,7 +15,7 @@ from src.config import settings
 logger = logging.getLogger(__name__)
 
 class LLMService:
-    """Enhanced service for interacting with multiple language model providers."""
+    """Enhanced service for interacting with multiple language model providers including Ollama."""
     
     def __init__(self):
         """Initialize LLM clients for all providers."""
@@ -28,6 +30,9 @@ class LLMService:
         
         # Initialize Gemini client if API key is available
         self._init_gemini_client()
+        
+        # Initialize Ollama client for DeepSeek R1
+        self._init_ollama_client()
         
         logger.info(f"LLM Service initialized with {len(self.available_models)} available models")
 
@@ -93,10 +98,6 @@ class LLMService:
             return
             
         try:
-            # For Gemini, we'll use the REST API through requests or a compatible client
-            # For now, we'll implement a basic structure and mark it as available
-            # You may need to install google-generativeai: pip install google-generativeai
-            
             genai.configure(api_key=settings.GEMINI_API_KEY)
             
             # Test connection by listing models
@@ -115,6 +116,33 @@ class LLMService:
             logger.warning("⚠️ google-generativeai not installed. Install with: pip install google-generativeai")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Gemini: {e}")
+
+    def _init_ollama_client(self):
+        """Initialize Ollama client for DeepSeek R1."""
+        try:
+            # Test Ollama connection by checking if the model is available
+            models_url = f"{settings.OLLAMA_BASE_URL}/api/tags"
+            
+            response = requests.get(models_url, timeout=10)
+            response.raise_for_status()
+            
+            models_data = response.json()
+            available_models = [model["name"] for model in models_data.get("models", [])]
+            
+            if settings.DEEPSEEK_R1_MODEL_NAME in available_models:
+                self.clients["deepseek-r1"] = {
+                    "client": None,  # We'll use direct HTTP requests
+                    "type": "ollama",
+                    "model_id": settings.DEEPSEEK_R1_MODEL_NAME,
+                    "endpoint": settings.OLLAMA_BASE_URL
+                }
+                self.available_models.append("deepseek-r1")
+                logger.info(f"✅ DeepSeek R1 ({settings.DEEPSEEK_R1_MODEL_NAME}) initialized successfully at {settings.OLLAMA_BASE_URL}")
+            else:
+                logger.warning(f"⚠️ DeepSeek R1 model '{settings.DEEPSEEK_R1_MODEL_NAME}' not found in Ollama. Available models: {available_models}")
+                
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Ollama/DeepSeek R1: {e}")
             
     def get_available_models(self) -> List[str]:
         """Get list of available model names."""
@@ -200,6 +228,10 @@ class LLMService:
                 )
             elif client_type == "gemini":
                 return self._generate_gemini_response(
+                    client_info, prompt, system_prompt, temperature, max_tokens, model
+                )
+            elif client_type == "ollama":
+                return self._generate_ollama_response(
                     client_info, prompt, system_prompt, temperature, max_tokens, model
                 )
             else:
@@ -335,6 +367,87 @@ class LLMService:
             }
         }
 
+    def _generate_ollama_response(
+        self, 
+        client_info: Dict, 
+        prompt: str, 
+        system_prompt: str, 
+        temperature: float, 
+        max_tokens: Optional[int],
+        model: str
+    ) -> Dict[str, Any]:
+        """Generate response using Ollama (DeepSeek R1)."""
+        model_id = client_info["model_id"]
+        endpoint = client_info["endpoint"]
+        
+        # Prepare the Ollama API request
+        url = f"{endpoint}/api/chat"
+        
+        # Build messages array
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ]
+        
+        # Prepare request payload
+        payload = {
+            "model": model_id,
+            "messages": messages,
+            "stream": False,  # We want a single response
+            "options": {
+                "temperature": temperature,
+            }
+        }
+        
+        # Add max tokens if specified
+        if max_tokens:
+            payload["options"]["num_predict"] = max_tokens
+        
+        try:
+            # Make the request to Ollama
+            response = requests.post(
+                url, 
+                json=payload, 
+                timeout=120,  # DeepSeek R1 might take longer
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+            
+            # Parse the response
+            response_data = response.json()
+            
+            # Extract the generated text
+            generated_text = response_data.get("message", {}).get("content", "")
+            
+            # Extract metadata
+            metadata = {
+                "total_duration": response_data.get("total_duration", 0),
+                "load_duration": response_data.get("load_duration", 0),
+                "prompt_eval_count": response_data.get("prompt_eval_count", 0),
+                "prompt_eval_duration": response_data.get("prompt_eval_duration", 0),
+                "eval_count": response_data.get("eval_count", 0),
+                "eval_duration": response_data.get("eval_duration", 0),
+            }
+            
+            return {
+                "text": generated_text,
+                "model": model,
+                "model_id": model_id,
+                "provider": "ollama",
+                "endpoint": endpoint,
+                "metadata": metadata
+            }
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Ollama request failed: {e}")
+            raise Exception(f"Failed to get response from Ollama: {e}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse Ollama response: {e}")
+            raise Exception(f"Invalid response from Ollama: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error with Ollama: {e}")
+            raise
+
     def health_check(self) -> Dict[str, Any]:
         """Perform health check on all configured LLM providers."""
         health_status = {
@@ -364,6 +477,15 @@ class LLMService:
                 elif client_info["type"] == "gemini":
                     # Test with list models call
                     list(client_info["client"].list_models())
+                    health_status["providers"][model_name] = {
+                        "status": "healthy",
+                        "endpoint": client_info["endpoint"]
+                    }
+                elif client_info["type"] == "ollama":
+                    # Test Ollama connection
+                    models_url = f"{client_info['endpoint']}/api/tags"
+                    response = requests.get(models_url, timeout=5)
+                    response.raise_for_status()
                     health_status["providers"][model_name] = {
                         "status": "healthy",
                         "endpoint": client_info["endpoint"]
