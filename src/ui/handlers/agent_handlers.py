@@ -1,313 +1,449 @@
-# src/ui/handlers/agent_handlers.py - Fixed version
+# src/ui/handlers/agent_handlers.py
 """
-Fixed agent handlers with proper HTML formatting for text visibility
+Handlers for the redesigned agent search functionality.
+Integrates time-windowed agent search with the main search workflow.
 """
 import json
 import logging
 import time
+import threading
 from typing import Dict, List, Tuple, Optional, Any
 import gradio as gr
 
-from src.core.search.strategies import AgentSearchStrategy, SearchConfig
+from src.core.search.agent_strategy import TimeWindowedAgentStrategy, AgentSearchConfig
+from src.core.search.strategies import SearchConfig
 from src.config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Global reference to the RAG engine
+# Global references
 rag_engine = None
+current_agent_search = None
+search_thread = None
 
 def set_rag_engine(engine: Any) -> None:
     """Set the global RAG engine reference."""
     global rag_engine
     rag_engine = engine
 
-def perform_agent_search_and_analysis(
-    question: str,
+def perform_agent_search(
     content_description: str,
+    chunk_size: int,
     year_start: int,
     year_end: int,
-    chunk_size: int,
-    keywords: str,
-    search_in: List[str],
-    enforce_keywords: bool,
-    initial_count: int,
-    filter_stage1: int,
-    filter_stage2: int,
-    filter_stage3: int,
-    model: str,
-    system_prompt_template: str,
-    custom_system_prompt: str
-) -> Tuple[Dict[str, Any], str, str, str, str, str]:
+    agent_use_time_windows: bool,
+    agent_time_window_size: int,
+    chunks_per_window_initial: int,
+    chunks_per_window_final: int,
+    agent_keywords: str,
+    agent_search_in: List[str],
+    agent_enforce_keywords: bool,
+    agent_model: str,
+    agent_system_prompt_template: str,
+    agent_custom_system_prompt: str,
+    progress_callback: Optional[Any] = None
+) -> Tuple[str, Dict[str, Any]]:
     """
-    Perform agent search and analysis in one step using the new architecture.
-    FIXED: Removed openai_api_key parameter
+    Perform agent search with time windowing.
     
     Returns:
-        Tuple of (results_state, status, answer_output, process_output, evaluations_output, chunks_output, metadata_output)
+        Tuple of (status_message, search_results)
     """
+    global current_agent_search
+    
     try:
         if not rag_engine:
-            error_msg = "RAG Engine failed to initialize"
-            return {}, f"Error: {error_msg}", f"### Error\n\n{error_msg}", "", "", "", ""
+            return "Error: RAG Engine nicht initialisiert", None
         
-        if not question.strip():
-            error_msg = "Bitte geben Sie eine Frage ein"
-            return {}, f"Error: {error_msg}", f"### Error\n\n{error_msg}", "", "", "", ""
+        if not content_description.strip():
+            return "Error: Inhaltsbeschreibung ist erforderlich", None
         
         start_time = time.time()
-        logger.info(f"Starting agent search and analysis for question: '{question}'")
+        logger.info(f"Starting agent search: '{content_description}'")
         
         # Clean parameters
-        content_description = content_description.strip() if content_description else question
-        keywords_cleaned = keywords.strip() if keywords else None
-        search_fields = search_in if search_in else ["Text"]
-        
-        # Prepare filter stages (remove duplicates and sort descending)
-        filter_stages = [filter_stage1, filter_stage2, filter_stage3]
-        filter_stages = sorted(list(set([f for f in filter_stages if f > 0])), reverse=True)
-        
-        logger.info(f"Filter stages: {filter_stages}")
-        
-        # Determine model
-        model_to_use = model
+        content_description = content_description.strip()
+        keywords_cleaned = agent_keywords.strip() if agent_keywords else None
+        search_fields = agent_search_in if agent_search_in else ["Text"]
         
         # Determine system prompt
-        if custom_system_prompt.strip():
-            system_prompt = custom_system_prompt.strip()
+        if agent_custom_system_prompt.strip():
+            system_prompt = agent_custom_system_prompt.strip()
         else:
-            system_prompt = settings.SYSTEM_PROMPTS.get(system_prompt_template, settings.SYSTEM_PROMPTS["default"])
+            system_prompt = settings.ALL_SYSTEM_PROMPTS.get(
+                agent_system_prompt_template, 
+                settings.AGENT_SYSTEM_PROMPTS["agent_default"]
+            )
         
-        # Step 1: Create search configuration
-        config = SearchConfig(
+        # Create search configurations
+        search_config = SearchConfig(
             content_description=content_description,
             year_range=(year_start, year_end),
             chunk_size=chunk_size,
             keywords=keywords_cleaned,
             search_fields=search_fields,
-            enforce_keywords=enforce_keywords,
-            top_k=filter_stages[-1] if filter_stages else 10  # Use final filter stage as top_k
+            enforce_keywords=agent_enforce_keywords,
+            top_k=100  # Not used in agent search, but required
         )
         
-        # Step 2: Create and execute agent strategy directly
-        agent_strategy = AgentSearchStrategy(
-            initial_count=initial_count,
-            filter_stages=filter_stages,
+        agent_config = AgentSearchConfig(
+            use_time_windows=agent_use_time_windows,
+            time_window_size=agent_time_window_size,
+            chunks_per_window_initial=chunks_per_window_initial,
+            chunks_per_window_final=chunks_per_window_final,
+            agent_model=agent_model,
+            agent_system_prompt=system_prompt
+        )
+        
+        # Create and execute agent strategy
+        agent_strategy = TimeWindowedAgentStrategy(
             llm_service=rag_engine.llm_service,
-            model=model_to_use
+            agent_config=agent_config
         )
         
-        logger.info("Executing agent search...")
+        # Store reference for potential cancellation
+        current_agent_search = agent_strategy
         
-        # Call the strategy directly 
+        logger.info("Executing agent search with time windowing...")
+        
+        # Progress callback wrapper
+        def progress_wrapper(message: str, progress: float):
+            if progress_callback:
+                progress_callback(message, progress)
+        
+        # Execute search
         search_result = agent_strategy.search(
-            config=config,
+            config=search_config,
             vector_store=rag_engine.vector_store,
-            question=question
+            progress_callback=progress_wrapper
         )
         
         search_time = time.time() - start_time
         
-        # Check for search errors
+        # Clear reference
+        current_agent_search = None
+        
+        # Check for errors
         if "error" in search_result.metadata:
             error_msg = search_result.metadata["error"]
-            return {}, f"Error: {error_msg}", f"### Error\n\n{error_msg}", "", "", "", ""
+            logger.error(f"Agent search error: {error_msg}")
+            return f"Error: {error_msg}", None
         
-        # Step 3: Perform analysis with the found chunks
-        logger.info(f"Analyzing {len(search_result.chunks)} chunks...")
+        # Convert search result to UI format
+        chunks_for_ui = []
+        for doc, score in search_result.chunks:
+            chunks_for_ui.append({
+                'content': doc.page_content,
+                'metadata': doc.metadata,
+                'relevance_score': score  # This is the LLM score
+            })
         
-        # Convert search result chunks to Document format for analysis
-        documents = [doc for doc, score in search_result.chunks]
-        
-        analysis_result = rag_engine.analyze(
-            question=question,
-            chunks=documents,
-            model=model_to_use,
-            system_prompt=system_prompt,
-            temperature=0.3
-        )
-        
-        total_time = time.time() - start_time
-        logger.info(f"Agent search and analysis completed in {total_time:.2f} seconds")
-        
-        # Prepare results for UI
+        # Build comprehensive results dictionary
         results = {
-            "answer": analysis_result.answer,
-            "chunks": [{"content": doc.page_content, "metadata": doc.metadata, "relevance_score": score} 
-                      for doc, score in search_result.chunks],
-            "evaluations": search_result.metadata.get("evaluations", []),
-            "metadata": {
-                **search_result.metadata,
-                "analysis_model": analysis_result.model,
-                "total_time": total_time,
-                "question": question
+            'chunks': chunks_for_ui,
+            'metadata': {
+                'search_time': search_time,
+                'strategy': 'time_windowed_agent',
+                'chunk_size': chunk_size,
+                'year_range': [year_start, year_end],
+                'keywords': keywords_cleaned,
+                'retrieval_method': 'agent_time_windowed' if agent_use_time_windows else 'agent_global',
+                **search_result.metadata  # Include all agent metadata
             }
         }
         
-        # Format outputs with FIXED formatting
-        status = f"Suche und Analyse erfolgreich abgeschlossen in {total_time:.2f} Sekunden."
-        answer_output = analysis_result.answer
-        process_output = format_process_visualization_fixed(results)
-        evaluations_output = format_evaluations_fixed(results)
-        chunks_output = format_chunks(results)
-        metadata_output = format_metadata(results)
+        num_chunks = len(chunks_for_ui)
+        logger.info(f"Agent search completed: {num_chunks} chunks in {search_time:.2f}s")
         
-        return results, status, answer_output, process_output, evaluations_output, chunks_output, metadata_output
+        # Create success message
+        method_name = "Agenten-Suche mit Zeitfenstern" if agent_use_time_windows else "Agenten-Suche (global)"
+        
+        info_text = f"""
+        ### Quellen erfolgreich durch KI-Bewertung ausgewählt ({method_name})
+        
+        **Inhaltsbeschreibung**: {content_description}  
+        **Zeitraum**: {year_start} - {year_end}  
+        **Anzahl ausgewählter Quellen**: {num_chunks}  
+        **Suchzeit**: {search_time:.2f} Sekunden  
+        **Bewertungsmodell**: {agent_model}
+        """
+        
+        if agent_use_time_windows:
+            windows = search_result.metadata.get('time_windows', [])
+            total_initial = search_result.metadata.get('total_initial_chunks', 0)
+            info_text += f"""
+            **Zeitfenster**: {len(windows)} Fenster à {agent_time_window_size} Jahre
+            **Initial abgerufen**: {total_initial} Texte insgesamt
+            **Pro Fenster**: {chunks_per_window_initial} → {chunks_per_window_final} Texte
+            """
+        
+        if keywords_cleaned:
+            info_text += f"""
+            **Schlagwörter**: {keywords_cleaned}
+            **Strikte Filterung**: {'Ja' if agent_enforce_keywords else 'Nein'}
+            """
+        
+        return info_text, results
         
     except Exception as e:
-        logger.error(f"Error in agent search and analysis: {e}", exc_info=True)
-        error_msg = str(e)
-        return {}, f"Error: {error_msg}", f"### Error\n\n{error_msg}", "", "", "", ""
+        logger.error(f"Error in agent search: {e}", exc_info=True)
+        current_agent_search = None
+        return f"Error: {str(e)}", None
 
-def format_process_visualization_fixed(results: Dict[str, Any]) -> str:
-    """FIXED: Format the process visualization as HTML with proper styling."""
-    agent_metadata = results.get("metadata", {}).get("agent_metadata", {})
-    stage_times = agent_metadata.get("stage_times", [])
-    stage_results = agent_metadata.get("stage_results", [])
-    initial_count = agent_metadata.get("initial_retrieval_count", 100)
+def cancel_agent_search() -> str:
+    """Cancel the currently running agent search."""
+    global current_agent_search
     
-    if not stage_times or not stage_results:
-        return "<div class='agent-results'>Keine Prozessdaten verfügbar.</div>"
-    
-    html = "<div class='agent-results'>"
-    html += f"<h3 style='color: #2c3e50; margin-bottom: 20px;'>Filterungsprozess ({len(stage_times)} Stufen)</h3>"
-    html += f"<p style='color: #34495e; margin-bottom: 20px;'>Gesamtzeit: {agent_metadata.get('total_time', 0):.2f} Sekunden</p>"
-    
-    for i, ((stage_name, stage_time), stage_result) in enumerate(zip(stage_times, stage_results)):
-        percentage = 100.0
-        if i == 0:
-            max_value = initial_count * 1.2
-        else:
-            max_value = stage_results[i-1]
-            
-        if max_value > 0:
-            percentage = (stage_result / max_value) * 100
-            
-        html += f"""
-        <div class='filter-stage'>
-            <div class='filter-stage-title'>{stage_name} ({stage_time:.2f}s)</div>
-            <div class='filter-progress'>
-                <div class='filter-bar' style='width: {min(percentage, 100)}%;'>
-                    {stage_result} Texte
-                </div>
-            </div>
-        </div>
-        """
-    
-    html += "</div>"
-    return html
+    if current_agent_search:
+        logger.info("Cancelling agent search...")
+        current_agent_search.cancel_search()
+        return "Agenten-Suche wird abgebrochen..."
+    else:
+        return "Keine aktive Suche zum Abbrechen."
 
-def format_evaluations_fixed(results: Dict[str, Any]) -> str:
-    """FIXED: Format evaluations with proper contrast and readable text."""
-    evaluations = results.get("evaluations", [])
-    
-    if not evaluations:
-        return "<div class='agent-results'>Keine Bewertungen verfügbar.</div>"
-    
-    html = "<div class='agent-results'>"
-    html += f"<h3 style='color: #2c3e50; margin-bottom: 20px;'>Detaillierte Bewertungen der {len(evaluations)} ausgewählten Texte</h3>"
-    
-    # Add FIXED explanation of scoring with proper styling
-    html += """
-    <div class='explanation-box'>
-        <h4>Score-Erklärung:</h4>
-        <ul>
-            <li><strong>LLM-Bewertung (0-1):</strong> Vom Sprachmodell vergebene Relevanz für Ihre Frage - <em>entscheidend für finale Auswahl</em></li>
-            <li><strong>Vektor-Ähnlichkeit (0-1):</strong> Semantische Ähnlichkeit zur Suchanfrage - <em>für initiale Filterung</em></li>
-            <li><strong>Ursprünglicher LLM-Score:</strong> Bewertung auf 0-10 Skala vor Normalisierung</li>
-        </ul>
-    </div>
+def perform_agent_search_threaded(
+    content_description: str,
+    chunk_size: int,
+    year_start: int,
+    year_end: int,
+    agent_use_time_windows: bool,
+    agent_time_window_size: int,
+    chunks_per_window_initial: int,
+    chunks_per_window_final: int,
+    agent_keywords: str,
+    agent_search_in: List[str],
+    agent_enforce_keywords: bool,
+    agent_model: str,
+    agent_system_prompt_template: str,
+    agent_custom_system_prompt: str
+) -> Tuple[str, Dict[str, Any], str, gr.update, gr.update, gr.update, gr.update, gr.update, gr.update]:
     """
+    Perform agent search in a thread with UI updates.
     
-    for i, eval_data in enumerate(evaluations):
-        title = eval_data.get("title", "Unbekannter Titel")
-        date = eval_data.get("date", "Unbekanntes Datum")
-        
-        llm_score = eval_data.get("llm_evaluation_score", eval_data.get("relevance_score", 0.0))
-        vector_score = eval_data.get("vector_similarity_score", 0.0)
-        
-        # Calculate original 0-10 score for display
-        original_llm_score = llm_score * 10
-        
-        evaluation = eval_data.get("evaluation", "Keine Bewertung verfügbar")
-        
-        # FIXED: Determine relevance class for proper styling
-        relevance_class = "low-relevance"
-        if llm_score >= 0.8:
-            relevance_class = "high-relevance"
-        elif llm_score >= 0.6:
-            relevance_class = "medium-relevance"
-        
-        html += f"""
-        <div class='evaluation-card {relevance_class}'>
-            <h4>{i+1}. {title} ({date})</h4>
-            <div style='display: flex; gap: 20px; margin-bottom: 10px; flex-wrap: wrap;'>
-                <div><strong>LLM-Bewertung:</strong> {llm_score:.3f}</div>
-                <div><strong>Ursprünglicher Score:</strong> {original_llm_score:.1f}/10</div>
-                <div><strong>Vektor-Ähnlichkeit:</strong> {vector_score:.3f}</div>
-            </div>
-            <p><strong>Begründung:</strong> {evaluation}</p>
-        </div>
-        """
+    Returns:
+        Tuple for UI updates: (search_status, retrieved_chunks_state, formatted_chunks, 
+                              search_mode_update, search_btn_update, cancel_btn_update,
+                              progress_update, retrieved_texts_accordion, question_accordion)
+    """
+    global search_thread
     
-    html += "</div>"
-    return html
+    try:
+        # Initialize UI state
+        progress_state = gr.update(value="Agenten-Suche gestartet...", visible=True)
+        cancel_btn_state = gr.update(visible=True)
+        search_btn_state = gr.update(interactive=False)
+        
+        # Progress tracking
+        progress_messages = []
+        
+        def progress_callback(message: str, progress: float):
+            progress_messages.append(f"{progress*100:.0f}% - {message}")
+            # Update progress display
+            return gr.update(value=f"**Fortschritt**: {message} ({progress*100:.0f}%)")
+        
+        # Run search
+        search_status, retrieved_chunks = perform_agent_search(
+            content_description, chunk_size, year_start, year_end,
+            agent_use_time_windows, agent_time_window_size,
+            chunks_per_window_initial, chunks_per_window_final,
+            agent_keywords, agent_search_in, agent_enforce_keywords,
+            agent_model, agent_system_prompt_template, agent_custom_system_prompt,
+            progress_callback
+        )
+        
+        # Format chunks for display
+        if retrieved_chunks and retrieved_chunks.get('chunks'):
+            formatted_chunks = format_agent_chunks(retrieved_chunks)
+            num_chunks = len(retrieved_chunks.get('chunks'))
+            
+            # Update accordion states for successful search
+            retrieved_texts_state = gr.update(open=True)
+            question_state = gr.update(open=True)
+        else:
+            formatted_chunks = "Keine Texte durch KI-Bewertung ausgewählt."
+            num_chunks = 0
+            
+            # Keep search accordion open for retry
+            retrieved_texts_state = gr.update(open=False)
+            question_state = gr.update(open=False)
+        
+        # Final UI updates
+        final_progress = gr.update(visible=False)
+        final_cancel_btn = gr.update(visible=False)
+        final_search_btn = gr.update(interactive=True)
+        
+        # Clear thread reference
+        search_thread = None
+        
+        return (
+            search_status, retrieved_chunks, formatted_chunks,
+            gr.update(),  # search_mode (no change)
+            final_search_btn, final_cancel_btn, final_progress,
+            retrieved_texts_state, question_state
+        )
+        
+    except Exception as e:
+        logger.error(f"Threaded agent search failed: {e}", exc_info=True)
+        
+        # Reset UI on error
+        error_status = f"Error: {str(e)}"
+        final_progress = gr.update(visible=False)
+        final_cancel_btn = gr.update(visible=False)
+        final_search_btn = gr.update(interactive=True)
+        
+        search_thread = None
+        
+        return (
+            error_status, None, "Fehler bei der Agenten-Suche.",
+            gr.update(), final_search_btn, final_cancel_btn, final_progress,
+            gr.update(open=False), gr.update(open=False)
+        )
 
-def format_chunks(results: Dict[str, Any]) -> str:
-    """Format the chunks as markdown."""
-    chunks = results.get("chunks", [])
+def format_agent_chunks(retrieved_chunks: Dict[str, Any]) -> str:
+    """
+    Format agent search results for display, highlighting KI evaluation.
+    """
+    chunks = retrieved_chunks.get('chunks', [])
+    metadata = retrieved_chunks.get('metadata', {})
     
     if not chunks:
-        return "Keine Texte verfügbar."
+        return "Keine Texte durch KI-Bewertung ausgewählt."
     
-    chunks_by_year = {}
+    # Group by time window if available
+    chunks_by_window = {}
+    evaluations = metadata.get('evaluations', [])
+    
     for chunk in chunks:
-        year = chunk["metadata"].get("Jahrgang", "Unknown")
-        if year not in chunks_by_year:
-            chunks_by_year[year] = []
-        chunks_by_year[year].append(chunk)
+        window = chunk['metadata'].get('time_window', 'Global')
+        if window not in chunks_by_window:
+            chunks_by_window[window] = []
+        chunks_by_window[window].append(chunk)
     
-    markdown = f"# Gefundene Texte ({len(chunks)})\n\n"
+    # Format output
+    use_time_windows = len(chunks_by_window) > 1 or 'Global' not in chunks_by_window
     
-    for year in sorted(chunks_by_year.keys()):
-        markdown += f"## {year}\n\n"
+    formatted_text = f"# KI-bewertete Quellen ({len(chunks)} ausgewählt)\n\n"
+    
+    # Add summary information
+    if use_time_windows:
+        formatted_text += "## Übersicht nach Zeitfenstern\n\n"
+        for window, window_chunks in sorted(chunks_by_window.items()):
+            avg_score = sum(c['relevance_score'] for c in window_chunks) / len(window_chunks)
+            formatted_text += f"- **{window}**: {len(window_chunks)} Texte (Ø Bewertung: {avg_score:.3f})\n"
+        formatted_text += "\n"
+    
+    # Display chunks
+    for window in sorted(chunks_by_window.keys()):
+        if use_time_windows:
+            formatted_text += f"## Zeitfenster {window}\n\n"
         
-        for i, chunk in enumerate(chunks_by_year[year], 1):
-            metadata = chunk["metadata"]
-            markdown += f"### {i}. {metadata.get('Artikeltitel', 'Kein Titel')}\n\n"
-            markdown += f"**Datum**: {metadata.get('Datum', 'Unbekannt')} | "
-            markdown += f"**Relevanz**: {chunk['relevance_score']:.3f}"
+        window_chunks = chunks_by_window[window]
+        
+        for i, chunk in enumerate(window_chunks, 1):
+            metadata_chunk = chunk['metadata']
+            formatted_text += f"### {i}. {metadata_chunk.get('Artikeltitel', 'Kein Titel')}\n\n"
             
-            url = metadata.get('URL')
+            # Show evaluation details
+            formatted_text += f"**Datum**: {metadata_chunk.get('Datum', 'Unbekannt')} | "
+            formatted_text += f"**KI-Bewertung**: {chunk['relevance_score']:.3f}"
+            
+            # Add evaluation text if available
+            eval_text = metadata_chunk.get('evaluation_text', '')
+            if eval_text and 'Score:' in eval_text:
+                original_score = eval_text.split('Score:')[1].split('-')[0].strip()
+                formatted_text += f" ({original_score})"
+            
+            url = metadata_chunk.get('URL')
             if url and url != 'Keine URL':
-                markdown += f" | [**Link zum Artikel**]({url})"
-                
-            markdown += "\n\n"
-            markdown += f"**Text**:\n{chunk['content']}\n\n"
-            markdown += "---\n\n"
+                formatted_text += f" | [**Link zum Artikel**]({url})"
+            
+            formatted_text += "\n\n"
+            
+            # Show evaluation reasoning if available
+            if eval_text and '-' in eval_text:
+                reasoning = eval_text.split('-', 1)[1].strip()
+                formatted_text += f"**KI-Begründung**: {reasoning}\n\n"
+            
+            formatted_text += f"**Text**:\n{chunk['content']}\n\n"
+            formatted_text += "---\n\n"
     
-    return markdown
+    return formatted_text
 
-def format_metadata(results: Dict[str, Any]) -> str:
-    """Format the metadata as markdown."""
-    metadata = results.get("metadata", {})
-    agent_metadata = metadata.get("agent_metadata", {})
+def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
+    """
+    Create comprehensive download with all retrieved chunks and evaluations.
     
-    markdown = "## Suchparameter\n"
-    markdown += f"- **Frage**: {metadata.get('question', 'Keine Frage')}\n"
-    markdown += f"- **Modell**: {metadata.get('analysis_model', 'Unbekannt')}\n"
-    markdown += f"- **Gesamtzeit**: {metadata.get('total_time', 0):.2f} Sekunden\n\n"
+    Returns:
+        Path to the created file, or None if no data
+    """
+    if not retrieved_chunks:
+        return None
     
-    markdown += "## Agenten-Metadaten\n"
-    markdown += f"- **Initiale Textmenge**: {agent_metadata.get('initial_retrieval_count', 0)}\n"
-    markdown += f"- **Filterstufen**: {agent_metadata.get('filter_stages', [])}\n"
-    markdown += f"- **Finale Textanzahl**: {agent_metadata.get('final_chunk_count', 0)}\n"
-    
-    stage_times = agent_metadata.get("stage_times", [])
-    if stage_times:
-        markdown += "\n## Stufen-Zeiten\n"
-        for stage_name, stage_time in stage_times:
-            markdown += f"- **{stage_name}**: {stage_time:.2f} Sekunden\n"
-    
-    return markdown
+    try:
+        import tempfile
+        import json
+        from datetime import datetime
+        
+        # Prepare comprehensive data
+        metadata = retrieved_chunks.get('metadata', {})
+        evaluations = metadata.get('evaluations', [])
+        
+        export_data = {
+            "export_info": {
+                "timestamp": datetime.now().isoformat(),
+                "format": "json",
+                "source": "Der Spiegel RAG System - Agent Search",
+                "search_type": "time_windowed_agent"
+            },
+            "search_configuration": {
+                "strategy": metadata.get('strategy', 'unknown'),
+                "year_range": metadata.get('year_range', []),
+                "chunk_size": metadata.get('chunk_size', 0),
+                "keywords": metadata.get('keywords', ''),
+                "time_windows": metadata.get('time_windows', []),
+                "agent_config": metadata.get('agent_config', {}),
+                "search_time": metadata.get('search_time', 0)
+            },
+            "retrieval_summary": {
+                "total_initial_chunks": metadata.get('total_initial_chunks', 0),
+                "total_final_chunks": metadata.get('total_final_chunks', 0),
+                "window_chunks_map": metadata.get('window_chunks_map', {}),
+                "evaluation_count": len(evaluations)
+            },
+            "selected_chunks": [],
+            "all_evaluations": evaluations
+        }
+        
+        # Add selected chunks
+        for chunk in retrieved_chunks.get('chunks', []):
+            chunk_data = {
+                "content": chunk.get('content', ''),
+                "relevance_score": chunk.get('relevance_score', 0.0),
+                "metadata": chunk.get('metadata', {}),
+                "time_window": chunk.get('metadata', {}).get('time_window', 'Unknown'),
+                "llm_evaluation_score": chunk.get('metadata', {}).get('llm_evaluation_score', 0.0),
+                "evaluation_text": chunk.get('metadata', {}).get('evaluation_text', '')
+            }
+            export_data["selected_chunks"].append(chunk_data)
+        
+        # Create temporary file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        temp_file = tempfile.NamedTemporaryFile(
+            mode='w',
+            suffix='.json',
+            prefix='spiegel_agent_comprehensive_',
+            delete=False,
+            encoding='utf-8'
+        )
+        
+        json.dump(export_data, temp_file, ensure_ascii=False, indent=2)
+        temp_file.close()
+        
+        logger.info(f"Created comprehensive agent download at {temp_file.name}")
+        return temp_file.name
+        
+    except Exception as e:
+        logger.error(f"Error creating comprehensive download: {e}")
+        return None

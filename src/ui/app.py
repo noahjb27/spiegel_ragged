@@ -1,6 +1,6 @@
-# src/ui/app.py - Fixed version
+# src/ui/app.py - Updated with integrated agent search
 """
-Enhanced app with improved button styling, download functionality, and fixed text visibility
+Enhanced app with redesigned agent search integrated into main search flow
 """
 import gradio as gr
 import logging
@@ -21,12 +21,18 @@ from src.ui.handlers.search_handlers import (
     perform_retrieval_and_update_ui,
     perform_analysis_and_update_ui
 )
+from src.ui.handlers.agent_handlers import (
+    set_rag_engine as set_agent_rag_engine,
+    perform_agent_search_threaded,
+    cancel_agent_search,
+    create_agent_download_comprehensive
+)
 from src.ui.handlers.keyword_handlers import (
     set_embedding_service,
     find_similar_words,
     expand_boolean_expression
 )
-from src.ui.handlers.download_handlers import create_download_json, create_download_csv  # New import
+from src.ui.handlers.download_handlers import create_download_json, create_download_csv
 from src.ui.utils.ui_helpers import toggle_api_key_visibility
 from src.config import settings
 
@@ -35,7 +41,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_app():
-    """Create the main Gradio application with enhanced styling and download functionality."""
+    """Create the main Gradio application with integrated agent search."""
     
     # Initialize RAG engine
     logger.info("Initializing RAG engine...")
@@ -48,6 +54,7 @@ def create_app():
     
     # Set the engine reference for handlers
     set_rag_engine(rag_engine)
+    set_agent_rag_engine(rag_engine)
     
     # Set embedding service for keyword handlers
     if rag_engine.embedding_service:
@@ -56,11 +63,20 @@ def create_app():
     else:
         logger.warning("Embedding service not available for keyword analysis")
     
-    # Enhanced CSS with better button styling and fixed text visibility
+    # Enhanced CSS
     enhanced_css = """
     /* Main container styling */
     .gradio-container {
-        max-width: 1200px !important;
+        max-width: 1400px !important;
+    }
+    
+    /* Search mode radio styling */
+    .search-mode-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
+        border: 2px solid #dee2e6 !important;
+        margin-bottom: 20px !important;
     }
     
     /* ENHANCED ACCORDION BUTTON STYLING */
@@ -89,95 +105,26 @@ def create_app():
         border: 2px solid #2d7d3b !important;
     }
     
-    /* Icon styling within buttons */
-    .label-wrap .icon {
-        font-weight: bold !important;
-        font-size: 18px !important;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    /* Button text styling */
-    .label-wrap span:first-child {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-        letter-spacing: 0.5px !important;
-    }
-    
-    /* FIXED TEXT VISIBILITY FOR EVALUATIONS */
-    .evaluation-card {
-        border-left: 4px solid #3498db !important;
+    /* Agent search specific styling */
+    .agent-progress {
+        background-color: #e3f2fd !important;
         padding: 15px !important;
-        margin-bottom: 15px !important;
-        background-color: #f8f9fa !important;
         border-radius: 8px !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        border-left: 4px solid #2196f3 !important;
+        margin: 10px 0 !important;
     }
     
-    .evaluation-card h4 {
-        color: #2c3e50 !important;
+    .agent-progress h4 {
+        color: #1565c0 !important;
         margin-bottom: 10px !important;
-        font-weight: bold !important;
     }
     
-    .evaluation-card p, .evaluation-card div {
-        color: #34495e !important;
-        line-height: 1.6 !important;
-    }
-    
-    .evaluation-card strong {
-        color: #2c3e50 !important;
-        font-weight: 600 !important;
-    }
-    
-    /* High relevance styling */
-    .evaluation-card.high-relevance {
-        background-color: #f1f8e9 !important;
-        border-left-color: #4caf50 !important;
-    }
-    
-    /* Medium relevance styling */
-    .evaluation-card.medium-relevance {
-        background-color: #fff8e1 !important;
-        border-left-color: #ff9800 !important;
-    }
-    
-    /* Lower relevance styling */
-    .evaluation-card.low-relevance {
-        background-color: #ffebee !important;
-        border-left-color: #f44336 !important;
-    }
-    
-    /* Progress visualization */
-    .filter-stage {
-        margin-bottom: 20px !important;
-        background-color: #f8f9fa !important;
-        padding: 10px !important;
+    /* Results container styling */
+    .results-container {
+        padding: 20px !important;
         border-radius: 8px !important;
-    }
-    
-    .filter-stage-title {
-        font-weight: bold !important;
-        margin-bottom: 8px !important;
-        color: #2c3e50 !important;
-    }
-    
-    .filter-progress {
-        height: 30px !important;
-        background-color: #e9ecef !important;
-        border-radius: 15px !important;
-        overflow: hidden !important;
-        margin-bottom: 5px !important;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-    }
-    
-    .filter-bar {
-        height: 100% !important;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
-        text-align: center !important;
-        color: white !important;
-        line-height: 30px !important;
-        font-weight: bold !important;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) !important;
-        transition: width 0.5s ease !important;
+        border: 1px solid #e0e0e0 !important;
+        background-color: #ffffff !important;
     }
     
     /* Download button styling */
@@ -198,37 +145,19 @@ def create_app():
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
     }
     
-    /* Results container styling */
-    .results-container {
-        padding: 20px !important;
-        border-radius: 8px !important;
-        border: 1px solid #e0e0e0 !important;
-        background-color: #ffffff !important;
+    /* Cancel button styling */
+    .cancel-button {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 6px !important;
+        padding: 8px 16px !important;
+        border: none !important;
+        cursor: pointer !important;
     }
     
-    /* Better typography */
-    .results-container p, .results-container li {
-        font-size: 16px !important;
-        line-height: 1.6 !important;
-        color: #2c3e50 !important;
-    }
-    
-    /* Better heading styles */
-    .results-container h1, .results-container h2, .results-container h3 {
-        margin-top: 1em !important;
-        margin-bottom: 0.5em !important;
-        color: #2c3e50 !important;
-    }
-    
-    /* Quote styling */
-    .results-container blockquote {
-        border-left: 4px solid #667eea !important;
-        padding-left: 1em !important;
-        margin-left: 0 !important;
-        font-style: italic !important;
-        background-color: #f8f9fa !important;
-        padding: 10px 15px !important;
-        border-radius: 0 6px 6px 0 !important;
+    .cancel-button:hover {
+        background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
     }
     """
     
@@ -247,12 +176,12 @@ def create_app():
         **Systemstatus:** ✅ Verbunden mit ChromaDB und Ollama Embedding Service
         """)
         
-        with gr.Tab("1. Quellen abrufen"):
-            with gr.Accordion("Inhalt suchen", open=True) as retrieval_accordion:
-                # Create search panel components
+        with gr.Tab("Quellen abrufen"):
+            with gr.Accordion("Suchmethode wählen", open=True) as search_method_accordion:
+                # Create search panel components with both callbacks
                 search_components = create_search_panel(
                     retrieve_callback=None,  # Will be set below
-                    analyze_callback=None,   # Not used in this tab
+                    agent_search_callback=None,  # Will be set below
                     preview_callback=expand_boolean_expression,
                     toggle_api_key_callback=toggle_api_key_visibility
                 )
@@ -260,17 +189,25 @@ def create_app():
             with gr.Accordion("Gefundene Texte", open=False) as retrieved_texts_accordion:
                 retrieved_chunks_display = gr.Markdown("Die gefundenen Texte werden hier angezeigt...")
                 
-                # ADD DOWNLOAD FUNCTIONALITY
+                # Download functionality
                 with gr.Row():
                     download_json_btn = gr.Button("📥 Als JSON herunterladen", elem_classes=["download-button"])
                     download_csv_btn = gr.Button("📊 Als CSV herunterladen", elem_classes=["download-button"])
+                    
+                    # Agent-specific comprehensive download (conditionally visible)
+                    download_comprehensive_btn = gr.Button(
+                        "📋 Umfassender Agent-Download", 
+                        elem_classes=["download-button"],
+                        visible=False
+                    )
                 
-                # Download status and files - FIXED
+                # Download status and files
                 download_status = gr.Markdown("", visible=False)
                 download_json_file = gr.File(label="JSON Download", visible=False)
                 download_csv_file = gr.File(label="CSV Download", visible=False)
+                download_comprehensive_file = gr.File(label="Comprehensive Agent Download", visible=False)
         
-        with gr.Tab("2. Quellen analysieren"):
+        with gr.Tab("Quellen analysieren"):
             with gr.Accordion("Frage stellen", open=True) as question_accordion:
                 # Create question panel components
                 question_components = create_question_panel()
@@ -278,27 +215,6 @@ def create_app():
             with gr.Accordion("Ergebnisse", open=False) as results_accordion:
                 # Create results panel components
                 results_components = create_results_panel()
-        
-        with gr.Tab("3. Agenten-Suche"):
-            # Import agent components
-            from src.ui.components.agent_panel import create_agent_panel
-            from src.ui.components.agent_results_panel import create_agent_results_panel
-            from src.ui.handlers.agent_handlers import (
-                set_rag_engine as set_agent_rag_engine,
-                perform_agent_search_and_analysis
-            )
-            
-            # Set RAG engine for agent handlers too
-            set_agent_rag_engine(rag_engine)
-            
-            # Create agent panel components
-            agent_components = create_agent_panel(
-                agent_search_callback=None,  # Will be set below
-                toggle_api_key_callback=toggle_api_key_visibility
-            )
-            
-            # Create agent results panel
-            agent_results_components = create_agent_results_panel()
         
         with gr.Tab("Schlagwort-Analyse"):
             # Create keyword analysis panel
@@ -311,8 +227,20 @@ def create_app():
         
         # Connect event handlers
         
-        # Retrieval button click
-        search_components["retrieve_btn"].click(
+        # Helper function to determine which search to use
+        def route_search_request(*args):
+            """Route search request based on search mode."""
+            search_mode = args[0]  # First argument is search mode
+            
+            if search_mode == "standard":
+                # Use standard search (skip search_mode argument)
+                return perform_retrieval_and_update_ui(*args[1:])
+            else:
+                # Use agent search
+                return perform_agent_search_threaded(*args[1:])
+        
+        # Standard search button click
+        search_components["standard_search_btn"].click(
             perform_retrieval_and_update_ui,
             inputs=[
                 search_components["content_description"],
@@ -330,16 +258,60 @@ def create_app():
                 search_components["top_k"]
             ],
             outputs=[
-                search_components["retrieved_info"],
+                search_components["search_status"],
                 search_components["retrieved_chunks_state"],
                 retrieved_chunks_display,
-                retrieval_accordion,
+                search_method_accordion,
                 retrieved_texts_accordion,
                 question_accordion
             ]
+        ).then(
+            lambda: gr.update(visible=False),  # Hide comprehensive download for standard
+            outputs=[download_comprehensive_btn]
         )
         
-        # Analysis button click
+        # Agent search button click
+        search_components["agent_search_btn"].click(
+            perform_agent_search_threaded,
+            inputs=[
+                search_components["content_description"],
+                search_components["chunk_size"],
+                search_components["year_start"],
+                search_components["year_end"],
+                search_components["agent_use_time_windows"],
+                search_components["agent_time_window_size"],
+                search_components["chunks_per_window_initial"],
+                search_components["chunks_per_window_final"],
+                search_components["agent_keywords"],
+                search_components["agent_search_in"],
+                search_components["agent_enforce_keywords"],
+                search_components["agent_model"],
+                search_components["agent_system_prompt_template"],
+                search_components["agent_custom_system_prompt"]
+            ],
+            outputs=[
+                search_components["search_status"],
+                search_components["retrieved_chunks_state"],
+                retrieved_chunks_display,
+                search_components["search_mode"],  # No change
+                search_components["agent_search_btn"],
+                search_components["agent_cancel_btn"],
+                search_components["agent_progress"],
+                retrieved_texts_accordion,
+                question_accordion
+            ]
+        ).then(
+            lambda: gr.update(visible=True),  # Show comprehensive download for agent
+            outputs=[download_comprehensive_btn]
+        )
+        
+        # Agent search cancellation
+        search_components["agent_cancel_btn"].click(
+            cancel_agent_search,
+            outputs=[search_components["agent_progress"]]
+        )
+        
+        # Analysis button click (works for both search types)
         question_components["analyze_btn"].click(
             perform_analysis_and_update_ui,
             inputs=[
@@ -359,38 +331,7 @@ def create_app():
             ]
         )
         
-        # Agent search button click
-        agent_components["agent_search_btn"].click(
-            perform_agent_search_and_analysis,
-            inputs=[
-                agent_components["agent_question"],
-                agent_components["agent_content_description"],
-                agent_components["agent_year_start"],
-                agent_components["agent_year_end"],
-                agent_components["agent_chunk_size"],
-                agent_components["agent_keywords"],
-                agent_components["agent_search_in"],
-                agent_components["agent_enforce_keywords"],
-                agent_components["agent_initial_count"],
-                agent_components["agent_filter_stage1"],
-                agent_components["agent_filter_stage2"],
-                agent_components["agent_filter_stage3"],
-                agent_components["agent_model"],
-                agent_components["agent_system_prompt_template"],
-                agent_components["agent_custom_system_prompt"]
-            ],
-            outputs=[
-                agent_components["agent_results_state"],
-                agent_components["agent_status"],
-                agent_results_components["agent_answer_output"],
-                agent_results_components["agent_process_output"],
-                agent_results_components["agent_evaluations_output"],
-                agent_results_components["agent_chunks_output"],
-                agent_results_components["agent_metadata_output"]
-            ]
-        )
-        
-        # JSON Download
+        # Download handlers
         def handle_json_download(retrieved_chunks_state):
             """Handle JSON download with proper status updates."""
             try:
@@ -412,7 +353,6 @@ def create_app():
                     gr.update(visible=False)
                 )
         
-        # CSV Download  
         def handle_csv_download(retrieved_chunks_state):
             """Handle CSV download with proper status updates."""
             try:
@@ -434,7 +374,28 @@ def create_app():
                     gr.update(visible=False)
                 )
         
-        # Connect download events - FIXED
+        def handle_comprehensive_download(retrieved_chunks_state):
+            """Handle comprehensive agent download."""
+            try:
+                file_path = create_agent_download_comprehensive(retrieved_chunks_state)
+                if file_path:
+                    return (
+                        gr.update(value="✅ Umfassende Agent-Datei wurde erstellt.", visible=True),
+                        gr.update(value=file_path, visible=True)
+                    )
+                else:
+                    return (
+                        gr.update(value="❌ Fehler: Keine Agent-Daten zum Herunterladen verfügbar.", visible=True),
+                        gr.update(visible=False)
+                    )
+            except Exception as e:
+                logger.error(f"Comprehensive download error: {e}")
+                return (
+                    gr.update(value=f"❌ Fehler beim Erstellen der umfassenden Datei: {str(e)}", visible=True),
+                    gr.update(visible=False)
+                )
+        
+        # Connect download events
         download_json_btn.click(
             handle_json_download,
             inputs=[search_components["retrieved_chunks_state"]],
@@ -447,7 +408,13 @@ def create_app():
             outputs=[download_status, download_csv_file]
         )
         
-        logger.info("Enhanced Gradio interface created successfully")
+        download_comprehensive_btn.click(
+            handle_comprehensive_download,
+            inputs=[search_components["retrieved_chunks_state"]],
+            outputs=[download_status, download_comprehensive_file]
+        )
+        
+        logger.info("Enhanced Gradio interface with integrated agent search created successfully")
     
     return app
 
@@ -455,7 +422,7 @@ def main():
     """Main entry point for the application."""
     try:
         app = create_app()
-        logger.info("Starting enhanced Gradio application...")
+        logger.info("Starting enhanced Gradio application with integrated agent search...")
         app.launch(
             server_name="0.0.0.0",
             server_port=7860,

@@ -1,6 +1,7 @@
+# src/config/settings.py - Updated with agent-specific prompts
 """
 Enhanced application settings for Spiegel RAG System (1948-1979).
-Updated version with multiple LLM options and expanded chunk sizes.
+Updated version with agent-specific system prompts.
 """
 import os
 from typing import Dict, List, Optional
@@ -66,6 +67,16 @@ LLM_DISPLAY_NAMES = {
 # Semantic Expansion Settings
 ENABLE_SEMANTIC_EXPANSION = True
 DEFAULT_SEMANTIC_EXPANSION_FACTOR = 3
+
+# =============================================================================
+# AGENT SEARCH DEFAULTS
+# =============================================================================
+
+# Default settings for agent-based search
+AGENT_DEFAULT_CHUNKS_PER_WINDOW_INITIAL = 50
+AGENT_DEFAULT_CHUNKS_PER_WINDOW_FINAL = 20
+AGENT_DEFAULT_TIME_WINDOW_SIZE = 5
+AGENT_DEFAULT_USE_TIME_WINDOWS = True
 
 # =============================================================================
 # COLLECTION NAME GENERATION
@@ -210,6 +221,119 @@ Analyse:
 }
 
 # =============================================================================
+# AGENT-SPECIFIC SYSTEM PROMPTS FOR SOURCE EVALUATION
+# =============================================================================
+
+AGENT_SYSTEM_PROMPTS = {
+    "agent_default": """Du bist ein Experte für die Bewertung historischer Quellen und arbeitest mit SPIEGEL-Artikeln aus der Zeit von 1948-1979.
+
+Deine Aufgabe ist es, jeden Textabschnitt hinsichtlich seiner Relevanz für die gestellte Forschungsfrage zu bewerten.
+
+Bewertungskriterien für Relevanz (Skala 0-10):
+- 9-10: Außergewöhnlich relevant - direkter, substantieller Bezug zur Forschungsfrage mit einzigartigen Informationen
+- 7-8: Hoch relevant - klarer Bezug zur Forschungsfrage mit wichtigen Informationen
+- 5-6: Mäßig relevant - teilweiser Bezug zur Forschungsfrage mit ergänzenden Informationen
+- 3-4: Gering relevant - schwacher Bezug zur Forschungsfrage mit minimalen verwertbaren Informationen
+- 0-2: Nicht relevant - kein erkennbarer Bezug zur Forschungsfrage
+
+Berücksichtige dabei:
+- Historische Bedeutung des Dokuments für die Fragestellung
+- Quellenwert für die spezifische Forschungsfrage
+- Zeitgenössische vs. nachträgliche Perspektive
+- Einzigartigkeit der enthaltenen Informationen
+
+Antworte für jeden Text: "Score X - Kurze historische Begründung unter Nennung spezifischer Aspekte".""",
+
+    "agent_media_analysis": """Du bewertest SPIEGEL-Artikel (1948-1979) für medienwissenschaftliche Fragestellungen.
+
+Bewerte jeden Textabschnitt (Skala 0-10) basierend auf:
+- Relevanz für medienkritische Analyse
+- Beispiele journalistischer Strategien und Techniken
+- Sprachliche Besonderheiten und Stilmittel
+- Darstellung von Akteuren und Ereignissen
+- Typische SPIEGEL-Narrative und Deutungsmuster
+
+Besonders relevant sind Texte, die:
+- Charakteristische SPIEGEL-Sprache zeigen
+- Framing-Strategien erkennbar machen
+- Medienpolitische Positionierungen deutlich werden lassen
+- Journalistische Innovation oder Tradition repräsentieren
+
+Antworte: "Score X - Medienkritische Begründung mit konkreten sprachlichen/stilistischen Beispielen".""",
+
+    "agent_discourse_analysis": """Du bewertest SPIEGEL-Texte (1948-1979) für diskursanalytische Untersuchungen.
+
+Bewerte jeden Textabschnitt (Skala 0-10) basierend auf:
+- Diskursive Relevanz für die Forschungsfrage
+- Präsenz dominanter Diskurse der Zeit
+- Sprachliche Konstruktion von Bedeutung
+- Macht-/Wissensstrukturen in der Darstellung
+- Begriffliche und semantische Besonderheiten
+
+Besonders relevant sind Texte mit:
+- Typischen Diskursformationen der Nachkriegszeit
+- Schlüsselbegriffen und deren Verwendung
+- Interdiskursiven Bezügen
+- Ideologischen Positionierungen
+
+Antworte: "Score X - Diskursanalytische Begründung mit Fokus auf Begriffe und Bedeutungskonstruktion".""",
+
+    "agent_historical_context": """Du bewertest SPIEGEL-Artikel (1948-1979) für historisch-kontextuelle Analysen.
+
+Bewerte jeden Textabschnitt (Skala 0-10) basierend auf:
+- Historische Aussagekraft für die Forschungsfrage
+- Zeitgenössische Perspektiven und Wahrnehmungen
+- Quellencharakter für die deutsche Nachkriegsgeschichte
+- Dokumentation gesellschaftlicher Entwicklungen
+- Einordnung in größere historische Zusammenhänge
+
+Besonders relevant sind Texte, die:
+- Zeitgenössische Sichtweisen authentisch wiedergeben
+- Wichtige historische Entwicklungen dokumentieren
+- Gesellschaftliche Stimmungen und Mentalitäten zeigen
+- Kontinuitäten und Brüche der deutschen Geschichte beleuchten
+
+Antworte: "Score X - Historische Begründung mit Einordnung in den zeitgenössischen Kontext".""",
+
+    "agent_political_analysis": """Du bewertest SPIEGEL-Artikel (1948-1979) für politikwissenschaftliche und politikhistorische Analysen.
+
+Bewerte jeden Textabschnitt (Skala 0-10) basierend auf:
+- Politische Relevanz für die Forschungsfrage
+- Darstellung politischer Akteure und Prozesse
+- Demokratisierung und politische Kultur der frühen BRD
+- Ost-West-Konflikt und internationale Beziehungen
+- Politische Meinungsbildung und öffentlicher Diskurs
+
+Besonders relevant sind Texte über:
+- Politische Entscheidungsprozesse und deren Darstellung
+- Parteien, Politiker und politische Institutionen
+- Außenpolitik und internationale Verflechtungen
+- Politische Krisen und deren mediale Vermittlung
+
+Antworte: "Score X - Politikanalytische Begründung mit Fokus auf politische Akteure und Prozesse".""",
+
+    "agent_social_cultural": """Du bewertest SPIEGEL-Artikel (1948-1979) für sozial- und kulturgeschichtliche Fragestellungen.
+
+Bewerte jeden Textabschnitt (Skala 0-10) basierend auf:
+- Soziale und kulturelle Relevanz für die Forschungsfrage
+- Darstellung gesellschaftlicher Gruppen und Schichten
+- Alltagskultur und Mentalitäten
+- Modernisierung und gesellschaftlicher Wandel
+- Geschlechter-, Generationen- und Klassenverhältnisse
+
+Besonders relevant sind Texte, die:
+- Soziale Realitäten und Lebenswelten beschreiben
+- Kulturelle Praktiken und Wertvorstellungen zeigen
+- Gesellschaftliche Konflikte und Veränderungen dokumentieren
+- Alltägliche Erfahrungen und Wahrnehmungen wiedergeben
+
+Antworte: "Score X - Sozialhistorische Begründung mit Fokus auf gesellschaftliche Aspekte und Alltagskultur"."""
+}
+
+# Combine both prompt collections for easy access
+ALL_SYSTEM_PROMPTS = {**SYSTEM_PROMPTS, **AGENT_SYSTEM_PROMPTS}
+
+# =============================================================================
 # HISTORICAL PERIOD CONTEXTS
 # =============================================================================
 
@@ -258,61 +382,6 @@ PERIOD_CONTEXTS = {
 }
 
 # =============================================================================
-# AGENT SCORING PROMPT FOR HISTORICAL DOCUMENTS
-# =============================================================================
-
-AGENT_SCORING_PROMPT = """Du bist ein Experte für die Bewertung historischer Quellen und arbeitest mit SPIEGEL-Artikeln aus der Zeit von 1948-1979.
-
-Bewertungskriterien für Relevanz zur Forschungsfrage (Skala 0-10):
-
-9-10: Außergewöhnlich relevant
-- Direkter, substantieller Bezug zur Forschungsfrage
-- Einzigartige Informationen oder Perspektiven
-- Schlüsseldokument für das Thema
-
-7-8: Hoch relevant  
-- Klarer Bezug zur Forschungsfrage
-- Wichtige Informationen oder Kontext
-- Gute Illustration des Themas
-
-5-6: Mäßig relevant
-- Teilbezug zur Forschungsfrage
-- Ergänzende Informationen
-- Allgemeiner historischer Kontext
-
-3-4: Gering relevant
-- Schwacher Bezug zur Forschungsfrage  
-- Minimale verwertbare Informationen
-- Hauptsächlich tangentiale Erwähnung
-
-0-2: Nicht relevant
-- Kein erkennbarer Bezug zur Forschungsfrage
-- Keine verwertbaren Informationen
-
-Berücksichtige dabei:
-- Historische Bedeutung des Dokuments
-- Quellenwert für die spezifische Fragestellung
-- Typizität oder Besonderheit der Darstellung
-- Zeitgenössische vs. nachträgliche Perspektive
-
-Antworte für jeden Text:
-Text X: Score Y - Historische Begründung unter Nennung spezifischer Aspekte"""
-
-# =============================================================================
-# QUALITY INDICATORS FOR HISTORICAL ANALYSIS
-# =============================================================================
-
-HISTORICAL_QUALITY_INDICATORS = [
-    "Präzise Quellenangaben (Datum, Titel, Autor wenn verfügbar)",
-    "Kontextualisierung innerhalb der Zeitperiode", 
-    "Unterscheidung zwischen zeitgenössischer und heutiger Sicht",
-    "Berücksichtigung der SPIEGEL-spezifischen Perspektive",
-    "Transparenz bei unzureichender Quellenlage",
-    "Methodische Reflexion der Quellenauswahl",
-    "Einordnung in größere historische Entwicklungen"
-]
-
-# =============================================================================
 # APPLICATION SETTINGS
 # =============================================================================
 
@@ -343,7 +412,7 @@ def get_system_prompt_with_context(prompt_type: str = "default",
                                  start_year: int = None, 
                                  end_year: int = None) -> str:
     """Get system prompt with optional historical context."""
-    base_prompt = SYSTEM_PROMPTS.get(prompt_type, SYSTEM_PROMPTS["default"])
+    base_prompt = ALL_SYSTEM_PROMPTS.get(prompt_type, ALL_SYSTEM_PROMPTS["default"])
     
     if start_year and end_year:
         context = get_period_context(start_year, end_year)
