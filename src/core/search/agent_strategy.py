@@ -379,9 +379,8 @@ class TimeWindowedAgentStrategy(SearchStrategy):
                 context="",
                 model=self.agent_config.agent_model,
                 system_prompt=system_prompt,
-                temperature=0.2,
-                max_tokens=8000  # Increased for longer responses
-            )
+                temperature=0.2
+                )
             
             response_text = response.get('text', '')
             logger.info(f"LLM Response for batch in {window_key}: {response_text[:200]}...")

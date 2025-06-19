@@ -238,9 +238,8 @@ Sei kritisch - die meisten Texte sollten 3-7 bekommen, nur außergewöhnliche er
                 context="",
                 model=model,
                 system_prompt=system_prompt,
-                temperature=0.2,
-                max_tokens=10000  # Enough for simple responses
-            )
+                temperature=0.2
+                )
             
             response_text = response.get('text', '')
             

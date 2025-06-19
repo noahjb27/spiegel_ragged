@@ -113,8 +113,7 @@ def test_application_integration():
             question="What is the capital of Germany? Please answer briefly.",
             context="Germany is a European country.",
             model="deepseek-r1",
-            temperature=0.1,
-            max_tokens=50
+            temperature=0.1
         )
         
         print(f"✅ Application integration test successful!")

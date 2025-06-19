@@ -115,8 +115,7 @@ def test_deepseek_generation():
             question=test_question,
             context=test_context,
             model="deepseek-r1",
-            temperature=0.3,
-            max_tokens=200
+            temperature=0.3
         )
         
         print(f"✅ DeepSeek R1 generation successful!")
