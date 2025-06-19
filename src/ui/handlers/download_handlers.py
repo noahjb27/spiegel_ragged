@@ -1,7 +1,6 @@
-# src/ui/handlers/download_handlers.py - Updated for dual score support
+# src/ui/handlers/download_handlers.py - Enhanced with proper German text encoding
 """
-Updated download handlers that properly create temporary files for Gradio downloads.
-Now includes support for both vector similarity and LLM evaluation scores.
+Enhanced download handlers with improved German text encoding and CSV export functionality.
 """
 import json
 import csv
@@ -44,7 +43,8 @@ def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
                 "format": "json",
                 "source": "Der Spiegel RAG System",
                 "total_chunks": len(retrieved_chunks.get('chunks', [])),
-                "has_dual_scores": has_dual_scores  # NEW: Indicate if dual scores are available
+                "has_dual_scores": has_dual_scores,
+                "supports_chunk_selection": True  # NEW: Indicate chunk selection support
             },
             "search_metadata": retrieved_chunks.get('metadata', {}),
             "chunks": []
@@ -74,7 +74,7 @@ def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
                 }
             }
             
-            # NEW: Add dual scores if available (for agent search)
+            # Add dual scores if available (for agent search)
             if has_dual_scores:
                 chunk_data["scoring"] = {
                     "primary_relevance_score": chunk.get('relevance_score', 0.0),
@@ -86,26 +86,24 @@ def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
             
             export_data["chunks"].append(chunk_data)
         
-        # Create temporary file
+        # Create temporary file with proper UTF-8 encoding
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename_suffix = "_dual_scores" if has_dual_scores else ""
         
-        # Create temporary file with proper name
         temp_file = tempfile.NamedTemporaryFile(
             mode='w', 
             suffix='.json', 
             prefix=f'spiegel_rag{filename_suffix}_', 
-            delete=False,  # Important: don't delete automatically
+            delete=False,
             encoding='utf-8'
         )
         
-        # Write JSON content to temporary file
+        # Write JSON content with proper Unicode handling
         json.dump(export_data, temp_file, ensure_ascii=False, indent=2)
         temp_file.close()
         
         logger.info(f"Created JSON download with {len(export_data['chunks'])} chunks at {temp_file.name}")
         
-        # Return the file path
         return temp_file.name
         
     except Exception as e:
@@ -114,8 +112,8 @@ def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
 
 def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
     """
-    Create a CSV file for download containing retrieved chunks and metadata.
-    Enhanced to include both vector and LLM scores when available.
+    Create a CSV file for download with proper German text encoding.
+    Enhanced with BOM for Excel compatibility and better handling of German characters.
     
     Args:
         retrieved_chunks: Dictionary containing chunks and metadata from search
@@ -134,7 +132,7 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
             for chunk in retrieved_chunks.get('chunks', [])
         )
         
-        # Create temporary file
+        # Create temporary file with UTF-8 BOM for Excel compatibility
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename_suffix = "_dual_scores" if has_dual_scores else ""
         
@@ -142,22 +140,28 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
             mode='w', 
             suffix='.csv', 
             prefix=f'spiegel_rag{filename_suffix}_', 
-            delete=False,  # Important: don't delete automatically
-            encoding='utf-8',
-            newline=''  # Important for CSV files on Windows
+            delete=False,
+            encoding='utf-8-sig',  # ENHANCED: UTF-8 with BOM for Excel compatibility
+            newline=''
         )
         
-        # Create CSV writer
-        writer = csv.writer(temp_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        # Create CSV writer with proper quoting for German text
+        writer = csv.writer(
+            temp_file, 
+            delimiter=',', 
+            quotechar='"', 
+            quoting=csv.QUOTE_ALL,  # ENHANCED: Quote all fields for better compatibility
+            lineterminator='\n'
+        )
         
-        # Write CSV header - ENHANCED for dual scores
+        # Write CSV header - Enhanced for dual scores and chunk selection
         if has_dual_scores:
             headers = [
                 'chunk_id',
-                'primary_relevance_score',  # Main UI display score
-                'vector_similarity_score',  # NEW: Vector retrieval score
-                'llm_evaluation_score',     # NEW: LLM evaluation score
-                'score_difference',         # NEW: Difference between LLM and vector scores
+                'primary_relevance_score',
+                'vector_similarity_score',
+                'llm_evaluation_score',
+                'score_difference',
                 'titel',
                 'datum',
                 'jahrgang',
@@ -168,13 +172,12 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
                 'url',
                 'nr_in_issue',
                 'time_window',
-                'evaluation_text',          # NEW: LLM evaluation reasoning
+                'evaluation_text',
                 'content_preview',
                 'content_length',
                 'full_content'
             ]
         else:
-            # Standard headers for non-agent search
             headers = [
                 'chunk_id',
                 'relevance_score',
@@ -195,20 +198,36 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
         
         writer.writerow(headers)
         
-        # Write data rows
+        # Write data rows with proper text cleaning
         for i, chunk in enumerate(retrieved_chunks.get('chunks', [])):
             metadata = chunk.get('metadata', {})
             content = chunk.get('content', '')
             
+            # ENHANCED: Better text cleaning for German characters
+            def clean_text_for_csv(text: str) -> str:
+                """Clean text for CSV export while preserving German characters."""
+                if not text:
+                    return ""
+                
+                # Replace problematic whitespace but keep German characters
+                cleaned = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+                
+                # Replace multiple spaces with single space
+                cleaned = ' '.join(cleaned.split())
+                
+                # Remove any remaining control characters but keep German umlauts
+                import re
+                cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]', '', cleaned)
+                
+                return cleaned.strip()
+            
             # Create safe content preview (first 200 chars)
-            content_preview = content[:200].replace('\n', ' ').replace('\r', ' ')
+            content_preview = clean_text_for_csv(content)[:200]
             if len(content) > 200:
                 content_preview += '...'
             
-            # Clean content for CSV (remove problematic characters)
-            clean_content = content.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
-            # Replace multiple spaces with single space
-            clean_content = ' '.join(clean_content.split())
+            # Clean full content
+            clean_content = clean_text_for_csv(content)
             
             if has_dual_scores:
                 # Enhanced row with dual scores
@@ -216,25 +235,25 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
                 llm_score = chunk.get('llm_evaluation_score', 0.0)
                 primary_score = chunk.get('relevance_score', 0.0)
                 score_difference = llm_score - vector_score if (llm_score and vector_score) else 0.0
-                evaluation_text = metadata.get('evaluation_text', '')
+                evaluation_text = clean_text_for_csv(metadata.get('evaluation_text', ''))
                 
                 row = [
                     i + 1,  # chunk_id
-                    primary_score,  # primary_relevance_score
-                    vector_score,   # vector_similarity_score
-                    llm_score,      # llm_evaluation_score
-                    score_difference,  # score_difference
-                    metadata.get('Artikeltitel', 'Kein Titel'),
-                    metadata.get('Datum', 'Unbekannt'),
+                    primary_score,
+                    vector_score,
+                    llm_score,
+                    score_difference,
+                    clean_text_for_csv(metadata.get('Artikeltitel', 'Kein Titel')),
+                    clean_text_for_csv(metadata.get('Datum', 'Unbekannt')),
                     metadata.get('Jahrgang', ''),
                     metadata.get('Ausgabe', ''),
-                    metadata.get('Autoren', ''),
-                    metadata.get('Schlagworte', ''),
-                    metadata.get('Untertitel', ''),
+                    clean_text_for_csv(metadata.get('Autoren', '')),
+                    clean_text_for_csv(metadata.get('Schlagworte', '')),
+                    clean_text_for_csv(metadata.get('Untertitel', '')),
                     metadata.get('URL', ''),
                     metadata.get('nr_in_issue', ''),
                     metadata.get('time_window', ''),
-                    evaluation_text,  # evaluation_text
+                    evaluation_text,
                     content_preview,
                     len(content),
                     clean_content
@@ -244,13 +263,13 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
                 row = [
                     i + 1,  # chunk_id
                     chunk.get('relevance_score', 0.0),
-                    metadata.get('Artikeltitel', 'Kein Titel'),
-                    metadata.get('Datum', 'Unbekannt'),
+                    clean_text_for_csv(metadata.get('Artikeltitel', 'Kein Titel')),
+                    clean_text_for_csv(metadata.get('Datum', 'Unbekannt')),
                     metadata.get('Jahrgang', ''),
                     metadata.get('Ausgabe', ''),
-                    metadata.get('Autoren', ''),
-                    metadata.get('Schlagworte', ''),
-                    metadata.get('Untertitel', ''),
+                    clean_text_for_csv(metadata.get('Autoren', '')),
+                    clean_text_for_csv(metadata.get('Schlagworte', '')),
+                    clean_text_for_csv(metadata.get('Untertitel', '')),
                     metadata.get('URL', ''),
                     metadata.get('nr_in_issue', ''),
                     metadata.get('time_window', ''),
@@ -264,19 +283,53 @@ def create_download_csv(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
         temp_file.close()
         
         score_info = "with dual scores" if has_dual_scores else "with single scores"
-        logger.info(f"Created CSV download {score_info} with {len(retrieved_chunks.get('chunks', []))} chunks at {temp_file.name}")
+        logger.info(f"Created CSV download {score_info} with proper German encoding and {len(retrieved_chunks.get('chunks', []))} chunks at {temp_file.name}")
         
-        # Return the file path
         return temp_file.name
         
     except Exception as e:
         logger.error(f"Error creating CSV download: {e}")
         return None
 
+def create_chunk_selection_template_csv() -> str:
+    """
+    Create a template CSV file that users can use to select chunks.
+    
+    Returns:
+        str: Path to the created template file
+    """
+    try:
+        temp_file = tempfile.NamedTemporaryFile(
+            mode='w', 
+            suffix='.csv', 
+            prefix='chunk_selection_template_', 
+            delete=False,
+            encoding='utf-8-sig',
+            newline=''
+        )
+        
+        writer = csv.writer(temp_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
+        
+        # Write template header
+        writer.writerow(['chunk_id', 'include', 'notes'])
+        
+        # Write example rows
+        for i in range(1, 11):
+            writer.writerow([i, 'yes', f'Example chunk {i}'])
+        
+        temp_file.close()
+        
+        logger.info(f"Created chunk selection template at {temp_file.name}")
+        return temp_file.name
+        
+    except Exception as e:
+        logger.error(f"Error creating chunk selection template: {e}")
+        return None
+
 def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> str:
     """
     Create a JSON file for download containing agent search results with evaluations.
-    Enhanced to properly handle dual scores.
+    Enhanced to properly handle dual scores and chunk selection support.
     
     Args:
         agent_results: Dictionary containing agent search results and evaluations
@@ -297,7 +350,8 @@ def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> str:
                 "source": "Der Spiegel RAG System - Agent Search",
                 "total_chunks": len(agent_results.get('chunks', [])),
                 "search_type": "agent_based",
-                "includes_dual_scores": True  # Agent search always has dual scores
+                "includes_dual_scores": True,
+                "supports_chunk_selection": True  # NEW: Indicate chunk selection support
             },
             "search_metadata": agent_results.get('metadata', {}),
             "agent_evaluations": agent_results.get('evaluations', []),
@@ -309,9 +363,9 @@ def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> str:
         for i, chunk in enumerate(agent_results.get('chunks', [])):
             chunk_data = {
                 "chunk_id": i + 1,
-                "relevance_score": chunk.get('relevance_score', 0.0),  # Primary score
-                "vector_similarity_score": chunk.get('vector_similarity_score', 0.0),  # NEW
-                "llm_evaluation_score": chunk.get('llm_evaluation_score', 0.0),  # NEW
+                "relevance_score": chunk.get('relevance_score', 0.0),
+                "vector_similarity_score": chunk.get('vector_similarity_score', 0.0),
+                "llm_evaluation_score": chunk.get('llm_evaluation_score', 0.0),
                 "content": chunk.get('content', ''),
                 "metadata": {
                     "titel": chunk.get('metadata', {}).get('Artikeltitel', 'Kein Titel'),
@@ -324,12 +378,12 @@ def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> str:
                     "untertitel": chunk.get('metadata', {}).get('Untertitel', ''),
                     "nr_in_issue": chunk.get('metadata', {}).get('nr_in_issue', None)
                 },
-                "scoring_analysis": {  # NEW: Enhanced scoring analysis
+                "scoring_analysis": {
                     "vector_similarity_score": chunk.get('vector_similarity_score', 0.0),
                     "llm_evaluation_score": chunk.get('llm_evaluation_score', 0.0),
                     "score_difference": chunk.get('llm_evaluation_score', 0.0) - chunk.get('vector_similarity_score', 0.0),
                     "evaluation_text": chunk.get('metadata', {}).get('evaluation_text', ''),
-                    "primary_selection_criterion": "llm_evaluation"  # Agent search prioritizes LLM scores
+                    "primary_selection_criterion": "llm_evaluation"
                 }
             }
             
@@ -345,24 +399,23 @@ def create_agent_download_json(agent_results: Optional[Dict[str, Any]]) -> str:
             
             export_data["chunks"].append(chunk_data)
         
-        # Create temporary file
+        # Create temporary file with proper UTF-8 encoding
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         temp_file = tempfile.NamedTemporaryFile(
             mode='w', 
             suffix='.json', 
             prefix='spiegel_rag_agent_dual_scores_', 
-            delete=False,  # Important: don't delete automatically
+            delete=False,
             encoding='utf-8'
         )
         
-        # Write JSON content
+        # Write JSON content with proper Unicode handling
         json.dump(export_data, temp_file, ensure_ascii=False, indent=2)
         temp_file.close()
         
         logger.info(f"Created agent JSON download with dual scores and {len(export_data['chunks'])} chunks at {temp_file.name}")
         
-        # Return the file path
         return temp_file.name
         
     except Exception as e:
@@ -407,6 +460,10 @@ def format_download_summary(chunks_count: int, format_type: str, has_dual_scores
     if has_dual_scores:
         score_info = "\n\n**Enthaltene Scores**: Vector-Similarity, LLM-Evaluation und Score-Differenz für detaillierte Analyse."
     
+    encoding_info = ""
+    if format_type.upper() == "CSV":
+        encoding_info = "\n\n**Encoding**: UTF-8 mit BOM für optimale Kompatibilität mit Excel und deutschen Umlauten."
+    
     return f"""
     ### Download erfolgreich erstellt ({format_type.upper()})
     
@@ -414,6 +471,8 @@ def format_download_summary(chunks_count: int, format_type: str, has_dual_scores
     **Anzahl Texte**: {chunks_count}  
     **Format**: {format_type.upper()}
     {score_info}
+    {encoding_info}
     
     Die Datei enthält alle gefundenen Texte mit vollständigen Metadaten und Relevanz-Scores.
+    **Chunk-IDs können für selektive Analyse verwendet werden.**
     """

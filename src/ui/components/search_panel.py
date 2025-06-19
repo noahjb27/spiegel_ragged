@@ -1,6 +1,6 @@
-# src/ui/components/search_panel.py - Updated with agent minimum retrieval score
+# src/ui/components/search_panel.py - Enhanced with chunks per window and improved agent prompts
 """
-Updated search panel component with minimum retrieval relevance score for agent search.
+Enhanced search panel component with chunks per time window and improved agent system prompt editing.
 """
 import gradio as gr
 from typing import Dict, Any, Callable
@@ -14,7 +14,7 @@ def create_search_panel(
     toggle_api_key_callback: Callable
 ) -> Dict[str, Any]:
     """
-    Create the redesigned search panel with stacked standard/agent options.
+    Create the enhanced search panel with chunks per window and improved agent prompts.
     
     Returns:
         Dictionary of UI components
@@ -79,14 +79,29 @@ def create_search_panel(
     with gr.Group(visible=True) as standard_settings:
         gr.Markdown("## Standard-Suche Einstellungen")
         
-        top_k = gr.Slider(
-            minimum=1,
-            maximum=50,
-            value=10,
-            step=1,
-            label="Anzahl Ergebnisse",
-            info="Maximale Anzahl der Texte, die abgerufen werden sollen."
-        )
+        # ENHANCED: Different options for chunks based on time window usage
+        with gr.Row():
+            # Total chunks (shown when time windows are disabled)
+            top_k = gr.Slider(
+                minimum=1,
+                maximum=50,
+                value=10,
+                step=1,
+                label="Anzahl Ergebnisse (gesamt)",
+                info="Maximale Anzahl der Texte insgesamt.",
+                visible=True
+            )
+            
+            # Chunks per window (shown when time windows are enabled)
+            chunks_per_window = gr.Slider(
+                minimum=1,
+                maximum=20,
+                value=5,
+                step=1,
+                label="Ergebnisse pro Zeitfenster",
+                info="Anzahl der Texte pro Zeitfenster.",
+                visible=False
+            )
         
         with gr.Accordion("Erweiterte Einstellungen", open=False):
             # Keyword filtering
@@ -141,13 +156,14 @@ def create_search_panel(
                 
                 expansion_output = gr.Markdown(label="Ähnliche Wörter")
             
-            # Time window search
+            # ENHANCED: Time window search with per-window chunk control
             with gr.Accordion("Zeitfenster-Suche", open=False):
                 gr.Markdown("""
                 ### Zeitfenster-Suche
                 
                 Die Zeitfenster-Suche unterteilt den Suchzeitraum in kleinere Abschnitte und sorgt dafür, 
-                dass Ergebnisse aus verschiedenen Zeitperioden berücksichtigt werden.
+                dass Ergebnisse aus verschiedenen Zeitperioden berücksichtigt werden. Sie können wählen,
+                wie viele Texte pro Zeitfenster abgerufen werden sollen.
                 """)
                 
                 with gr.Row():
@@ -214,7 +230,7 @@ def create_search_panel(
                 info="Anzahl der Texte, die nach KI-Bewertung pro Zeitfenster behalten werden"
             )
         
-        # NEW: Agent minimum retrieval relevance score
+        # Agent minimum retrieval relevance score
         with gr.Row():
             agent_min_retrieval_score = gr.Slider(
                 minimum=0.1,
@@ -246,7 +262,7 @@ def create_search_panel(
                     info="Nur Texte mit den angegebenen Schlagwörtern"
                 )
         
-        # Agent LLM settings
+        # ENHANCED: Agent LLM settings with editable system prompts (like question panel)
         with gr.Accordion("KI-Bewertungseinstellungen", open=True):
             agent_model = gr.Radio(
                 choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
@@ -255,19 +271,30 @@ def create_search_panel(
                 info="Wählen Sie das Modell für die Quellenbewertung. DeepSeek R1 ist besonders leistungsstark für komplexe Analysen."
             )
             
-            agent_system_prompt_template = gr.Dropdown(
-                choices=list(settings.AGENT_SYSTEM_PROMPTS.keys()),
-                value="agent_default",
-                label="Bewertungs-Prompt Vorlage",
-                info="Vordefinierte Vorlagen für verschiedene Analysezwecke"
-            )
+            # ENHANCED: System prompt template selection and editing (like question panel)
+            gr.Markdown("""
+            ### System Prompt für Quellenbewertung
             
-            agent_custom_system_prompt = gr.Textbox(
-                label="Eigener Bewertungs-Prompt",
-                placeholder="Anpassung des System-Prompts für die Quellenbewertung...",
-                value="",
-                lines=6,
-                info="Leer lassen für die gewählte Vorlage oder eigenen Prompt eingeben"
+            Wählen Sie eine Vorlage und bearbeiten Sie sie nach Ihren Bedürfnissen. Der System Prompt steuert, 
+            wie das LLM die Relevanz der Quellen bewertet.
+            """)
+            
+            with gr.Row():
+                agent_system_prompt_template = gr.Dropdown(
+                    choices=list(settings.AGENT_SYSTEM_PROMPTS.keys()),
+                    value="agent_default",
+                    label="Bewertungs-Prompt Vorlage",
+                    info="Wählen Sie eine Vorlage als Ausgangspunkt"
+                )
+                
+                reset_agent_system_prompt_btn = gr.Button("Auf Vorlage zurücksetzen", size="sm")
+            
+            # ENHANCED: Editable system prompt text area (like question panel)
+            agent_system_prompt_text = gr.Textbox(
+                label="System Prompt für Bewertung (bearbeitbar)",
+                value=settings.AGENT_SYSTEM_PROMPTS["agent_default"],
+                lines=8,
+                info="Bearbeiten Sie den System Prompt für die Quellenbewertung nach Ihren Bedürfnissen."
             )
         
         agent_search_btn = gr.Button("Agenten-Suche starten", variant="primary")
@@ -287,6 +314,19 @@ def create_search_panel(
         outputs=[expansion_output, expanded_words_state]
     )
     
+    # ENHANCED: Show/hide chunk options based on time window selection
+    def toggle_chunk_options(use_time_windows_val):
+        if use_time_windows_val:
+            return gr.update(visible=False), gr.update(visible=True)
+        else:
+            return gr.update(visible=True), gr.update(visible=False)
+    
+    use_time_windows.change(
+        toggle_chunk_options,
+        inputs=[use_time_windows],
+        outputs=[top_k, chunks_per_window]
+    )
+    
     # Show/hide settings based on search mode
     def toggle_search_settings(mode):
         if mode == "standard":
@@ -298,6 +338,29 @@ def create_search_panel(
         toggle_search_settings,
         inputs=[search_mode],
         outputs=[standard_settings, agent_settings]
+    )
+    
+    # ENHANCED: Agent system prompt template management (like question panel)
+    def load_agent_system_prompt_template(template_name: str) -> str:
+        """Load the selected agent template into the text area."""
+        return settings.AGENT_SYSTEM_PROMPTS.get(template_name, settings.AGENT_SYSTEM_PROMPTS["agent_default"])
+    
+    def reset_agent_to_template(template_name: str) -> str:
+        """Reset the agent text area to the selected template."""
+        return settings.AGENT_SYSTEM_PROMPTS.get(template_name, settings.AGENT_SYSTEM_PROMPTS["agent_default"])
+    
+    # Connect agent template dropdown to text area
+    agent_system_prompt_template.change(
+        load_agent_system_prompt_template,
+        inputs=[agent_system_prompt_template],
+        outputs=[agent_system_prompt_text]
+    )
+    
+    # Connect agent reset button
+    reset_agent_system_prompt_btn.click(
+        reset_agent_to_template,
+        inputs=[agent_system_prompt_template],
+        outputs=[agent_system_prompt_text]
     )
     
     # Define all components to be returned
@@ -314,6 +377,7 @@ def create_search_panel(
         
         # Standard search components
         "top_k": top_k,
+        "chunks_per_window": chunks_per_window,  # ENHANCED: New component
         "keywords": keywords,
         "search_in": search_in,
         "use_semantic_expansion": use_semantic_expansion,
@@ -329,20 +393,24 @@ def create_search_panel(
         "agent_time_window_size": agent_time_window_size,
         "chunks_per_window_initial": chunks_per_window_initial,
         "chunks_per_window_final": chunks_per_window_final,
-        "agent_min_retrieval_score": agent_min_retrieval_score,  # NEW
+        "agent_min_retrieval_score": agent_min_retrieval_score,
         "agent_keywords": agent_keywords,
         "agent_search_in": agent_search_in,
         "agent_enforce_keywords": agent_enforce_keywords,
         "agent_model": agent_model,
         "agent_system_prompt_template": agent_system_prompt_template,
-        "agent_custom_system_prompt": agent_custom_system_prompt,
+        "agent_system_prompt_text": agent_system_prompt_text,  # ENHANCED: New editable component
+        "reset_agent_system_prompt_btn": reset_agent_system_prompt_btn,  # ENHANCED: Reset button
         "agent_search_btn": agent_search_btn,
         "agent_progress": agent_progress,
         "agent_cancel_btn": agent_cancel_btn,
         
         # UI groups for visibility control
         "standard_settings": standard_settings,
-        "agent_settings": agent_settings
+        "agent_settings": agent_settings,
+        
+        # DEPRECATED: Keep for backward compatibility
+        "agent_custom_system_prompt": agent_system_prompt_text  # Alias
     }
     
     return components

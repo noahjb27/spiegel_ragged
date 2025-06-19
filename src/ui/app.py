@@ -1,6 +1,6 @@
-# src/ui/app.py - Updated for editable system prompts
+# src/ui/app.py - Enhanced with all new features
 """
-Enhanced app with editable system prompt templates for both regular analysis and agent search.
+Enhanced app with chunk selection, chunks per window, improved encoding, and editable agent prompts.
 """
 import gradio as gr
 import logging
@@ -32,7 +32,12 @@ from src.ui.handlers.keyword_handlers import (
     find_similar_words,
     expand_boolean_expression
 )
-from src.ui.handlers.download_handlers import create_download_json, create_download_csv
+from src.ui.handlers.download_handlers import (
+    create_download_json, 
+    create_download_csv,
+    create_chunk_selection_template_csv,
+    format_download_summary
+)
 from src.ui.utils.ui_helpers import toggle_api_key_visibility
 from src.config import settings
 
@@ -41,7 +46,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_app():
-    """Create the main Gradio application with editable system prompts."""
+    """Create the enhanced Gradio application with all new features."""
     
     # Initialize RAG engine
     logger.info("Initializing RAG engine...")
@@ -63,7 +68,7 @@ def create_app():
     else:
         logger.warning("Embedding service not available for keyword analysis")
     
-    # Enhanced CSS
+    # Enhanced CSS with new features styling
     enhanced_css = """
     /* Main container styling */
     .gradio-container {
@@ -77,6 +82,45 @@ def create_app():
         border-radius: 8px !important;
         border: 2px solid #dee2e6 !important;
         margin-bottom: 20px !important;
+    }
+    
+    /* ENHANCED: Chunk selection styling */
+    .chunk-selection-container {
+        background: linear-gradient(135deg, #e8f5e8 0%, #f0f9ff 100%) !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
+        border: 2px solid #22c55e !important;
+        margin: 10px 0 !important;
+    }
+    
+    .chunk-selection-container h4 {
+        color: #15803d !important;
+        margin-bottom: 10px !important;
+        font-weight: bold !important;
+    }
+    
+    /* ENHANCED: Chunks per window styling */
+    .chunks-per-window-info {
+        background: #fef3c7 !important;
+        padding: 10px !important;
+        border-radius: 6px !important;
+        border-left: 4px solid #f59e0b !important;
+        margin: 10px 0 !important;
+    }
+    
+    /* ENHANCED: Agent prompt styling */
+    .agent-prompt-container {
+        background: #f0f9ff !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
+        border: 1px solid #0ea5e9 !important;
+        margin: 10px 0 !important;
+    }
+    
+    .agent-prompt-container h4 {
+        color: #0c4a6e !important;
+        margin-bottom: 10px !important;
+        font-weight: bold !important;
     }
     
     /* ENHANCED ACCORDION BUTTON STYLING */
@@ -127,7 +171,7 @@ def create_app():
         background-color: #ffffff !important;
     }
     
-    /* Download button styling */
+    /* ENHANCED: Download button styling with new variants */
     .download-button {
         background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
         color: white !important;
@@ -145,6 +189,20 @@ def create_app():
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
     }
     
+    .template-button {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 6px !important;
+        padding: 8px 16px !important;
+        border: none !important;
+        cursor: pointer !important;
+    }
+    
+    .template-button:hover {
+        background: linear-gradient(135deg, #2980b9 0%, #1f5f8b 100%) !important;
+    }
+    
     /* Cancel button styling */
     .cancel-button {
         background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
@@ -160,6 +218,21 @@ def create_app():
         background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
     }
     
+    /* ENHANCED: File upload styling */
+    .file-upload-container {
+        border: 2px dashed #cbd5e0 !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        text-align: center !important;
+        background: #f8fafc !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .file-upload-container:hover {
+        border-color: #4299e1 !important;
+        background: #ebf8ff !important;
+    }
+    
     /* System prompt styling */
     .system-prompt-container {
         background: #f8f9fa !important;
@@ -172,24 +245,28 @@ def create_app():
     
     # Create the Gradio interface
     with gr.Blocks(
-        title="Der Spiegel RAG System",
+        title="Der Spiegel RAG System - Enhanced",
         theme=gr.themes.Soft(),
         css=enhanced_css
     ) as app:
         
         gr.Markdown("""
-        # Der Spiegel RAG System (1948-1979)
+        # Der Spiegel RAG System (1948-1979) - Enhanced Edition
         
-        Ein Retrieval Augmented Generation (RAG) System zur Analyse und Durchsuchung des Spiegel-Archivs.
+        Ein verbessertes Retrieval Augmented Generation (RAG) System zur Analyse und Durchsuchung des Spiegel-Archivs.
         
         **Systemstatus:** ✅ Verbunden mit ChromaDB und Ollama Embedding Service
         
-        **Neu:** Bearbeitbare System Prompts - Wählen Sie eine Vorlage und passen Sie sie an Ihre Bedürfnisse an!
+        **Neue Features:**
+        - 🔧 **Chunks pro Zeitfenster**: Präzise Kontrolle über Quellenverteilung
+        - 📋 **Selective Analyse**: Wählen Sie spezifische Texte für die Analyse aus
+        - 🌍 **Verbesserte Deutsche Texte**: Optimierte CSV-Kodierung für deutsche Umlaute
+        - ⚙️ **Erweiterte Agent-Prompts**: Vollständig anpassbare System-Prompts für Agenten-Suche
         """)
         
         with gr.Tab("Quellen abrufen"):
             with gr.Accordion("Suchmethode wählen", open=True) as search_method_accordion:
-                # Create search panel components with both callbacks
+                # Create enhanced search panel components
                 search_components = create_search_panel(
                     retrieve_callback=None,  # Will be set below
                     agent_search_callback=None,  # Will be set below
@@ -200,10 +277,11 @@ def create_app():
             with gr.Accordion("Gefundene Texte", open=False) as retrieved_texts_accordion:
                 retrieved_chunks_display = gr.Markdown("Die gefundenen Texte werden hier angezeigt...")
                 
-                # Download functionality
+                # ENHANCED: Download functionality with template option
                 with gr.Row():
                     download_json_btn = gr.Button("📥 Als JSON herunterladen", elem_classes=["download-button"])
                     download_csv_btn = gr.Button("📊 Als CSV herunterladen", elem_classes=["download-button"])
+                    template_csv_btn = gr.Button("📋 CSV-Vorlage für Auswahl", elem_classes=["template-button"])
                     
                     # Agent-specific comprehensive download (conditionally visible)
                     download_comprehensive_btn = gr.Button(
@@ -212,15 +290,16 @@ def create_app():
                         visible=False
                     )
                 
-                # Download status and files
+                # ENHANCED: Download status and files with template support
                 download_status = gr.Markdown("", visible=False)
                 download_json_file = gr.File(label="JSON Download", visible=False)
                 download_csv_file = gr.File(label="CSV Download", visible=False)
+                download_template_file = gr.File(label="CSV-Vorlage", visible=False)
                 download_comprehensive_file = gr.File(label="Comprehensive Agent Download", visible=False)
         
         with gr.Tab("Quellen analysieren"):
             with gr.Accordion("Frage stellen", open=True) as question_accordion:
-                # Create question panel components
+                # Create enhanced question panel components with chunk selection
                 question_components = create_question_panel()
             
             with gr.Accordion("Ergebnisse", open=False) as results_accordion:
@@ -238,7 +317,7 @@ def create_app():
         
         # Connect event handlers
         
-        # Standard search button click
+        # ENHANCED: Standard search button click with chunks per window support
         search_components["standard_search_btn"].click(
             perform_retrieval_and_update_ui,
             inputs=[
@@ -254,7 +333,8 @@ def create_app():
                 search_components["enforce_keywords"],
                 search_components["use_time_windows"],
                 search_components["time_window_size"],
-                search_components["top_k"]
+                search_components["top_k"],
+                search_components["chunks_per_window"]  # ENHANCED: New parameter
             ],
             outputs=[
                 search_components["search_status"],
@@ -269,7 +349,7 @@ def create_app():
             outputs=[download_comprehensive_btn]
         )
         
-        # Agent search button click
+        # ENHANCED: Agent search button click with improved prompts
         search_components["agent_search_btn"].click(
             perform_agent_search_threaded,
             inputs=[
@@ -281,19 +361,19 @@ def create_app():
                 search_components["agent_time_window_size"],
                 search_components["chunks_per_window_initial"],
                 search_components["chunks_per_window_final"],
-                search_components["agent_min_retrieval_score"],  # NEW: Add minimum retrieval score
+                search_components["agent_min_retrieval_score"],
                 search_components["agent_keywords"],
                 search_components["agent_search_in"],
                 search_components["agent_enforce_keywords"],
                 search_components["agent_model"],
                 search_components["agent_system_prompt_template"],
-                search_components["agent_custom_system_prompt"]
+                search_components["agent_system_prompt_text"]  # ENHANCED: Use editable text
             ],
             outputs=[
                 search_components["search_status"],
                 search_components["retrieved_chunks_state"],
                 retrieved_chunks_display,
-                search_components["search_mode"],  # No change
+                search_components["search_mode"],
                 search_components["agent_search_btn"],
                 search_components["agent_cancel_btn"],
                 search_components["agent_progress"],
@@ -311,17 +391,19 @@ def create_app():
             outputs=[search_components["agent_progress"]]
         )
         
-        # Analysis button click - UPDATED: Use system_prompt_text
+        # ENHANCED: Analysis button click with chunk selection support
         question_components["analyze_btn"].click(
             perform_analysis_and_update_ui,
             inputs=[
                 question_components["question"],
                 search_components["retrieved_chunks_state"],
                 question_components["model_selection"],
-                question_components["system_prompt_template"],  # For backward compatibility
-                question_components["system_prompt_text"],      # NEW: Use the edited template
+                question_components["system_prompt_template"],
+                question_components["system_prompt_text"],
                 question_components["temperature"],
-                question_components["max_tokens"]
+                question_components["max_tokens"],
+                question_components["chunk_selection_mode"],  # ENHANCED: New parameter
+                question_components["selected_chunks_state"]  # ENHANCED: New parameter
             ],
             outputs=[
                 results_components["answer_output"],
@@ -331,14 +413,24 @@ def create_app():
             ]
         )
         
-        # Download handlers
+        # ENHANCED: Download handlers with improved functionality
         def handle_json_download(retrieved_chunks_state):
             """Handle JSON download with proper status updates."""
             try:
                 file_path = create_download_json(retrieved_chunks_state)
                 if file_path:
+                    has_dual_scores = any(
+                        'vector_similarity_score' in chunk or 'llm_evaluation_score' in chunk
+                        for chunk in retrieved_chunks_state.get('chunks', [])
+                    ) if retrieved_chunks_state else False
+                    
+                    summary = format_download_summary(
+                        len(retrieved_chunks_state.get('chunks', [])), 
+                        "JSON", 
+                        has_dual_scores
+                    )
                     return (
-                        gr.update(value="✅ JSON-Datei wurde erstellt und kann heruntergeladen werden.", visible=True),
+                        gr.update(value=summary, visible=True),
                         gr.update(value=file_path, visible=True)
                     )
                 else:
@@ -354,12 +446,22 @@ def create_app():
                 )
         
         def handle_csv_download(retrieved_chunks_state):
-            """Handle CSV download with proper status updates."""
+            """Handle CSV download with improved German text encoding."""
             try:
                 file_path = create_download_csv(retrieved_chunks_state)
                 if file_path:
+                    has_dual_scores = any(
+                        'vector_similarity_score' in chunk or 'llm_evaluation_score' in chunk
+                        for chunk in retrieved_chunks_state.get('chunks', [])
+                    ) if retrieved_chunks_state else False
+                    
+                    summary = format_download_summary(
+                        len(retrieved_chunks_state.get('chunks', [])), 
+                        "CSV", 
+                        has_dual_scores
+                    )
                     return (
-                        gr.update(value="✅ CSV-Datei wurde erstellt und kann heruntergeladen werden.", visible=True),
+                        gr.update(value=summary, visible=True),
                         gr.update(value=file_path, visible=True)
                     )
                 else:
@@ -371,6 +473,27 @@ def create_app():
                 logger.error(f"CSV download error: {e}")
                 return (
                     gr.update(value=f"❌ Fehler beim Erstellen der CSV-Datei: {str(e)}", visible=True),
+                    gr.update(visible=False)
+                )
+        
+        def handle_template_download():
+            """Handle CSV template download for chunk selection."""
+            try:
+                file_path = create_chunk_selection_template_csv()
+                if file_path:
+                    return (
+                        gr.update(value="✅ CSV-Vorlage für Chunk-Auswahl erstellt.", visible=True),
+                        gr.update(value=file_path, visible=True)
+                    )
+                else:
+                    return (
+                        gr.update(value="❌ Fehler beim Erstellen der Vorlage.", visible=True),
+                        gr.update(visible=False)
+                    )
+            except Exception as e:
+                logger.error(f"Template download error: {e}")
+                return (
+                    gr.update(value=f"❌ Fehler: {str(e)}", visible=True),
                     gr.update(visible=False)
                 )
         
@@ -408,21 +531,27 @@ def create_app():
             outputs=[download_status, download_csv_file]
         )
         
+        # ENHANCED: Template download
+        template_csv_btn.click(
+            handle_template_download,
+            outputs=[download_status, download_template_file]
+        )
+        
         download_comprehensive_btn.click(
             handle_comprehensive_download,
             inputs=[search_components["retrieved_chunks_state"]],
             outputs=[download_status, download_comprehensive_file]
         )
         
-        logger.info("Enhanced Gradio interface with editable system prompts created successfully")
+        logger.info("Enhanced Gradio interface with all new features created successfully")
     
     return app
 
 def main():
-    """Main entry point for the application."""
+    """Main entry point for the enhanced application."""
     try:
         app = create_app()
-        logger.info("Starting enhanced Gradio application with editable system prompts...")
+        logger.info("Starting enhanced Gradio application with chunk selection, chunks per window, improved encoding, and editable agent prompts...")
         app.launch(
             server_name="0.0.0.0",
             server_port=7860,

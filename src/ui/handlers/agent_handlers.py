@@ -1,6 +1,6 @@
-# src/ui/handlers/agent_handlers.py - Updated to handle both scores
+# src/ui/handlers/agent_handlers.py - Enhanced with editable system prompts
 """
-Updated handlers for agent search functionality with dual score support.
+Enhanced handlers for agent search functionality with editable system prompt support.
 """
 import json
 import logging
@@ -36,20 +36,18 @@ def perform_agent_search(
     agent_time_window_size: int,
     chunks_per_window_initial: int,
     chunks_per_window_final: int,
-    agent_min_retrieval_score: float,  # NEW parameter
+    agent_min_retrieval_score: float,
     agent_keywords: str,
     agent_search_in: List[str],
     agent_enforce_keywords: bool,
     agent_model: str,
     agent_system_prompt_template: str,
-    agent_custom_system_prompt: str,
+    agent_system_prompt_text: str,  # ENHANCED: Use editable text directly
     progress_callback: Optional[Any] = None
 ) -> Tuple[str, Dict[str, Any]]:
     """
-    Perform agent search with time windowing and dual score preservation.
-    
-    Returns:
-        Tuple of (status_message, search_results)
+    Perform agent search with enhanced system prompt support.
+    ENHANCED: Now uses the editable system prompt text directly.
     """
     global current_agent_search
     
@@ -62,20 +60,26 @@ def perform_agent_search(
         
         start_time = time.time()
         logger.info(f"Starting agent search: '{content_description}'")
+        logger.info(f"Initial retrieval count: {chunks_per_window_initial}, Final: {chunks_per_window_final}")
         
         # Clean parameters
         content_description = content_description.strip()
         keywords_cleaned = agent_keywords.strip() if agent_keywords else None
         search_fields = agent_search_in if agent_search_in else ["Text"]
         
-        # Determine system prompt
-        if agent_custom_system_prompt.strip():
-            system_prompt = agent_custom_system_prompt.strip()
-        else:
-            system_prompt = settings.ALL_SYSTEM_PROMPTS.get(
+        # ENHANCED: Use the editable system prompt text directly
+        system_prompt = agent_system_prompt_text.strip()
+        
+        # Fallback to template if somehow empty (shouldn't happen with new UI)
+        if not system_prompt:
+            logger.warning("System prompt text is empty, falling back to template")
+            system_prompt = settings.AGENT_SYSTEM_PROMPTS.get(
                 agent_system_prompt_template, 
                 settings.AGENT_SYSTEM_PROMPTS["agent_default"]
             )
+        
+        logger.info(f"Using editable system prompt (length: {len(system_prompt)} chars)")
+        logger.info(f"System prompt preview: {system_prompt[:150]}...")
         
         # Create search configurations
         search_config = SearchConfig(
@@ -94,8 +98,8 @@ def perform_agent_search(
             chunks_per_window_initial=chunks_per_window_initial,
             chunks_per_window_final=chunks_per_window_final,
             agent_model=agent_model,
-            agent_system_prompt=system_prompt,
-            min_retrieval_relevance_score=agent_min_retrieval_score  # NEW: Pass minimum score
+            agent_system_prompt=system_prompt,  # ENHANCED: Use editable prompt
+            min_retrieval_relevance_score=agent_min_retrieval_score
         )
         
         # Create and execute agent strategy
@@ -107,7 +111,7 @@ def perform_agent_search(
         # Store reference for potential cancellation
         current_agent_search = agent_strategy
         
-        logger.info("Executing agent search with time windowing...")
+        logger.info("Executing agent search with enhanced time windowing...")
         
         # Progress callback wrapper
         def progress_wrapper(message: str, progress: float):
@@ -143,8 +147,8 @@ def perform_agent_search(
                 'content': doc.page_content,
                 'metadata': doc.metadata,
                 'relevance_score': llm_score,  # Primary score for UI display (LLM score)
-                'vector_similarity_score': vector_score,  # NEW: Vector similarity score
-                'llm_evaluation_score': llm_eval_score  # NEW: Explicit LLM score
+                'vector_similarity_score': vector_score,  # Vector similarity score
+                'llm_evaluation_score': llm_eval_score  # Explicit LLM score
             })
         
         # Build comprehensive results dictionary
@@ -157,7 +161,9 @@ def perform_agent_search(
                 'year_range': [year_start, year_end],
                 'keywords': keywords_cleaned,
                 'retrieval_method': 'agent_time_windowed' if agent_use_time_windows else 'agent_global',
-                'min_retrieval_relevance_score': agent_min_retrieval_score,  # NEW: Include in metadata
+                'min_retrieval_relevance_score': agent_min_retrieval_score,
+                'system_prompt_used': system_prompt[:200] + "..." if len(system_prompt) > 200 else system_prompt,  # ENHANCED: Store prompt info
+                'system_prompt_template': agent_system_prompt_template,  # Store template reference
                 **search_result.metadata  # Include all agent metadata
             }
         }
@@ -177,6 +183,7 @@ def perform_agent_search(
         **Suchzeit**: {search_time:.2f} Sekunden  
         **Bewertungsmodell**: {agent_model}
         **Mindest-Retrieval-Score**: {agent_min_retrieval_score}
+        **System-Prompt**: {agent_system_prompt_template} (angepasst)
         """
         
         if agent_use_time_windows:
@@ -221,21 +228,17 @@ def perform_agent_search_threaded(
     agent_time_window_size: int,
     chunks_per_window_initial: int,
     chunks_per_window_final: int,
-    agent_min_retrieval_score: float,  # NEW parameter
+    agent_min_retrieval_score: float,
     agent_keywords: str,
     agent_search_in: List[str],
     agent_enforce_keywords: bool,
     agent_model: str,
     agent_system_prompt_template: str,
-    agent_custom_system_prompt: str
+    agent_system_prompt_text: str  # ENHANCED: Use editable text
 ) -> Tuple[str, Dict[str, Any], str, gr.update, gr.update, gr.update, gr.update, gr.update, gr.update]:
     """
-    Perform agent search in a thread with UI updates.
-    
-    Returns:
-        Tuple for UI updates: (search_status, retrieved_chunks_state, formatted_chunks, 
-                              search_mode_update, search_btn_update, cancel_btn_update,
-                              progress_update, retrieved_texts_accordion, question_accordion)
+    Perform agent search in a thread with UI updates and enhanced system prompt support.
+    ENHANCED: Now uses the editable system prompt text directly.
     """
     global search_thread
     
@@ -253,20 +256,24 @@ def perform_agent_search_threaded(
             # Update progress display
             return gr.update(value=f"**Fortschritt**: {message} ({progress*100:.0f}%)")
         
-        # Run search with NEW parameter
+        # ENHANCED: Log system prompt usage
+        logger.info(f"Agent search using editable system prompt (template: {agent_system_prompt_template})")
+        logger.info(f"System prompt length: {len(agent_system_prompt_text)} characters")
+        
+        # Run search with ENHANCED parameters
         search_status, retrieved_chunks = perform_agent_search(
             content_description, chunk_size, year_start, year_end,
             agent_use_time_windows, agent_time_window_size,
             chunks_per_window_initial, chunks_per_window_final,
-            agent_min_retrieval_score,  # NEW: Pass minimum retrieval score
-            agent_keywords, agent_search_in, agent_enforce_keywords,
-            agent_model, agent_system_prompt_template, agent_custom_system_prompt,
+            agent_min_retrieval_score, agent_keywords, agent_search_in, 
+            agent_enforce_keywords, agent_model, agent_system_prompt_template, 
+            agent_system_prompt_text,  # ENHANCED: Pass editable text
             progress_callback
         )
         
         # Format chunks for display
         if retrieved_chunks and retrieved_chunks.get('chunks'):
-            formatted_chunks = format_agent_chunks_with_dual_scores(retrieved_chunks)  # Updated function
+            formatted_chunks = format_agent_chunks_with_dual_scores(retrieved_chunks)
             num_chunks = len(retrieved_chunks.get('chunks'))
             
             # Update accordion states for successful search
@@ -315,6 +322,7 @@ def perform_agent_search_threaded(
 def format_agent_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]) -> str:
     """
     Format agent search results for display, highlighting both vector and LLM scores.
+    ENHANCED: Shows information about system prompt used.
     """
     chunks = retrieved_chunks.get('chunks', [])
     metadata = retrieved_chunks.get('metadata', {})
@@ -336,6 +344,13 @@ def format_agent_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]) -> st
     use_time_windows = len(chunks_by_window) > 1 or 'Global' not in chunks_by_window
     
     formatted_text = f"# KI-bewertete Quellen ({len(chunks)} ausgewählt)\n\n"
+    
+    # ENHANCED: Add system prompt information
+    system_prompt_info = metadata.get('system_prompt_used', '')
+    system_prompt_template = metadata.get('system_prompt_template', 'unknown')
+    if system_prompt_info:
+        formatted_text += f"**Verwendeter System-Prompt**: {system_prompt_template} (angepasst)\n"
+        formatted_text += f"**Prompt-Vorschau**: {system_prompt_info}\n\n"
     
     # Add summary information with dual scores
     if use_time_windows:
@@ -389,7 +404,8 @@ def format_agent_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]) -> st
 
 def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
     """
-    Create comprehensive download with all retrieved chunks, evaluations, and dual scores.
+    Create comprehensive download with all retrieved chunks, evaluations, dual scores, and system prompt info.
+    ENHANCED: Now includes system prompt information.
     
     Returns:
         Path to the created file, or None if no data
@@ -410,9 +426,10 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
             "export_info": {
                 "timestamp": datetime.now().isoformat(),
                 "format": "json",
-                "source": "Der Spiegel RAG System - Agent Search",
+                "source": "Der Spiegel RAG System - Agent Search Enhanced",
                 "search_type": "time_windowed_agent",
-                "includes_dual_scores": True  # NEW: Indicate dual score support
+                "includes_dual_scores": True,
+                "includes_system_prompt_info": True  # ENHANCED: New feature
             },
             "search_configuration": {
                 "strategy": metadata.get('strategy', 'unknown'),
@@ -422,7 +439,11 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
                 "time_windows": metadata.get('time_windows', []),
                 "agent_config": metadata.get('agent_config', {}),
                 "search_time": metadata.get('search_time', 0),
-                "min_retrieval_relevance_score": metadata.get('min_retrieval_relevance_score', 0.25)  # NEW
+                "min_retrieval_relevance_score": metadata.get('min_retrieval_relevance_score', 0.25),
+                # ENHANCED: System prompt information
+                "system_prompt_template": metadata.get('system_prompt_template', 'unknown'),
+                "system_prompt_preview": metadata.get('system_prompt_used', ''),
+                "system_prompt_customized": True  # Indicates editable prompt was used
             },
             "retrieval_summary": {
                 "total_initial_chunks": metadata.get('total_initial_chunks', 0),
@@ -439,16 +460,17 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
             chunk_data = {
                 "content": chunk.get('content', ''),
                 "relevance_score": chunk.get('relevance_score', 0.0),  # Primary UI score (LLM)
-                "vector_similarity_score": chunk.get('vector_similarity_score', 0.0),  # NEW: Vector score
-                "llm_evaluation_score": chunk.get('llm_evaluation_score', 0.0),  # NEW: LLM score
+                "vector_similarity_score": chunk.get('vector_similarity_score', 0.0),  # Vector score
+                "llm_evaluation_score": chunk.get('llm_evaluation_score', 0.0),  # LLM score
                 "metadata": chunk.get('metadata', {}),
                 "time_window": chunk.get('metadata', {}).get('time_window', 'Unknown'),
                 "evaluation_text": chunk.get('metadata', {}).get('evaluation_text', ''),
-                "score_details": {  # NEW: Detailed score breakdown
+                "score_details": {  # Detailed score breakdown
                     "vector_similarity": chunk.get('vector_similarity_score', 0.0),
                     "llm_evaluation": chunk.get('llm_evaluation_score', 0.0),
                     "primary_display_score": chunk.get('relevance_score', 0.0),
-                    "evaluation_reasoning": chunk.get('metadata', {}).get('evaluation_text', '')
+                    "evaluation_reasoning": chunk.get('metadata', {}).get('evaluation_text', ''),
+                    "score_difference": chunk.get('llm_evaluation_score', 0.0) - chunk.get('vector_similarity_score', 0.0)
                 }
             }
             export_data["selected_chunks"].append(chunk_data)
@@ -458,7 +480,7 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
         temp_file = tempfile.NamedTemporaryFile(
             mode='w',
             suffix='.json',
-            prefix='spiegel_agent_comprehensive_dual_scores_',
+            prefix='spiegel_agent_comprehensive_enhanced_',
             delete=False,
             encoding='utf-8'
         )
@@ -466,9 +488,9 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
         json.dump(export_data, temp_file, ensure_ascii=False, indent=2)
         temp_file.close()
         
-        logger.info(f"Created comprehensive agent download with dual scores at {temp_file.name}")
+        logger.info(f"Created enhanced comprehensive agent download with system prompt info at {temp_file.name}")
         return temp_file.name
         
     except Exception as e:
-        logger.error(f"Error creating comprehensive download: {e}")
+        logger.error(f"Error creating enhanced comprehensive download: {e}")
         return None
