@@ -112,7 +112,6 @@ def format_analysis_metadata(
     analysis_time: float,
     retrieved_info: Dict[str, Any],
     temperature: float = 0.3,
-    max_tokens: Optional[int] = None,
     system_prompt: Optional[str] = None
 ) -> str:
     """
@@ -124,7 +123,6 @@ def format_analysis_metadata(
         analysis_time: Time taken for analysis in seconds
         retrieved_info: Metadata from the retrieval step
         temperature: Generation temperature used
-        max_tokens: Maximum tokens set for generation
         system_prompt: System prompt used (if custom)
         
     Returns:
@@ -136,7 +134,6 @@ def format_analysis_metadata(
 - **Frage**: {question}
 - **Analysezeit**: {analysis_time:.2f} Sekunden
 - **Temperatur**: {temperature}
-- **Max Tokens**: {max_tokens or "Standardwert"}
 
 ## Quellen-Metadaten
 - **Inhaltsbeschreibung**: {retrieved_info.get('content_description', 'Nicht angegeben')}

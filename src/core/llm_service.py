@@ -100,22 +100,57 @@ class LLMService:
         try:
             genai.configure(api_key=settings.GEMINI_API_KEY)
             
-            # Test connection by listing models
-            models = genai.list_models()
+            # Test connection by listing models and finding available ones
+            models = list(genai.list_models())
+            available_model_names = [model.name for model in models]
             
-            self.clients["gemini-pro"] = {
-                "client": genai,
-                "type": "gemini",
-                "model_id": "gemini-pro",
-                "endpoint": "https://generativelanguage.googleapis.com/"
-            }
-            self.available_models.append("gemini-pro")
-            logger.info("✅ Gemini Pro initialized successfully")
+            # Try different model names in order of preference (prioritize 2.5 Pro)
+            model_options = [
+                "models/gemini-2.5-pro",            # CHANGED: Added 2.5 Pro as priority
+                "models/gemini-2.5-pro-latest", 
+                "models/gemini-2.5-flash",
+                "models/gemini-1.5-pro-latest",      # Fallbacks
+                "models/gemini-1.5-pro", 
+                "models/gemini-2.0-flash",
+                "models/gemini-1.5-flash"
+            ]
+            
+            selected_model = None
+            for model_name in model_options:
+                if model_name in available_model_names:
+                    selected_model = model_name.replace("models/", "")  # Remove "models/" prefix
+                    break
+            
+            if selected_model:
+                self.clients["gemini-pro"] = {
+                    "client": genai,
+                    "type": "gemini",
+                    "model_id": selected_model,
+                    "endpoint": "https://generativelanguage.googleapis.com/"
+                }
+                self.available_models.append("gemini-pro")
+                logger.info(f"✅ Gemini initialized successfully with model: {selected_model}")
+            else:
+                logger.warning(f"⚠️ No supported Gemini models found. Available: {[m.replace('models/', '') for m in available_model_names[:5]]}...")
             
         except ImportError:
             logger.warning("⚠️ google-generativeai not installed. Install with: pip install google-generativeai")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Gemini: {e}")
+            # Try fallback with basic model name
+            try:
+                logger.info("Attempting fallback initialization...")
+                genai.configure(api_key=settings.GEMINI_API_KEY)
+                self.clients["gemini-pro"] = {
+                    "client": genai,
+                    "type": "gemini",
+                    "model_id": "gemini-2.5-pro",  # CHANGED: Updated fallback to 2.5 Pro
+                    "endpoint": "https://generativelanguage.googleapis.com/"
+                }
+                self.available_models.append("gemini-pro")
+                logger.info("✅ Gemini fallback initialization successful")
+            except Exception as fallback_error:
+                logger.error(f"❌ Gemini fallback initialization also failed: {fallback_error}")
 
     def _init_ollama_client(self):
         """Initialize Ollama client for DeepSeek R1."""
@@ -171,7 +206,6 @@ class LLMService:
         context: str,
         model: str = "hu-llm3",
         system_prompt: Optional[str] = None,
-        max_tokens: Optional[int] = None,  
         temperature: float = 0.3,
         preprompt: str = "",
         postprompt: str = "",
@@ -186,7 +220,6 @@ class LLMService:
             context: Context for the question
             model: Model to use (must be in available_models)
             system_prompt: System prompt for the model
-            max_tokens: Maximum tokens to generate
             temperature: Generation temperature
             preprompt: Text to prepend to the question
             postprompt: Text to append to the question
@@ -220,19 +253,19 @@ class LLMService:
         try:
             if client_type == "hu-llm":
                 return self._generate_hu_llm_response(
-                    client_info, prompt, system_prompt, temperature, max_tokens, model
+                    client_info, prompt, system_prompt, temperature, model
                 )
             elif client_type == "openai":
                 return self._generate_openai_response(
-                    client_info, prompt, system_prompt, temperature, max_tokens, model, response_format
+                    client_info, prompt, system_prompt, temperature, model, response_format
                 )
             elif client_type == "gemini":
                 return self._generate_gemini_response(
-                    client_info, prompt, system_prompt, temperature, max_tokens, model
+                    client_info, prompt, system_prompt, temperature, model
                 )
             elif client_type == "ollama":
                 return self._generate_ollama_response(
-                    client_info, prompt, system_prompt, temperature, max_tokens, model
+                    client_info, prompt, system_prompt, temperature, model
                 )
             else:
                 raise ValueError(f"Unsupported client type: {client_type}")
@@ -247,7 +280,6 @@ class LLMService:
         prompt: str, 
         system_prompt: str, 
         temperature: float, 
-        max_tokens: Optional[int],
         model: str
     ) -> Dict[str, Any]:
         """Generate response using HU-LLM."""
@@ -263,10 +295,7 @@ class LLMService:
             "model": model_id,
             "temperature": temperature
         }
-        
-        # Add max_tokens if specified
-        if max_tokens:
-            request_params["max_tokens"] = max_tokens
+    
         
         chat_completion = client.chat.completions.create(**request_params)
         
@@ -285,7 +314,6 @@ class LLMService:
         prompt: str, 
         system_prompt: str, 
         temperature: float, 
-        max_tokens: Optional[int],
         model: str,
         response_format: Optional[Dict] = None
     ) -> Dict[str, Any]:
@@ -302,10 +330,6 @@ class LLMService:
             "model": model_id,
             "temperature": temperature
         }
-        
-        # Add max_tokens if specified
-        if max_tokens:
-            request_params["max_tokens"] = max_tokens
             
         # Add response_format if specified
         if response_format:
@@ -328,7 +352,6 @@ class LLMService:
         prompt: str, 
         system_prompt: str, 
         temperature: float, 
-        max_tokens: Optional[int],
         model: str
     ) -> Dict[str, Any]:
         """Generate response using Gemini."""
@@ -342,9 +365,6 @@ class LLMService:
         generation_config = {
             "temperature": temperature,
         }
-        
-        if max_tokens:
-            generation_config["max_output_tokens"] = max_tokens
         
         # Create model instance
         model_instance = genai.GenerativeModel(model_id)
@@ -373,7 +393,6 @@ class LLMService:
         prompt: str, 
         system_prompt: str, 
         temperature: float, 
-        max_tokens: Optional[int],
         model: str
     ) -> Dict[str, Any]:
         """Generate response using Ollama (DeepSeek R1)."""
@@ -399,9 +418,6 @@ class LLMService:
             }
         }
         
-        # Add max tokens if specified
-        if max_tokens:
-            payload["options"]["num_predict"] = max_tokens
         
         try:
             # Make the request to Ollama
@@ -479,7 +495,8 @@ class LLMService:
                     list(client_info["client"].list_models())
                     health_status["providers"][model_name] = {
                         "status": "healthy",
-                        "endpoint": client_info["endpoint"]
+                        "endpoint": client_info["endpoint"],
+                        "model_id": client_info["model_id"]  # ADDED: Include model_id
                     }
                 elif client_info["type"] == "ollama":
                     # Test Ollama connection

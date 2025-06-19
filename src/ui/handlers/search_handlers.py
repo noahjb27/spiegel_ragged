@@ -189,7 +189,6 @@ def perform_analysis(
     model_selection: str,
     system_prompt: str,
     temperature: float = 0.3,
-    max_tokens: Optional[int] = None,
     selected_chunk_ids: Optional[List[int]] = None  # ENHANCED: New parameter for chunk selection
 ) -> Tuple[str, str, str]:
     """
@@ -250,8 +249,7 @@ def perform_analysis(
             chunks=documents,
             model=model_selection,
             system_prompt=system_prompt,
-            temperature=temperature,
-            max_tokens=max_tokens
+            temperature=temperature
         )
         
         analysis_time = time.time() - start_time
@@ -276,7 +274,6 @@ def perform_analysis(
         - **Frage**: {question}
         - **Analysezeit**: {analysis_time:.2f} Sekunden
         - **Temperatur**: {temperature}
-        - **Max Tokens**: {max_tokens or "Standardwert"}
         {chunk_selection_info}
 
         ## System Prompt (verwendet)
@@ -362,7 +359,6 @@ def perform_analysis_and_update_ui(
     system_prompt_template: str,
     system_prompt_text: str,
     temperature: float,
-    max_tokens: int,
     chunk_selection_mode: str = "all",  # ENHANCED: New parameter
     selected_chunks_state: Optional[List[int]] = None  # ENHANCED: Selected chunk IDs
 ) -> Tuple[str, str, gr.Accordion, gr.Accordion]:
@@ -396,7 +392,6 @@ def perform_analysis_and_update_ui(
         model_selection=model_selection,
         system_prompt=system_prompt,
         temperature=temperature,
-        max_tokens=max_tokens,
         selected_chunk_ids=selected_chunk_ids  # ENHANCED: Pass selected chunk IDs
     )
     

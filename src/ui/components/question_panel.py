@@ -83,9 +83,8 @@ def create_question_panel() -> Dict[str, Any]:
             - **HU-LLM 3**: Lokales Modell (HU-Netzwerk erforderlich)  
             - **DeepSeek R1 32B**: Fortschrittliches Reasoning-Modell via Ollama (HU-Netzwerk erforderlich)
             - **OpenAI GPT-4o**: Leistungsstärkstes OpenAI-Modell
-            - **Google Gemini Pro**: Google's neuestes Sprachmodell mit großem Kontextfenster
+            - **Google Gemini 2.5 Pro**: Googles intelligentestes Modell mit großem Kontextfenster
             
-            **Empfehlung**: DeepSeek R1 für komplexe analytische Aufgaben, die mehrstufiges Denken erfordern.
             """)
             
             with gr.Row():
@@ -93,7 +92,7 @@ def create_question_panel() -> Dict[str, Any]:
                     choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
                     value="hu-llm3",
                     label="LLM-Modell",
-                    info="Wählen Sie das zu verwendende Sprachmodell. DeepSeek R1 ist besonders gut für analytische Aufgaben."
+                    info="Wählen Sie das zu verwendende Sprachmodell."
                 )
             
             # System prompt template selection and editing
@@ -131,16 +130,6 @@ def create_question_panel() -> Dict[str, Any]:
                     step=0.1,
                     label="Temperatur",
                     info="Bestimmt die Wahrscheinlichkeitsverteilung, aus der Tokens ausgewählt werden – höher bedeutet kreativere, aber potenziell weniger kohärente Texte."
-                )
-            
-            with gr.Row():
-                max_tokens = gr.Slider(
-                    minimum=100,
-                    maximum=4000,
-                    value=1000,
-                    step=100,
-                    label="Maximale Antwortlänge",
-                    info="Maximale Anzahl der Token in der Antwort."
                 )
         
         analyze_btn = gr.Button("Frage beantworten", variant="primary")
@@ -331,7 +320,6 @@ def create_question_panel() -> Dict[str, Any]:
         "system_prompt_text": system_prompt_text,
         "reset_system_prompt_btn": reset_system_prompt_btn,
         "temperature": temperature,
-        "max_tokens": max_tokens,
         "analyze_btn": analyze_btn,
         
         # ENHANCED: Chunk selection components

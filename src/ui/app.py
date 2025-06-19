@@ -1,6 +1,6 @@
-# src/ui/app.py - Enhanced with all new features
+# src/ui/app.py
 """
-Enhanced app with chunk selection, chunks per window, improved encoding, and editable agent prompts.
+App with chunk selection, chunks per window, improved encoding, and editable agent prompts.
 """
 import gradio as gr
 import logging
@@ -68,7 +68,7 @@ def create_app():
     else:
         logger.warning("Embedding service not available for keyword analysis")
     
-    # Enhanced CSS with new features styling
+    # CSS with new features styling
     enhanced_css = """
     /* Main container styling */
     .gradio-container {
@@ -168,7 +168,6 @@ def create_app():
         padding: 20px !important;
         border-radius: 8px !important;
         border: 1px solid #e0e0e0 !important;
-        background-color: #ffffff !important;
     }
     
     /* ENHANCED: Download button styling with new variants */
@@ -245,23 +244,23 @@ def create_app():
     
     # Create the Gradio interface
     with gr.Blocks(
-        title="Der Spiegel RAG System - Enhanced",
+        title="Der Spiegel RAG System",
         theme=gr.themes.Soft(),
         css=enhanced_css
     ) as app:
         
         gr.Markdown("""
-        # Der Spiegel RAG System (1948-1979) - Enhanced Edition
+        # Der Spiegel RAG System (1948-1979)
         
-        Ein verbessertes Retrieval Augmented Generation (RAG) System zur Analyse und Durchsuchung des Spiegel-Archivs.
+        Ein Retrieval Augmented Generation (RAG) System zur Analyse und Durchsuchung des Spiegel-Archivs.
         
         **Systemstatus:** ✅ Verbunden mit ChromaDB und Ollama Embedding Service
         
-        **Neue Features:**
-        - 🔧 **Chunks pro Zeitfenster**: Präzise Kontrolle über Quellenverteilung
-        - 📋 **Selective Analyse**: Wählen Sie spezifische Texte für die Analyse aus
-        - 🌍 **Verbesserte Deutsche Texte**: Optimierte CSV-Kodierung für deutsche Umlaute
-        - ⚙️ **Erweiterte Agent-Prompts**: Vollständig anpassbare System-Prompts für Agenten-Suche
+        **Features:**
+        - **Gentrente Retrieval- und Generationphasen**: Bauen Sie Ihren Korpus auf und fragen Sie diesen seperat ab
+        - **Chunks pro Zeitfenster**: Präzise Kontrolle über Quellenverteilung
+        - **Schlagwort-Filterung**: Filtern der Textchunks mit semantisch-erweiterbaren Keywords
+        - **Agent-Prompts**: Vollständig anpassbare System-Prompts für Agenten-Suche und Antwort-Generierung
         """)
         
         with gr.Tab("Quellen abrufen"):
@@ -401,7 +400,6 @@ def create_app():
                 question_components["system_prompt_template"],
                 question_components["system_prompt_text"],
                 question_components["temperature"],
-                question_components["max_tokens"],
                 question_components["chunk_selection_mode"],  # ENHANCED: New parameter
                 question_components["selected_chunks_state"]  # ENHANCED: New parameter
             ],
@@ -543,7 +541,7 @@ def create_app():
             outputs=[download_status, download_comprehensive_file]
         )
         
-        logger.info("Enhanced Gradio interface with all new features created successfully")
+        logger.info("Gradio interface  created successfully")
     
     return app
 

@@ -88,8 +88,7 @@ class SpiegelRAG:
                 chunks: Optional[List[Document]] = None,
                 model: str = "hu-llm3",
                 system_prompt: Optional[str] = None,
-                temperature: float = 0.3,
-                max_tokens: Optional[int] = None) -> AnalysisResult:
+                temperature: float = 0.3) -> AnalysisResult:
         """
         Analyze chunks with LLM to answer a question.
         FIXED: Removed openai_api_key parameter
@@ -100,7 +99,6 @@ class SpiegelRAG:
             model: LLM model to use
             system_prompt: Custom system prompt
             temperature: Generation temperature
-            max_tokens: Maximum tokens to generate
             
         Returns:
             AnalysisResult with answer and metadata
@@ -132,9 +130,8 @@ class SpiegelRAG:
                 context=context,
                 model=model,
                 system_prompt=system_prompt,
-                temperature=temperature,
-                max_tokens=max_tokens
-            )
+                temperature=temperature
+                )
             
             return AnalysisResult(
                 answer=response['text'],

@@ -265,10 +265,10 @@ def create_search_panel(
         # ENHANCED: Agent LLM settings with editable system prompts (like question panel)
         with gr.Accordion("KI-Bewertungseinstellungen", open=True):
             agent_model = gr.Radio(
-                choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
+            choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
                 value="hu-llm3",
                 label="LLM-Modell für Bewertung",
-                info="Wählen Sie das Modell für die Quellenbewertung. DeepSeek R1 ist besonders leistungsstark für komplexe Analysen."
+                info="Wählen Sie das Modell für die Quellenbewertung."
             )
             
             # ENHANCED: System prompt template selection and editing (like question panel)

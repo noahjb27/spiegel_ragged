@@ -47,42 +47,12 @@ def create_info_panel():
     
     ### Lokale Modelle (HU-Netzwerk erforderlich)
     - **HU-LLM 1 & 3**: Schnelle, zuverlässige Modelle für Standard-Analysen
-    - **DeepSeek R1 32B**: **Neu!** Fortschrittliches Reasoning-Modell für komplexe analytische Aufgaben
+    - **DeepSeek R1 32B**: Fortschrittliches Reasoning-Modell für komplexe analytische Aufgaben
     
     ### Externe Modelle (API-Schlüssel erforderlich)
     - **OpenAI GPT-4o**: Vielseitiges, leistungsstarkes Modell
     - **Google Gemini Pro**: Großes Kontextfenster für umfangreiche Textanalysen
-    
-    ## DeepSeek R1: Das neue Reasoning-Modell
-    
-    **DeepSeek R1** ist ein hochmodernes Sprachmodell, das speziell für analytisches Denken und komplexe Problemlösung entwickelt wurde:
-    
-    ### Besondere Stärken von DeepSeek R1:
-    - **Mehrstufiges Denken**: Kann komplexe Probleme in logische Schritte unterteilen
-    - **Kritische Analyse**: Hinterfragt Annahmen und betrachtet verschiedene Perspektiven
-    - **Quellenvergleich**: Besonders gut im Vergleich und der Synthese verschiedener Textquellen
-    - **Historische Kontextualisierung**: Versteht zeitliche Entwicklungen und historische Zusammenhänge
-    - **Argumentationsqualität**: Erstellt strukturierte, gut begründete Analysen
-    
-    ### Wann DeepSeek R1 verwenden?
-    
-    **Besonders empfohlen für:**
-    - **Diskursanalysen**: "Wie entwickelte sich die Darstellung der DDR über die Jahrzehnte?"
-    - **Vergleichende Studien**: "Unterschiede in der Berichterstattung über verschiedene politische Parteien"
-    - **Kritische Quellenanalyse**: "Welche Perspektiven und Vorurteile zeigt die Berichterstattung?"
-    - **Komplexe historische Fragen**: "Wie spiegelt sich der gesellschaftliche Wandel in der Mediensprache wider?"
-    - **Methodische Reflexion**: "Welche Grenzen hat diese Quellenauswahl?"
-    
-    **Weniger geeignet für:**
-    - Einfache Faktenfragen
-    - Schnelle Übersichten
-    - Standardzusammenfassungen
-    
-    ### Optimale Einstellungen für DeepSeek R1:
-    - **Temperatur**: 0.1-0.4 (niedrig für analytische Präzision)
-    - **Max. Token**: 1500-3000 (für ausführliche Analysen)
-    - **System-Prompt**: "historical_analysis" oder "discourse_analysis" für beste Ergebnisse
-    
+
     ## Hauptfunktionen
     
     - **Semantische Suche**: Findet Inhalte basierend auf Bedeutung, nicht nur nach Schlüsselwörtern
@@ -98,7 +68,7 @@ def create_info_panel():
     
     **Schritt 1: Suchmethode wählen**
     - **Standard-Suche**: Für schnelle, direkte Informationssuche
-    - **Agenten-Suche**: Für sorgfältige, KI-gestützte Quellenauswahl (empfohlen mit DeepSeek R1)
+    - **Agenten-Suche**: Für sorgfältige, KI-gestützte Quellenauswahl
     
     **Schritt 2: Suchparameter konfigurieren**
     - Geben Sie eine **Inhaltsbeschreibung** ein
@@ -114,7 +84,7 @@ def create_info_panel():
     **Für Agenten-Suche zusätzlich:**
     - **Zeitfenster** konfigurieren (standardmäßig aktiviert)
     - **Chunks pro Fenster** einstellen (Initial → Final, z.B. 50 → 20)
-    - **KI-Modell** für Bewertung wählen (DeepSeek R1 empfohlen für komplexe Analysen)
+    - **KI-Modell** für Bewertung wählen 
     - **Bewertungs-Prompt** anpassen (vordefinierte Vorlagen verfügbar)
     
     **Schritt 3: Suche starten**
@@ -131,56 +101,9 @@ def create_info_panel():
     ### 3. Quellen analysieren
     
     - Stellen Sie eine **konkrete Frage** zu den gefundenen Texten
-    - Wählen Sie ein **Sprachmodell** für die Analyse (DeepSeek R1 für komplexe Analysen)
+    - Wählen Sie ein **Sprachmodell** für die Analyse 
     - Passen Sie bei Bedarf **System-Prompt** und **Parameter** an
     - Erhalten Sie eine **fundierte Antwort** basierend auf den ausgewählten Quellen
-    
-    ## Wann welche Suchmethode und welches Modell verwenden?
-    
-    ### Standard-Suche + HU-LLM:
-    - **Schnelle Informationssuche**: Direkter Zugriff auf relevante Inhalte
-    - **Explorative Recherche**: Überblick über verfügbare Materialien
-    - **Einfache Faktenfragen**: Wer, was, wann, wo?
-    - **Bekannte Themen**: Wenn Sie wissen, wonach Sie suchen
-    
-    ### Standard-Suche + DeepSeek R1:
-    - **Komplexe Einzelfragen**: Tiefe Analyse weniger Quellen
-    - **Kritische Quellenbetrachtung**: Bewertung von Perspektiven und Vorurteilen
-    - **Detaillierte Interpretation**: Wenn Sie präzise Textanalyse benötigen
-    
-    ### Agenten-Suche + HU-LLM:
-    - **Qualitative Auswahl**: Wenn die Güte der Quellen entscheidend ist
-    - **Zeitübergreifende Studien**: Entwicklungen über mehrere Jahre
-    - **Ausgewogene Darstellung**: Verschiedene Perspektiven berücksichtigen
-    
-    ### Agenten-Suche + DeepSeek R1:
-    - **Komplexe Diskursanalysen**: Vielschichtige historische Fragestellungen
-    - **Vergleichende Medienanalysen**: Unterschiedliche Darstellungsmuster
-    - **Theoriegeleitete Forschung**: Wenn methodische Reflexion wichtig ist
-    - **Wissenschaftliche Untersuchungen**: Publikationsreife Analysen
-    
-    ## Anwendungsbeispiele mit Modellempfehlungen
-    
-    ### Einfache Recherche (Standard + HU-LLM):
-    - "Finde Artikel über den Mauerbau 1961"
-    - "Welche Autoren schrieben über die Studentenbewegung?"
-    - "Übersicht zur Wirtschaftspolitik der 1970er Jahre"
-    
-    ### Analytische Einzelfragen (Standard + DeepSeek R1):
-    - "Wie wird Willy Brandt in diesem Artikel charakterisiert?"
-    - "Welche Metaphern verwendet der Spiegel für die deutsche Teilung?"
-    - "Was sind die impliziten Wertungen in dieser Berichterstattung?"
-    
-    ### Systematische Untersuchungen (Agent + HU-LLM):
-    - "Sammle ausgewogene Quellen zur Ost-West-Beziehungen"
-    - "Finde repräsentative Texte über gesellschaftlichen Wandel"
-    - "Suche Artikel über Terrorismus aus verschiedenen Jahrzehnten"
-    
-    ### Wissenschaftliche Analysen (Agent + DeepSeek R1):
-    - "Wie entwickelte sich die Darstellung der DDR zwischen den 1950er und 1970er Jahren?"
-    - "Welche diskursiven Strategien nutzte der Spiegel bei der Berichterstattung über politische Skandale?"
-    - "Inwiefern spiegelt die Mediensprache gesellschaftliche Modernisierungsprozesse wider?"
-    - "Wie veränderte sich die Rolle der Frau in der Spiegel-Berichterstattung?"
     
     ## Technische Details
     
@@ -201,13 +124,6 @@ def create_info_panel():
     
     ## Tipps für optimale Ergebnisse
     
-    ### DeepSeek R1 optimal nutzen:
-    1. **Niedrige Temperatur**: 0.1-0.4 für präzise analytische Antworten
-    2. **Ausreichend Token**: 1500-3000 für detaillierte Analysen
-    3. **Spezifische Prompts**: Nutzen Sie "historical_analysis" oder "discourse_analysis"
-    4. **Komplexe Fragen**: Formulieren Sie mehrdimensionale, analytische Fragestellungen
-    5. **Zeit einplanen**: DeepSeek R1 braucht etwas länger, liefert aber tiefere Analysen
-    
     ### Allgemeine Empfehlungen:
     1. **Präzise Beschreibungen**: Je spezifischer Ihre Inhaltsbeschreibung, desto relevanter die Ergebnisse
     2. **Angemessene Zeiträume**: Nicht zu große Spannen wählen (max. 10-15 Jahre)
@@ -227,7 +143,4 @@ def create_info_panel():
     - **Archivdaten**: Unterliegen den Nutzungsbedingungen des Spiegel-Archivs
     - **Forschungszwecke**: System optimiert für akademische Nutzung
     
-    ---
-    
-    **Neu in dieser Version:** DeepSeek R1 Reasoning-Modell für erweiterte analytische Kapazitäten!
-    """)
+                  """)
