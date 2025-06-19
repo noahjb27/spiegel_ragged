@@ -82,7 +82,7 @@ def create_question_panel() -> Dict[str, Any]:
                     value=0.3,
                     step=0.1,
                     label="Temperatur",
-                    info="Kontrolliert die Kreativität der Antworten. Höhere Werte = kreativere Antworten."
+                    info="Bestimmt die Wahrscheinlichkeitsverteilung, aus der Tokens ausgewählt werden – höher bedeutet kreativere, aber potenziell weniger kohärente Texte."
                 )
             
             with gr.Row():

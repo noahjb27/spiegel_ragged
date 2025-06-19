@@ -1,7 +1,6 @@
-# src/ui/components/search_panel.py - Updated with editable agent system prompts
+# src/ui/components/search_panel.py - Updated with agent minimum retrieval score
 """
-Redesigned search panel component with standard and agent search options.
-Updated to include editable system prompt templates for agent search.
+Updated search panel component with minimum retrieval relevance score for agent search.
 """
 import gradio as gr
 from typing import Dict, Any, Callable
@@ -15,7 +14,7 @@ def create_search_panel(
     toggle_api_key_callback: Callable
 ) -> Dict[str, Any]:
     """
-    Create the redesigned search panel with editable system prompts for agent search.
+    Create the redesigned search panel with stacked standard/agent options.
     
     Returns:
         Dictionary of UI components
@@ -215,6 +214,17 @@ def create_search_panel(
                 info="Anzahl der Texte, die nach KI-Bewertung pro Zeitfenster behalten werden"
             )
         
+        # NEW: Agent minimum retrieval relevance score
+        with gr.Row():
+            agent_min_retrieval_score = gr.Slider(
+                minimum=0.1,
+                maximum=0.8,
+                value=0.25,
+                step=0.05,
+                label="Mindest-Retrieval-Score",
+                info="Minimale Ähnlichkeitsschwelle für die initiale Quellenauswahl (niedrigere Werte = mehr Kandidaten)"
+            )
+        
         # Agent-specific keyword filtering (simplified)
         with gr.Accordion("Schlagwort-Filterung", open=False):
             agent_keywords = gr.Textbox(
@@ -236,7 +246,7 @@ def create_search_panel(
                     info="Nur Texte mit den angegebenen Schlagwörtern"
                 )
         
-        # Agent LLM settings with editable system prompts
+        # Agent LLM settings
         with gr.Accordion("KI-Bewertungseinstellungen", open=True):
             agent_model = gr.Radio(
                 choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
@@ -245,29 +255,19 @@ def create_search_panel(
                 info="Wählen Sie das Modell für die Quellenbewertung. DeepSeek R1 ist besonders leistungsstark für komplexe Analysen."
             )
             
-            gr.Markdown("""
-            ### System Prompt für Quellenbewertung
+            agent_system_prompt_template = gr.Dropdown(
+                choices=list(settings.AGENT_SYSTEM_PROMPTS.keys()),
+                value="agent_default",
+                label="Bewertungs-Prompt Vorlage",
+                info="Vordefinierte Vorlagen für verschiedene Analysezwecke"
+            )
             
-            Wählen Sie eine Vorlage und bearbeiten Sie sie nach Ihren Bedürfnissen. Der System Prompt steuert, 
-            wie das LLM die Relevanz der Quellen bewertet.
-            """)
-            
-            with gr.Row():
-                agent_system_prompt_template = gr.Dropdown(
-                    choices=list(settings.AGENT_SYSTEM_PROMPTS.keys()),
-                    value="agent_default",
-                    label="Bewertungs-Prompt Vorlage",
-                    info="Wählen Sie eine Vorlage als Ausgangspunkt"
-                )
-                
-                reset_agent_system_prompt_btn = gr.Button("Auf Vorlage zurücksetzen", size="sm")
-            
-            # Editable agent system prompt text area - initialized with default template
-            agent_system_prompt_text = gr.Textbox(
-                label="Bewertungs-System Prompt (bearbeitbar)",
-                value=settings.AGENT_SYSTEM_PROMPTS["agent_default"],
-                lines=10,
-                info="Bearbeiten Sie den System Prompt für die Quellenbewertung nach Ihren Bedürfnissen."
+            agent_custom_system_prompt = gr.Textbox(
+                label="Eigener Bewertungs-Prompt",
+                placeholder="Anpassung des System-Prompts für die Quellenbewertung...",
+                value="",
+                lines=6,
+                info="Leer lassen für die gewählte Vorlage oder eigenen Prompt eingeben"
             )
         
         agent_search_btn = gr.Button("Agenten-Suche starten", variant="primary")
@@ -279,29 +279,6 @@ def create_search_panel(
     # Results display (common for both modes)
     with gr.Group():
         search_status = gr.Markdown("Noch keine Suche durchgeführt.")
-    
-    # Event handlers for system prompt template management
-    def load_agent_system_prompt_template(template_name: str) -> str:
-        """Load the selected agent template into the text area."""
-        return settings.AGENT_SYSTEM_PROMPTS.get(template_name, settings.AGENT_SYSTEM_PROMPTS["agent_default"])
-    
-    def reset_agent_to_template(template_name: str) -> str:
-        """Reset the agent text area to the selected template."""
-        return settings.AGENT_SYSTEM_PROMPTS.get(template_name, settings.AGENT_SYSTEM_PROMPTS["agent_default"])
-    
-    # Connect agent template dropdown to text area
-    agent_system_prompt_template.change(
-        load_agent_system_prompt_template,
-        inputs=[agent_system_prompt_template],
-        outputs=[agent_system_prompt_text]
-    )
-    
-    # Connect agent reset button
-    reset_agent_system_prompt_btn.click(
-        reset_agent_to_template,
-        inputs=[agent_system_prompt_template],
-        outputs=[agent_system_prompt_text]
-    )
     
     # Connect preview functionality
     preview_btn.click(
@@ -352,23 +329,20 @@ def create_search_panel(
         "agent_time_window_size": agent_time_window_size,
         "chunks_per_window_initial": chunks_per_window_initial,
         "chunks_per_window_final": chunks_per_window_final,
+        "agent_min_retrieval_score": agent_min_retrieval_score,  # NEW
         "agent_keywords": agent_keywords,
         "agent_search_in": agent_search_in,
         "agent_enforce_keywords": agent_enforce_keywords,
         "agent_model": agent_model,
         "agent_system_prompt_template": agent_system_prompt_template,
-        "agent_system_prompt_text": agent_system_prompt_text,  # New: always use this
-        "reset_agent_system_prompt_btn": reset_agent_system_prompt_btn,  # New: reset button
+        "agent_custom_system_prompt": agent_custom_system_prompt,
         "agent_search_btn": agent_search_btn,
         "agent_progress": agent_progress,
         "agent_cancel_btn": agent_cancel_btn,
         
         # UI groups for visibility control
         "standard_settings": standard_settings,
-        "agent_settings": agent_settings,
-        
-        # Keep these for backward compatibility but mark as deprecated
-        "agent_custom_system_prompt": agent_system_prompt_text  # Alias for backward compatibility
+        "agent_settings": agent_settings
     }
     
     return components

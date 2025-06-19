@@ -269,7 +269,7 @@ def create_app():
             outputs=[download_comprehensive_btn]
         )
         
-        # Agent search button click - UPDATED: Use agent_system_prompt_text
+        # Agent search button click
         search_components["agent_search_btn"].click(
             perform_agent_search_threaded,
             inputs=[
@@ -281,12 +281,13 @@ def create_app():
                 search_components["agent_time_window_size"],
                 search_components["chunks_per_window_initial"],
                 search_components["chunks_per_window_final"],
+                search_components["agent_min_retrieval_score"],  # NEW: Add minimum retrieval score
                 search_components["agent_keywords"],
                 search_components["agent_search_in"],
                 search_components["agent_enforce_keywords"],
                 search_components["agent_model"],
-                search_components["agent_system_prompt_template"],  # For backward compatibility
-                search_components["agent_system_prompt_text"]       # NEW: Use the edited template
+                search_components["agent_system_prompt_template"],
+                search_components["agent_custom_system_prompt"]
             ],
             outputs=[
                 search_components["search_status"],

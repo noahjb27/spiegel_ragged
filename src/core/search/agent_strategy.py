@@ -1,7 +1,7 @@
-# src/core/search/agent_strategy.py - Complete implementation with full chunk evaluation
+# src/core/search/agent_strategy.py - Updated to preserve both scores
 """
-New agent search strategy with integrated time windowing and transparent source evaluation.
-Designed to work as a parallel option to standard search, feeding into the same analysis pipeline.
+Updated agent search strategy with support for minimum retrieval relevance score
+and preservation of both vector similarity and LLM evaluation scores.
 """
 import logging
 import time
@@ -26,19 +26,15 @@ class AgentSearchConfig:
     chunks_per_window_final: int = 20
     agent_model: str = "hu-llm3"
     agent_system_prompt: str = ""
-    evaluation_batch_size: int = 8  # Initial batch size - will be adjusted dynamically
+    evaluation_batch_size: int = 8
+    min_retrieval_relevance_score: float = 0.25  # NEW: Minimum retrieval score
 
 
 class TimeWindowedAgentStrategy(SearchStrategy):
     """
-    Agent search strategy with integrated time windowing and full chunk evaluation.
+    Agent search strategy with integrated time windowing and dual score preservation.
     
-    This strategy:
-    1. Optionally divides the time range into windows
-    2. Retrieves initial chunks per window (or globally)
-    3. Uses LLM to evaluate and score each chunk using FULL content
-    4. Selects the best chunks per window based on LLM scores
-    5. Returns results in standard format for seamless integration
+    Now preserves both vector similarity scores and LLM evaluation scores for analysis.
     """
     
     def __init__(self, llm_service: LLMService, agent_config: AgentSearchConfig):
@@ -58,7 +54,7 @@ class TimeWindowedAgentStrategy(SearchStrategy):
               vector_store: Any,
               progress_callback: Optional[Callable[[str, float], None]] = None) -> SearchResult:
         """
-        Execute time-windowed agent search.
+        Execute time-windowed agent search with dual score preservation.
         
         Args:
             config: Basic search configuration
@@ -66,7 +62,7 @@ class TimeWindowedAgentStrategy(SearchStrategy):
             progress_callback: Optional callback for progress updates
             
         Returns:
-            SearchResult with evaluated chunks and detailed metadata
+            SearchResult with evaluated chunks and detailed metadata including both scores
         """
         start_time = time.time()
         self._cancellation_requested = False
@@ -101,9 +97,11 @@ class TimeWindowedAgentStrategy(SearchStrategy):
                     progress = 0.1 + (i / len(time_windows)) * 0.3
                     progress_callback(f"Zeitfenster {window_key}: Texte abrufen...", progress)
                 
-                # Get chunks for this window
+                # Get chunks for this window with UPDATED minimum score
                 window_chunks = self._retrieve_chunks_for_window(
-                    config, vector_store, window, self.agent_config.chunks_per_window_initial
+                    config, vector_store, window, 
+                    self.agent_config.chunks_per_window_initial,
+                    self.agent_config.min_retrieval_relevance_score  # NEW: Pass minimum score
                 )
                 
                 logger.info(f"Window {window_key}: Retrieved {len(window_chunks)} initial chunks")
@@ -113,6 +111,8 @@ class TimeWindowedAgentStrategy(SearchStrategy):
                     doc.metadata['time_window'] = window_key
                     doc.metadata['window_start'] = window_start
                     doc.metadata['window_end'] = window_end
+                    # IMPORTANT: Store the original vector score for later use
+                    doc.metadata['vector_similarity_score'] = score
                 
                 all_initial_chunks.extend(window_chunks)
                 window_chunks_map[window_key] = window_chunks
@@ -149,8 +149,8 @@ class TimeWindowedAgentStrategy(SearchStrategy):
                     config.content_description, window_chunks, window_key
                 )
                 
-                # Select top chunks for this window
-                top_chunks = self._select_top_chunks(
+                # Select top chunks for this window - UPDATED to preserve both scores
+                top_chunks = self._select_top_chunks_with_dual_scores(
                     evaluated_chunks, self.agent_config.chunks_per_window_final
                 )
                 
@@ -162,7 +162,7 @@ class TimeWindowedAgentStrategy(SearchStrategy):
             if progress_callback:
                 progress_callback(f"Agenten-Suche abgeschlossen: {len(final_chunks)} Texte ausgewählt", 1.0)
             
-            # Step 4: Prepare results
+            # Step 4: Prepare results with dual score metadata
             search_time = time.time() - start_time
             
             # Create metadata with comprehensive information
@@ -178,7 +178,8 @@ class TimeWindowedAgentStrategy(SearchStrategy):
                 "config": {
                     "year_range": config.year_range,
                     "chunk_size": config.chunk_size,
-                    "keywords": config.keywords
+                    "keywords": config.keywords,
+                    "min_retrieval_relevance_score": self.agent_config.min_retrieval_relevance_score  # NEW
                 }
             }
             
@@ -231,8 +232,9 @@ class TimeWindowedAgentStrategy(SearchStrategy):
                                    config: SearchConfig, 
                                    vector_store: Any, 
                                    window: Tuple[int, int], 
-                                   chunk_count: int) -> List[Tuple[Document, float]]:
-        """Retrieve chunks for a specific time window."""
+                                   chunk_count: int,
+                                   min_relevance_score: float = 0.25) -> List[Tuple[Document, float]]:
+        """Retrieve chunks for a specific time window with minimum relevance score."""
         window_start, window_end = window
         
         # Build filter for this window
@@ -242,13 +244,13 @@ class TimeWindowedAgentStrategy(SearchStrategy):
             search_in=None
         )
         
-        # Perform search for this window
+        # Perform search for this window with UPDATED minimum score
         chunks = vector_store.similarity_search(
             query=config.content_description,
             chunk_size=config.chunk_size,
             k=chunk_count,
             filter_dict=filter_dict,
-            min_relevance_score=0.25,  # Lower threshold for initial retrieval
+            min_relevance_score=min_relevance_score,  # NEW: Use configurable minimum score
             keywords=config.keywords,
             search_in=config.search_fields,
             enforce_keywords=config.enforce_keywords
@@ -597,21 +599,23 @@ Berücksichtige den gesamten Textinhalt für deine Bewertung."""
         
         return results
     
-    def _select_top_chunks(self, 
-                          evaluated_chunks: List[Tuple[Document, float, float, str]], 
-                          target_count: int) -> List[Tuple[Document, float]]:
-        """Select top chunks based on LLM scores."""
+    def _select_top_chunks_with_dual_scores(self, 
+                                           evaluated_chunks: List[Tuple[Document, float, float, str]], 
+                                           target_count: int) -> List[Tuple[Document, float]]:
+        """Select top chunks based on LLM scores while preserving both score types."""
         # Sort by LLM score (third element in tuple)
         sorted_chunks = sorted(evaluated_chunks, key=lambda x: x[2], reverse=True)
         
-        # Take top chunks and convert to standard format
+        # Take top chunks and convert to standard format while preserving both scores
         top_chunks = []
         for doc, vector_score, llm_score, eval_text in sorted_chunks[:target_count]:
-            # Store LLM score in metadata for later use
+            # Store BOTH scores in metadata for download and analysis
             doc.metadata['llm_evaluation_score'] = llm_score
             doc.metadata['evaluation_text'] = eval_text
+            # KEEP the original vector score that was already stored during retrieval
+            # doc.metadata['vector_similarity_score'] should already be there from _retrieve_chunks_for_window
             
-            # Use LLM score as the primary relevance score
+            # Use LLM score as the primary relevance score for UI display
             top_chunks.append((doc, llm_score))
         
         return top_chunks

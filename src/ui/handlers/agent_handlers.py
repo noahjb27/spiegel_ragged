@@ -1,7 +1,6 @@
-# src/ui/handlers/agent_handlers.py - Updated for editable system prompts
+# src/ui/handlers/agent_handlers.py - Updated to handle both scores
 """
-Handlers for the redesigned agent search functionality.
-Updated to use editable system prompt text areas.
+Updated handlers for agent search functionality with dual score support.
 """
 import json
 import logging
@@ -37,16 +36,17 @@ def perform_agent_search(
     agent_time_window_size: int,
     chunks_per_window_initial: int,
     chunks_per_window_final: int,
+    agent_min_retrieval_score: float,  # NEW parameter
     agent_keywords: str,
     agent_search_in: List[str],
     agent_enforce_keywords: bool,
     agent_model: str,
-    agent_system_prompt_text: str,  # UPDATED: Now receives the actual prompt text directly
+    agent_system_prompt_template: str,
+    agent_custom_system_prompt: str,
     progress_callback: Optional[Any] = None
 ) -> Tuple[str, Dict[str, Any]]:
     """
-    Perform agent search with time windowing.
-    UPDATED: Now uses agent_system_prompt_text directly (the edited template)
+    Perform agent search with time windowing and dual score preservation.
     
     Returns:
         Tuple of (status_message, search_results)
@@ -68,16 +68,14 @@ def perform_agent_search(
         keywords_cleaned = agent_keywords.strip() if agent_keywords else None
         search_fields = agent_search_in if agent_search_in else ["Text"]
         
-        # UPDATED: Use the system prompt text directly (no more template/custom logic)
-        system_prompt = agent_system_prompt_text.strip()
-        
-        # Fallback to default if somehow empty (shouldn't happen with new UI)
-        if not system_prompt:
-            logger.warning("Agent system prompt text is empty, falling back to default")
-            system_prompt = settings.AGENT_SYSTEM_PROMPTS["agent_default"]
-        
-        logger.info(f"Using agent system prompt text directly (length: {len(system_prompt)} chars)")
-        logger.info(f"System prompt preview: {system_prompt[:200]}...")
+        # Determine system prompt
+        if agent_custom_system_prompt.strip():
+            system_prompt = agent_custom_system_prompt.strip()
+        else:
+            system_prompt = settings.ALL_SYSTEM_PROMPTS.get(
+                agent_system_prompt_template, 
+                settings.AGENT_SYSTEM_PROMPTS["agent_default"]
+            )
         
         # Create search configurations
         search_config = SearchConfig(
@@ -96,7 +94,8 @@ def perform_agent_search(
             chunks_per_window_initial=chunks_per_window_initial,
             chunks_per_window_final=chunks_per_window_final,
             agent_model=agent_model,
-            agent_system_prompt=system_prompt  # Use the edited template directly
+            agent_system_prompt=system_prompt,
+            min_retrieval_relevance_score=agent_min_retrieval_score  # NEW: Pass minimum score
         )
         
         # Create and execute agent strategy
@@ -133,13 +132,19 @@ def perform_agent_search(
             logger.error(f"Agent search error: {error_msg}")
             return f"Error: {error_msg}", None
         
-        # Convert search result to UI format
+        # Convert search result to UI format WITH BOTH SCORES
         chunks_for_ui = []
-        for doc, score in search_result.chunks:
+        for doc, llm_score in search_result.chunks:
+            # Extract both scores from metadata
+            vector_score = doc.metadata.get('vector_similarity_score', 0.0)
+            llm_eval_score = doc.metadata.get('llm_evaluation_score', llm_score)
+            
             chunks_for_ui.append({
                 'content': doc.page_content,
                 'metadata': doc.metadata,
-                'relevance_score': score  # This is the LLM score
+                'relevance_score': llm_score,  # Primary score for UI display (LLM score)
+                'vector_similarity_score': vector_score,  # NEW: Vector similarity score
+                'llm_evaluation_score': llm_eval_score  # NEW: Explicit LLM score
             })
         
         # Build comprehensive results dictionary
@@ -152,7 +157,7 @@ def perform_agent_search(
                 'year_range': [year_start, year_end],
                 'keywords': keywords_cleaned,
                 'retrieval_method': 'agent_time_windowed' if agent_use_time_windows else 'agent_global',
-                'system_prompt_used': system_prompt[:500] + ('...' if len(system_prompt) > 500 else ''),  # Store truncated version
+                'min_retrieval_relevance_score': agent_min_retrieval_score,  # NEW: Include in metadata
                 **search_result.metadata  # Include all agent metadata
             }
         }
@@ -171,7 +176,7 @@ def perform_agent_search(
         **Anzahl ausgewählter Quellen**: {num_chunks}  
         **Suchzeit**: {search_time:.2f} Sekunden  
         **Bewertungsmodell**: {agent_model}
-        **System Prompt**: Bearbeitet (Länge: {len(system_prompt)} Zeichen)
+        **Mindest-Retrieval-Score**: {agent_min_retrieval_score}
         """
         
         if agent_use_time_windows:
@@ -216,16 +221,16 @@ def perform_agent_search_threaded(
     agent_time_window_size: int,
     chunks_per_window_initial: int,
     chunks_per_window_final: int,
+    agent_min_retrieval_score: float,  # NEW parameter
     agent_keywords: str,
     agent_search_in: List[str],
     agent_enforce_keywords: bool,
     agent_model: str,
-    agent_system_prompt_template: str,  # UPDATED: Still receive for backward compatibility
-    agent_system_prompt_text: str       # UPDATED: Now use this directly (the edited template)
+    agent_system_prompt_template: str,
+    agent_custom_system_prompt: str
 ) -> Tuple[str, Dict[str, Any], str, gr.update, gr.update, gr.update, gr.update, gr.update, gr.update]:
     """
     Perform agent search in a thread with UI updates.
-    UPDATED: Now uses agent_system_prompt_text directly (the edited template)
     
     Returns:
         Tuple for UI updates: (search_status, retrieved_chunks_state, formatted_chunks, 
@@ -248,29 +253,20 @@ def perform_agent_search_threaded(
             # Update progress display
             return gr.update(value=f"**Fortschritt**: {message} ({progress*100:.0f}%)")
         
-        # UPDATED: Use the system prompt text directly (no more template logic)
-        system_prompt = agent_system_prompt_text.strip()
-        
-        # Fallback to default if somehow empty (shouldn't happen with new UI)
-        if not system_prompt:
-            logger.warning("Agent system prompt text is empty, falling back to default")
-            system_prompt = settings.AGENT_SYSTEM_PROMPTS["agent_default"]
-        
-        logger.info(f"Using agent system prompt text in threaded search (length: {len(system_prompt)} chars)")
-        
-        # Run search
+        # Run search with NEW parameter
         search_status, retrieved_chunks = perform_agent_search(
             content_description, chunk_size, year_start, year_end,
             agent_use_time_windows, agent_time_window_size,
             chunks_per_window_initial, chunks_per_window_final,
+            agent_min_retrieval_score,  # NEW: Pass minimum retrieval score
             agent_keywords, agent_search_in, agent_enforce_keywords,
-            agent_model, system_prompt,  # Pass the edited template directly
+            agent_model, agent_system_prompt_template, agent_custom_system_prompt,
             progress_callback
         )
         
         # Format chunks for display
         if retrieved_chunks and retrieved_chunks.get('chunks'):
-            formatted_chunks = format_agent_chunks(retrieved_chunks)
+            formatted_chunks = format_agent_chunks_with_dual_scores(retrieved_chunks)  # Updated function
             num_chunks = len(retrieved_chunks.get('chunks'))
             
             # Update accordion states for successful search
@@ -316,9 +312,9 @@ def perform_agent_search_threaded(
             gr.update(open=False), gr.update(open=False)
         )
 
-def format_agent_chunks(retrieved_chunks: Dict[str, Any]) -> str:
+def format_agent_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]) -> str:
     """
-    Format agent search results for display, highlighting KI evaluation.
+    Format agent search results for display, highlighting both vector and LLM scores.
     """
     chunks = retrieved_chunks.get('chunks', [])
     metadata = retrieved_chunks.get('metadata', {})
@@ -341,20 +337,16 @@ def format_agent_chunks(retrieved_chunks: Dict[str, Any]) -> str:
     
     formatted_text = f"# KI-bewertete Quellen ({len(chunks)} ausgewählt)\n\n"
     
-    # Add system prompt info if available
-    system_prompt_used = metadata.get('system_prompt_used', '')
-    if system_prompt_used:
-        formatted_text += f"**System Prompt verwendet**: {system_prompt_used}\n\n"
-    
-    # Add summary information
+    # Add summary information with dual scores
     if use_time_windows:
         formatted_text += "## Übersicht nach Zeitfenstern\n\n"
         for window, window_chunks in sorted(chunks_by_window.items()):
-            avg_score = sum(c['relevance_score'] for c in window_chunks) / len(window_chunks)
-            formatted_text += f"- **{window}**: {len(window_chunks)} Texte (Ø Bewertung: {avg_score:.3f})\n"
+            avg_llm_score = sum(c['llm_evaluation_score'] for c in window_chunks) / len(window_chunks)
+            avg_vector_score = sum(c['vector_similarity_score'] for c in window_chunks) / len(window_chunks)
+            formatted_text += f"- **{window}**: {len(window_chunks)} Texte (Ø LLM: {avg_llm_score:.3f}, Ø Vector: {avg_vector_score:.3f})\n"
         formatted_text += "\n"
     
-    # Display chunks
+    # Display chunks with both scores
     for window in sorted(chunks_by_window.keys()):
         if use_time_windows:
             formatted_text += f"## Zeitfenster {window}\n\n"
@@ -365,9 +357,13 @@ def format_agent_chunks(retrieved_chunks: Dict[str, Any]) -> str:
             metadata_chunk = chunk['metadata']
             formatted_text += f"### {i}. {metadata_chunk.get('Artikeltitel', 'Kein Titel')}\n\n"
             
-            # Show evaluation details
+            # Show both evaluation scores
+            llm_score = chunk.get('llm_evaluation_score', 0.0)
+            vector_score = chunk.get('vector_similarity_score', 0.0)
+            
             formatted_text += f"**Datum**: {metadata_chunk.get('Datum', 'Unbekannt')} | "
-            formatted_text += f"**KI-Bewertung**: {chunk['relevance_score']:.3f}"
+            formatted_text += f"**LLM-Score**: {llm_score:.3f} | "
+            formatted_text += f"**Vector-Score**: {vector_score:.3f}"
             
             # Add evaluation text if available
             eval_text = metadata_chunk.get('evaluation_text', '')
@@ -393,7 +389,7 @@ def format_agent_chunks(retrieved_chunks: Dict[str, Any]) -> str:
 
 def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
     """
-    Create comprehensive download with all retrieved chunks and evaluations.
+    Create comprehensive download with all retrieved chunks, evaluations, and dual scores.
     
     Returns:
         Path to the created file, or None if no data
@@ -415,7 +411,8 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
                 "timestamp": datetime.now().isoformat(),
                 "format": "json",
                 "source": "Der Spiegel RAG System - Agent Search",
-                "search_type": "time_windowed_agent"
+                "search_type": "time_windowed_agent",
+                "includes_dual_scores": True  # NEW: Indicate dual score support
             },
             "search_configuration": {
                 "strategy": metadata.get('strategy', 'unknown'),
@@ -425,7 +422,7 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
                 "time_windows": metadata.get('time_windows', []),
                 "agent_config": metadata.get('agent_config', {}),
                 "search_time": metadata.get('search_time', 0),
-                "system_prompt_used": metadata.get('system_prompt_used', '')  # Include system prompt info
+                "min_retrieval_relevance_score": metadata.get('min_retrieval_relevance_score', 0.25)  # NEW
             },
             "retrieval_summary": {
                 "total_initial_chunks": metadata.get('total_initial_chunks', 0),
@@ -437,15 +434,22 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
             "all_evaluations": evaluations
         }
         
-        # Add selected chunks
+        # Add selected chunks with dual scores
         for chunk in retrieved_chunks.get('chunks', []):
             chunk_data = {
                 "content": chunk.get('content', ''),
-                "relevance_score": chunk.get('relevance_score', 0.0),
+                "relevance_score": chunk.get('relevance_score', 0.0),  # Primary UI score (LLM)
+                "vector_similarity_score": chunk.get('vector_similarity_score', 0.0),  # NEW: Vector score
+                "llm_evaluation_score": chunk.get('llm_evaluation_score', 0.0),  # NEW: LLM score
                 "metadata": chunk.get('metadata', {}),
                 "time_window": chunk.get('metadata', {}).get('time_window', 'Unknown'),
-                "llm_evaluation_score": chunk.get('metadata', {}).get('llm_evaluation_score', 0.0),
-                "evaluation_text": chunk.get('metadata', {}).get('evaluation_text', '')
+                "evaluation_text": chunk.get('metadata', {}).get('evaluation_text', ''),
+                "score_details": {  # NEW: Detailed score breakdown
+                    "vector_similarity": chunk.get('vector_similarity_score', 0.0),
+                    "llm_evaluation": chunk.get('llm_evaluation_score', 0.0),
+                    "primary_display_score": chunk.get('relevance_score', 0.0),
+                    "evaluation_reasoning": chunk.get('metadata', {}).get('evaluation_text', '')
+                }
             }
             export_data["selected_chunks"].append(chunk_data)
         
@@ -454,7 +458,7 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
         temp_file = tempfile.NamedTemporaryFile(
             mode='w',
             suffix='.json',
-            prefix='spiegel_agent_comprehensive_',
+            prefix='spiegel_agent_comprehensive_dual_scores_',
             delete=False,
             encoding='utf-8'
         )
@@ -462,7 +466,7 @@ def create_agent_download_comprehensive(retrieved_chunks: Optional[Dict[str, Any
         json.dump(export_data, temp_file, ensure_ascii=False, indent=2)
         temp_file.close()
         
-        logger.info(f"Created comprehensive agent download at {temp_file.name}")
+        logger.info(f"Created comprehensive agent download with dual scores at {temp_file.name}")
         return temp_file.name
         
     except Exception as e:

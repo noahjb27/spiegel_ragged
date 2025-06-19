@@ -70,7 +70,7 @@ def test_single_filter(vector_store, filter_name, filter_dict):
     
     results = vector_store.similarity_search(
         query="Berlin",
-        chunk_size=3000,
+        chunk_size=2000,
         k=5,
         filter_dict=filter_dict,
         min_relevance_score=0.3
@@ -103,7 +103,7 @@ def test_keyword_filter(vector_store, keywords, search_in=None):
     
     results = vector_store.similarity_search(
         query="Berlin",
-        chunk_size=3000,
+        chunk_size=2000,
         k=5,
         filter_dict=None,  # No server-side filter
         keywords=keywords,
