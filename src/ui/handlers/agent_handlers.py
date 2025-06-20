@@ -325,7 +325,7 @@ def perform_llm_assisted_search_threaded(
             gr.update(open=False), gr.update(open=False)
         )
 
-def format_llm_assisted_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]) -> str:  # UPDATED: from format_agent_chunks_with_dual_scores
+def format_llm_assisted_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]) -> str: 
     """
     Format LLM-assisted search results for display, highlighting both vector and LLM scores.
     UPDATED: Enhanced with new terminology and temperature information.
@@ -337,7 +337,7 @@ def format_llm_assisted_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]
         return "Keine Texte durch KI-Bewertung ausgewählt."
     
     # Group by time interval if available
-    chunks_by_interval = {}  # UPDATED: from chunks_by_window
+    chunks_by_interval = {}  
     evaluations = metadata.get('evaluations', [])
     
     for chunk in chunks:
@@ -347,31 +347,31 @@ def format_llm_assisted_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]
         chunks_by_interval[interval].append(chunk)
     
     # Format output with updated terminology
-    use_time_intervals = len(chunks_by_interval) > 1 or 'Global' not in chunks_by_interval  # UPDATED
+    use_time_intervals = len(chunks_by_interval) > 1 or 'Global' not in chunks_by_interval  
     
     formatted_text = f"# KI-bewertete Quellen ({len(chunks)} ausgewählt)\n\n"
     
     # Enhanced: Add system prompt and temperature information
     system_prompt_info = metadata.get('system_prompt_used', '')
     system_prompt_template = metadata.get('system_prompt_template', 'unknown')
-    evaluation_temperature = metadata.get('evaluation_temperature', 'nicht angegeben')  # NEW
+    evaluation_temperature = metadata.get('evaluation_temperature', 'nicht angegeben') 
     
     if system_prompt_info:
         formatted_text += f"**Verwendeter System-Prompt**: {system_prompt_template} (angepasst)\n"
-        formatted_text += f"**Bewertungstemperatur**: {evaluation_temperature}\n"  # NEW
+        formatted_text += f"**Bewertungstemperatur**: {evaluation_temperature}\n"
         formatted_text += f"**Prompt-Vorschau**: {system_prompt_info}\n\n"
     
     # Add summary information with dual scores
     if use_time_intervals:
-        formatted_text += "## Übersicht nach Zeit-Intervallen\n\n"  # UPDATED terminology
-        for interval, interval_chunks in sorted(chunks_by_interval.items()):  # UPDATED variable names
+        formatted_text += "## Übersicht nach Zeit-Intervallen\n\n"  
+        for interval, interval_chunks in sorted(chunks_by_interval.items()): 
             avg_llm_score = sum(c['llm_evaluation_score'] for c in interval_chunks) / len(interval_chunks)
             avg_vector_score = sum(c['vector_similarity_score'] for c in interval_chunks) / len(interval_chunks)
             formatted_text += f"- **{interval}**: {len(interval_chunks)} Texte (Ø LLM: {avg_llm_score:.3f}, Ø Vector: {avg_vector_score:.3f})\n"
         formatted_text += "\n"
     
     # Display chunks with both scores
-    for interval in sorted(chunks_by_interval.keys()):  # UPDATED variable names
+    for interval in sorted(chunks_by_interval.keys()):  
         if use_time_intervals:
             formatted_text += f"## Zeit-Intervall {interval}\n\n"  # UPDATED terminology
         

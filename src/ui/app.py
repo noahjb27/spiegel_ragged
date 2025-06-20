@@ -63,230 +63,621 @@ def create_app():
     else:
         logger.warning("Embedding service not available")
     
-    # UPDATED: CSS with new color scheme and improved styling
+
     updated_css = """
-    /* Main container styling */
+    /* =============================================================================
+    SPIEGEL RAG - Dark-Optimized Design System
+    Custom Color Palette: #968d84, #d75425, #b2b069
+    ============================================================================= */
+
+    /* Color System with Custom Palette */
+    :root {
+        /* Custom Brand Colors */
+        --brand-primary: #d75425;      /* Orange - main actions */
+        --brand-primary-hover: #c04a20;
+        --brand-primary-light: #fef7f0;
+        
+        --brand-secondary: #968d84;    /* Warm gray - secondary actions */
+        --brand-secondary-hover: #857c73;
+        --brand-secondary-light: #f4f1ee;
+        
+        --brand-accent: #b2b069;       /* Olive - success/accent */
+        --brand-accent-hover: #a0a05c;
+        --brand-accent-light: #f9f8f4;
+        
+        /* Dark Background System */
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #2d2d2d;
+        --bg-tertiary: #3a3a3a;
+        --bg-elevated: #404040;
+        
+        /* Text Colors for Dark Background */
+        --text-primary: #ffffff;       /* Main text */
+        --text-secondary: #e5e5e5;     /* Secondary text */
+        --text-muted: #b0b0b0;         /* Muted text */
+        --text-subtle: #8a8a8a;        /* Very subtle text */
+        
+        /* Border Colors */
+        --border-primary: #4a4a4a;
+        --border-secondary: #5a5a5a;
+        --border-accent: var(--brand-primary);
+        
+        /* State Colors */
+        --success: #22c55e;
+        --success-bg: #14532d;
+        --warning: #f59e0b;
+        --warning-bg: #451a03;
+        --error: #ef4444;
+        --error-bg: #7f1d1d;
+        --info: #3b82f6;
+        --info-bg: #1e3a8a;
+    }
+
+    /* Base Styles for Dark Theme */
     .gradio-container {
         max-width: 1400px !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        background-color: var(--bg-primary) !important;
+        color: var(--text-primary) !important;
     }
-    
-    .search-mode-container {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-        padding: 15px !important;
-        border-radius: 8px !important;
-        border: 2px solid #968d84 !important;  /* NEW: Updated border color */
-        margin-bottom: 20px !important;
+
+    /* Ensure all text is visible on dark background */
+    * {
+        color: var(--text-primary) !important;
     }
-    
-    .chunk-selection-container {
-        background: linear-gradient(135deg, #f4f1ee 0%, #faf8f6 100%) !important;
-        padding: 15px !important;
-        border-radius: 8px !important;
-        border: 2px solid #968d84 !important;  /* NEW: Updated color */
-        margin: 10px 0 !important;
+
+    /* Override Gradio's default text colors */
+    .gr-markdown,
+    .gr-markdown *,
+    .gr-textbox,
+    .gr-textbox *,
+    .gr-dropdown,
+    .gr-dropdown *,
+    .gr-slider,
+    .gr-slider *,
+    .gr-checkbox,
+    .gr-checkbox *,
+    .gr-radio,
+    .gr-radio * {
+        color: var(--text-primary) !important;
     }
-    
-    .chunk-selection-container h4 {
-        color: #5a5248 !important;  /* NEW: Darker shade of #968d84 */
-        margin-bottom: 10px !important;
-        font-weight: bold !important;
+
+    /* =============================================================================
+    HEADERS & TYPOGRAPHY
+    ============================================================================= */
+
+    /* Main Headers */
+    h1, .gr-markdown h1 {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
+        font-size: 32px !important;
+        line-height: 1.2 !important;
+        margin-bottom: 16px !important;
+        border-bottom: 3px solid var(--brand-primary) !important;
+        padding-bottom: 12px !important;
     }
-    
-    .interval-info {
-        background: #fef7f0 !important;  /* NEW: Light shade of #d75425 */
-        padding: 10px !important;
-        border-radius: 6px !important;
-        border-left: 4px solid #d75425 !important;  /* NEW: Orange accent */
-        margin: 10px 0 !important;
-    }
-    
-    .llm-assisted-prompt-container {
-        background: #f9f8f4 !important;  /* NEW: Light shade of #b2b069 */
-        padding: 15px !important;
-        border-radius: 8px !important;
-        border: 1px solid #b2b069 !important;  /* NEW: Yellow-green accent */
-        margin: 10px 0 !important;
-    }
-    
-    .llm-assisted-prompt-container h4 {
-        color: #6b6840 !important;  /* NEW: Darker shade of #b2b069 */
-        margin-bottom: 10px !important;
-        font-weight: bold !important;
-    }
-    
-    .label-wrap {
-        background: linear-gradient(135deg, #968d84 0%, #b2b069 100%) !important;  /* NEW: Custom gradient */
-        color: white !important;
-        font-weight: bold !important;
-        font-size: 16px !important;
-        padding: 12px 20px !important;
-        border-radius: 8px !important;
-        border: 2px solid transparent !important;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-        transition: all 0.3s ease !important;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) !important;
-    }
-    
-    .label-wrap:hover {
-        background: linear-gradient(135deg, #7d7469 0%, #9d9d5c 100%) !important;  /* NEW: Darker on hover */
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
-        border: 2px solid #5a5248 !important;
-    }
-    
-    .label-wrap.open {
-        background: linear-gradient(135deg, #d75425 0%, #b85820 100%) !important;  /* NEW: Orange when open */
-        border: 2px solid #a0471c !important;
-    }
-    
-    /* UPDATED: Primary button styling with new color scheme */
-    .btn-primary {
-        background: linear-gradient(135deg, #d75425 0%, #c04a20 100%) !important;  /* NEW: Orange gradient */
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 6px !important;
-        padding: 10px 20px !important;
-        border: none !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) !important;
-    }
-    
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #c04a20 0%, #a63f1b 100%) !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-    }
-    
-    /* UPDATED: Secondary button styling */
-    .btn-secondary {
-        background: linear-gradient(135deg, #968d84 0%, #857c73 100%) !important;  /* NEW: Gray gradient */
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 6px !important;
-        padding: 8px 16px !important;
-        border: none !important;
-        cursor: pointer !important;
-    }
-    
-    .btn-secondary:hover {
-        background: linear-gradient(135deg, #857c73 0%, #756c63 100%) !important;
-    }
-    
-    /* UPDATED: Download button styling with new colors */
-    .download-button {
-        background: linear-gradient(135deg, #b2b069 0%, #a0a05c 100%) !important;  /* NEW: Yellow-green */
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 6px !important;
-        padding: 8px 16px !important;
-        border: none !important;
-        cursor: pointer !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .download-button:hover {
-        background: linear-gradient(135deg, #a0a05c 0%, #8f8f52 100%) !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-    }
-    
-    /* Cancel button styling */
-    .cancel-button {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 6px !important;
-        padding: 8px 16px !important;
-        border: none !important;
-        cursor: pointer !important;
-    }
-    
-    .cancel-button:hover {
-        background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
-    }
-    
-    /* UPDATED: Progress indicators with new colors */
-    .llm-assisted-progress {
-        background-color: #f9f8f4 !important;  /* NEW: Light yellow-green */
-        padding: 15px !important;
-        border-radius: 8px !important;
-        border-left: 4px solid #b2b069 !important;  /* NEW: Yellow-green accent */
-        margin: 10px 0 !important;
-    }
-    
-    .llm-assisted-progress h4 {
-        color: #6b6840 !important;  /* NEW: Darker shade */
-        margin-bottom: 10px !important;
-    }
-    
-    /* Results container styling */
-    .results-container {
-        padding: 20px !important;
-        border-radius: 8px !important;
-        border: 1px solid #968d84 !important;  /* NEW: Updated border */
-    }
-    
-    /* UPDATED: Tab styling to distinguish from buttons */
-    .tab-nav {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-        border: 1px solid #968d84 !important;
-        border-radius: 8px 8px 0 0 !important;
-    }
-    
-    .tab-nav button {
-        background: transparent !important;
-        color: #5a5248 !important;
+
+    /* Section Headers */
+    h2, .gr-markdown h2 {
+        color: var(--text-primary) !important;
         font-weight: 600 !important;
+        font-size: 24px !important;
+        line-height: 1.3 !important;
+        margin: 24px 0 16px 0 !important;
+        position: relative !important;
+        padding-left: 20px !important;
+    }
+
+    h2::before {
+        content: '' !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 4px !important;
+        height: 20px !important;
+        background: var(--brand-primary) !important;
+        border-radius: 2px !important;
+    }
+
+    h3, .gr-markdown h3 {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        font-size: 20px !important;
+        margin: 20px 0 12px 0 !important;
+    }
+
+    h4, .gr-markdown h4 {
+        color: var(--text-secondary) !important;
+        font-weight: 500 !important;
+        font-size: 18px !important;
+        margin: 16px 0 8px 0 !important;
+    }
+
+    p, .gr-markdown p {
+        color: var(--text-secondary) !important;
+        line-height: 1.6 !important;
+        margin-bottom: 12px !important;
+    }
+
+    strong, .gr-markdown strong {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+    }
+
+    /* =============================================================================
+    BUTTONS WITH CUSTOM COLORS
+    ============================================================================= */
+
+    /* Primary Buttons - Orange Theme */
+    button[variant="primary"],
+    .btn-primary {
+        background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
         padding: 12px 24px !important;
         border: none !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 8px rgba(215, 84, 37, 0.3) !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    button[variant="primary"]:hover,
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--brand-primary-hover) 0%, #a63f1b 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(215, 84, 37, 0.4) !important;
+    }
+
+    /* Secondary Buttons - Warm Gray Theme */
+    .btn-secondary {
+        background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-secondary-hover) 100%) !important;
+        color: white !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        padding: 10px 20px !important;
+        border: none !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 6px rgba(150, 141, 132, 0.3) !important;
+    }
+
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, var(--brand-secondary-hover) 0%, #756c63 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 10px rgba(150, 141, 132, 0.4) !important;
+    }
+
+    /* Success/Download Buttons - Olive Theme */
+    .download-button,
+    .btn-success {
+        background: linear-gradient(135deg, var(--brand-accent) 0%, var(--brand-accent-hover) 100%) !important;
+        color: white !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        padding: 10px 18px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 6px rgba(178, 176, 105, 0.3) !important;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .download-button:hover,
+    .btn-success:hover {
+        background: linear-gradient(135deg, var(--brand-accent-hover) 0%, #8f8f52 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 10px rgba(178, 176, 105, 0.4) !important;
+    }
+
+    /* Cancel/Danger Buttons */
+    .cancel-button,
+    .btn-danger,
+    button[variant="stop"] {
+        background: linear-gradient(135deg, var(--error) 0%, #dc2626 100%) !important;
+        color: white !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        padding: 10px 18px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3) !important;
+    }
+
+    .cancel-button:hover,
+    .btn-danger:hover,
+    button[variant="stop"]:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4) !important;
+    }
+
+    /* Disabled State */
+    button:disabled,
+    .btn-disabled {
+        background: var(--bg-tertiary) !important;
+        color: var(--text-subtle) !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    /* =============================================================================
+    LAYOUT CONTAINERS
+    ============================================================================= */
+
+    .search-mode-container {
+        background: var(--bg-secondary) !important;
+        border: 2px solid var(--brand-primary) !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        margin-bottom: 24px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .chunk-selection-container,
+    .form-container {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-primary) !important;
+        border-radius: 8px !important;
+        padding: 16px !important;
+        margin: 12px 0 !important;
+    }
+
+    .chunk-selection-container h4,
+    .form-container h4 {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        margin-bottom: 12px !important;
+        border-bottom: 1px solid var(--border-primary) !important;
+        padding-bottom: 8px !important;
+    }
+
+    .results-container {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-primary) !important;
+        border-radius: 8px !important;
+        padding: 24px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* =============================================================================
+    ACCORDIONS & NAVIGATION
+    ============================================================================= */
+
+    /* Accordion Headers */
+    .label-wrap {
+        background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-elevated) 100%) !important;
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        padding: 16px 20px !important;
+        border: 2px solid var(--border-primary) !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .label-wrap:hover {
+        background: linear-gradient(135deg, var(--bg-elevated) 0%, #4a4a4a 100%) !important;
+        border-color: var(--brand-primary) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .label-wrap.open,
+    .label-wrap[aria-expanded="true"] {
+        background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%) !important;
+        color: white !important;
+        border-color: var(--brand-primary) !important;
         border-radius: 8px 8px 0 0 !important;
     }
-    
-    .tab-nav button.selected {
-        background: linear-gradient(135deg, #d75425 0%, #c04a20 100%) !important;
+
+    /* Tab Navigation */
+    .tab-nav {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-primary) !important;
+        border-radius: 8px 8px 0 0 !important;
+    }
+
+    .tab-nav button {
+        background: transparent !important;
+        color: var(--text-secondary) !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        padding: 14px 20px !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .tab-nav button:hover {
+        background: var(--bg-tertiary) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .tab-nav button.selected,
+    .tab-nav button[aria-selected="true"] {
+        background: var(--brand-primary) !important;
         color: white !important;
+        font-weight: 600 !important;
     }
-    
-    /* Improved form styling */
-    .form-container {
-        background: #fafafa !important;
-        padding: 15px !important;
+
+    /* =============================================================================
+    STATUS MESSAGES & FEEDBACK
+    ============================================================================= */
+
+    /* Success Messages */
+    .success-message,
+    .interval-info {
+        background: var(--success-bg) !important;
+        border: 1px solid var(--success) !important;
+        border-left: 4px solid var(--success) !important;
+        border-radius: 6px !important;
+        padding: 12px 16px !important;
+        margin: 12px 0 !important;
+        color: #bbf7d0 !important;
+    }
+
+    /* Error Messages */
+    .error-message {
+        background: var(--error-bg) !important;
+        border: 1px solid var(--error) !important;
+        border-left: 4px solid var(--error) !important;
+        border-radius: 6px !important;
+        padding: 12px 16px !important;
+        margin: 12px 0 !important;
+        color: #fecaca !important;
+    }
+
+    /* Warning Messages */
+    .warning-message {
+        background: var(--warning-bg) !important;
+        border: 1px solid var(--warning) !important;
+        border-left: 4px solid var(--warning) !important;
+        border-radius: 6px !important;
+        padding: 12px 16px !important;
+        margin: 12px 0 !important;
+        color: #fed7aa !important;
+    }
+
+    /* Info Messages */
+    .info-message {
+        background: var(--info-bg) !important;
+        border: 1px solid var(--info) !important;
+        border-left: 4px solid var(--info) !important;
+        border-radius: 6px !important;
+        padding: 12px 16px !important;
+        margin: 12px 0 !important;
+        color: #bfdbfe !important;
+    }
+
+    /* Progress Indicators */
+    .llm-assisted-progress,
+    .progress-container {
+        background: var(--brand-accent-light) !important;
+        background: rgba(178, 176, 105, 0.15) !important;
+        border: 1px solid var(--brand-accent) !important;
         border-radius: 8px !important;
-        border: 1px solid #968d84 !important;
-        margin: 10px 0 !important;
+        padding: 16px !important;
+        margin: 12px 0 !important;
+        position: relative !important;
     }
-    
-    /* Better text contrast for accessibility */
-    .dark-text {
-        color: #2c3e50 !important;
+
+    .llm-assisted-progress h4,
+    .progress-container h4 {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        margin-bottom: 8px !important;
     }
-    
-    /* Chunk selection checkboxes */
-    .chunk-checkbox {
-        margin-right: 8px !important;
-        transform: scale(1.2) !important;
+
+    /* =============================================================================
+    FORM ELEMENTS
+    ============================================================================= */
+
+    /* Input Fields */
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select,
+    .gr-textbox input,
+    .gr-textbox textarea {
+        background: var(--bg-tertiary) !important;
+        border: 2px solid var(--border-primary) !important;
+        border-radius: 6px !important;
+        padding: 10px 12px !important;
+        font-size: 14px !important;
+        color: var(--text-primary) !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
     }
-    
-    .chunk-item {
-        padding: 10px !important;
-        margin: 5px 0 !important;
-        border: 1px solid #ddd !important;
-        border-radius: 5px !important;
-        background: #fafafa !important;
-        transition: background-color 0.2s ease !important;
+
+    input:focus,
+    textarea:focus,
+    select:focus,
+    .gr-textbox input:focus,
+    .gr-textbox textarea:focus {
+        outline: none !important;
+        border-color: var(--brand-primary) !important;
+        box-shadow: 0 0 0 3px rgba(215, 84, 37, 0.2) !important;
     }
-    
-    .chunk-item:hover {
-        background: #f0f0f0 !important;
+
+    /* Labels */
+    label,
+    .gr-label {
+        color: var(--text-primary) !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        margin-bottom: 6px !important;
     }
-    
-    .chunk-item.selected {
-        background: #f9f8f4 !important;
-        border-color: #b2b069 !important;
+
+    /* Dropdown specific */
+    .gr-dropdown .choices__inner {
+        background: var(--bg-tertiary) !important;
+        border: 2px solid var(--border-primary) !important;
+        color: var(--text-primary) !important;
     }
+
+    /* =============================================================================
+    SPECIALIZED COMPONENTS
+    ============================================================================= */
+
+    /* LLM Assistant Prompt Container */
+    .llm-assisted-prompt-container {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--brand-accent) !important;
+        border-left: 4px solid var(--brand-accent) !important;
+        border-radius: 8px !important;
+        padding: 16px !important;
+        margin: 12px 0 !important;
+    }
+
+    .llm-assisted-prompt-container h4 {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Evaluation Cards */
+    .evaluation-card {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-primary) !important;
+        border-left: 4px solid var(--brand-primary) !important;
+        border-radius: 8px !important;
+        padding: 16px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .evaluation-card h4 {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        margin-bottom: 8px !important;
+    }
+
+    .evaluation-card p,
+    .evaluation-card div {
+        color: var(--text-secondary) !important;
+        line-height: 1.5 !important;
+    }
+
+    /* =============================================================================
+    CODE & CONTENT
+    ============================================================================= */
+
+    /* Code Blocks */
+    pre,
+    code {
+        background: var(--bg-tertiary) !important;
+        border: 1px solid var(--border-primary) !important;
+        border-radius: 4px !important;
+        padding: 8px 12px !important;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+        font-size: 13px !important;
+        color: var(--text-secondary) !important;
+    }
+
+    /* Tables */
+    table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        margin: 16px 0 !important;
+    }
+
+    th,
+    td {
+        border: 1px solid var(--border-primary) !important;
+        padding: 8px 12px !important;
+        text-align: left !important;
+    }
+
+    th {
+        background: var(--bg-tertiary) !important;
+        font-weight: 600 !important;
+        color: var(--text-primary) !important;
+    }
+
+    td {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Links */
+    a {
+        color: var(--brand-primary) !important;
+        text-decoration: none !important;
+        font-weight: 500 !important;
+        transition: color 0.2s ease !important;
+    }
+
+    a:hover {
+        color: var(--brand-primary-hover) !important;
+        text-decoration: underline !important;
+    }
+
+    /* Lists */
+    ul,
+    ol {
+        color: var(--text-secondary) !important;
+        line-height: 1.6 !important;
+        margin-bottom: 16px !important;
+        padding-left: 24px !important;
+    }
+
+    li {
+        margin-bottom: 4px !important;
+        color: var(--text-secondary) !important;
+    }
+
+    /* =============================================================================
+    RESPONSIVE DESIGN
+    ============================================================================= */
+
+    @media (max-width: 768px) {
+        .gradio-container {
+            padding: 8px !important;
+        }
+        
+        h1 {
+            font-size: 24px !important;
+        }
+        
+        h2 {
+            font-size: 20px !important;
+        }
+        
+        .btn-primary,
+        .btn-secondary {
+            padding: 10px 16px !important;
+            font-size: 13px !important;
+        }
+        
+        .search-mode-container,
+        .chunk-selection-container {
+            padding: 12px !important;
+            margin-bottom: 16px !important;
+        }
+    }
+
+    /* =============================================================================
+    UTILITY CLASSES
+    ============================================================================= */
+
+    .text-center { text-align: center !important; }
+    .text-right { text-align: right !important; }
+    .mb-2 { margin-bottom: 16px !important; }
+    .mt-2 { margin-top: 16px !important; }
+    .p-2 { padding: 16px !important; }
+    .font-bold { font-weight: 700 !important; }
+    .text-primary { color: var(--text-primary) !important; }
+    .text-secondary { color: var(--text-secondary) !important; }
     """
-    
+
     # Create the Gradio interface
     with gr.Blocks(
         title="SPIEGEL RAG System",  # UPDATED: Simplified title
@@ -302,7 +693,8 @@ def create_app():
         
         **Systemstatus:** ✅ Verbunden mit ChromaDB und Ollama Embedding Service
         
-        **Neue Features:**
+        ## Funktionen
+        
         - **Heuristik**: Getrennte Retrieval- und Analyse-Phasen für bessere Kontrolle
         - **LLM-Unterstützte Auswahl**: KI-gestützte Quellenbewertung mit anpassbaren Prompts
         - **Zeit-Interval-Suche**: Gleichmäßige zeitliche Verteilung der Quellen
@@ -311,7 +703,7 @@ def create_app():
         
         # UPDATED: Tab structure with new names
         with gr.Tab("Heuristik"):  # UPDATED: Changed from "Quellen abrufen"
-            with gr.Accordion("Suchmethode wählen", open=True) as search_method_accordion:
+            with gr.Accordion("Suchmethode wählen", open=True, elem_classes=["search-mode-container"]) as search_method_accordion:
                 # Create updated search panel components
                 search_components = create_search_panel(
                     retrieve_callback=None,  # Will be set below

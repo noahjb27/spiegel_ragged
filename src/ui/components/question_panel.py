@@ -9,8 +9,9 @@ def create_question_panel() -> Dict[str, Any]:
     Returns:
         Dictionary of UI components
     """
-    with gr.Group():
-        gr.Markdown("## Analyse")
+    with gr.Group(elem_classes=["form-container"]):
+        gr.HTML("<h3 style='margin-top: 0; color: var(--text-primary);'>📊 Analyse</h3>")
+   
         
         # 1. QUELLENAUSWAHL with chunk selection
         with gr.Accordion("1. Quellenauswahl", open=True):

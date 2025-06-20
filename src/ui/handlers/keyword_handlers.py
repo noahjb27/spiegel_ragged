@@ -132,9 +132,8 @@ def expand_boolean_expression(expression: str, expansion_factor: int) -> Tuple[s
         # Save expanded words for potential use in search
         expanded_words = {}
         
-        for category, terms in expanded_terms.items():
+        for terms in expanded_terms.items():
             if terms:
-                display_result += f"### {category.capitalize()} Begriffe:\n\n"
                 for term_data in terms:
                     original = term_data.get('original', '')
                     expanded = term_data.get('expanded', {}).get(original, [])
@@ -168,29 +167,7 @@ def expand_boolean_expression(expression: str, expansion_factor: int) -> Tuple[s
                             expanded_words[original].append(item['word'])
                     else:
                         display_result += "Keine ähnlichen Wörter gefunden.\n\n"
-        
-        # Add overall statistics
-        if expanded_words:
-            total_original_terms = len(expanded_words)
-            total_expanded_terms = sum(len(words) for words in expanded_words.values())
             
-            display_result += f"## Zusammenfassung\n\n"
-            display_result += f"- **Original-Begriffe**: {total_original_terms}\n"
-            display_result += f"- **Erweiterte Begriffe**: {total_expanded_terms}\n"
-            display_result += f"- **Erweiterungsfaktor**: {expansion_factor} pro Begriff\n"
-            
-            # Show frequency range
-            all_frequencies = []
-            for original, words in expanded_words.items():
-                for word in words:
-                    freq = embedding_service.get_word_frequency(word.lower())
-                    if freq > 0:
-                        all_frequencies.append(freq)
-            
-            if all_frequencies:
-                display_result += f"- **Häufigkeitsbereich**: {min(all_frequencies):,} - {max(all_frequencies):,}\n"
-                display_result += f"- **Durchschnittshäufigkeit**: {sum(all_frequencies)/len(all_frequencies):,.1f}\n"
-        
         # Prepare a JSON structure to be used later in search
         encoded_expanded = json.dumps(expanded_words)
         
