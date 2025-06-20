@@ -1,15 +1,19 @@
-# src/ui/components/info_panel.py - Updated with DeepSeek R1 information
+# src/ui/components/info_panel.py - Updated with new terminology and structure
 """
-Updated info panel component reflecting the integrated agent search approach and DeepSeek R1 model.
+Updated info panel component with new terminology:
+- Heuristik (instead of Quellen abrufen)
+- Analyse (instead of Quellen analysieren)  
+- LLM-Unterstützte Auswahl (instead of Agenten-Suche)
+- Zeit-Interval-Suche (instead of Zeitfenster-Suche)
 """
 import gradio as gr
 
 def create_info_panel():
     """
-    Create the updated info panel UI component with DeepSeek R1 information.
+    Create the updated info panel UI component with new terminology and structure.
     """
     gr.Markdown("""
-    # Über das Spiegel RAG-System
+    # Über das SPIEGEL RAG-System
     
     Dieses System ermöglicht die Durchsuchung und Analyse von Der Spiegel-Artikeln aus den Jahren 1948 bis 1979 
     mithilfe von Retrieval-Augmented Generation (RAG).
@@ -19,27 +23,50 @@ def create_info_panel():
     Retrieval-Augmented Generation ist ein Ansatz, der die Stärken von Suchsystemen mit 
     denen von großen Sprachmodellen kombiniert:
     
-    1. **Retrieval**: Das System sucht zunächst relevante Textabschnitte aus dem Archiv
-    2. **Generation**: Ein Sprachmodell analysiert diese Abschnitte und generiert eine Antwort
+    1. **Heuristik**: Das System sucht zunächst relevante Textabschnitte aus dem Archiv
+    2. **Analyse**: Ein Sprachmodell analysiert diese Abschnitte und generiert eine Antwort
     
-    ## Zwei Suchmethoden
+    ## Zwei-Phasen-Ansatz
     
-    Das System bietet zwei parallele Ansätze zur Quellenauswahl:
+    Das System bietet einen strukturierten Workflow mit zwei parallelen Suchmethoden:
     
-    ### Standard-Suche (Schnell & Direkt)
+    ### Phase 1: Heuristik (Quellenauswahl)
+    
+    #### Standard-Suche (Schnell & Direkt)
     - **Vektorsimilarität**: Findet Inhalte basierend auf semantischer Ähnlichkeit
-    - **Schlagwort-Filterung**: Boolesche Operatoren (AND, OR, NOT) für präzise Filterung
-    - **Semantische Erweiterung**: Automatische Berücksichtigung ähnlicher Begriffe
-    - **Zeitfenster-Suche**: Ausgewogene Abdeckung verschiedener Zeitperioden
+    - **Schlagwort-Filterung**: Boolesche Operatoren für präzise Filterung (immer aktiv)
+    - **Semantische Erweiterung**: Automatische Berücksichtigung ähnlicher Begriffe mit Korpus-Häufigkeiten
+    - **Zeit-Interval-Suche**: Gleichmäßige zeitliche Verteilung für diakrone Narrative
     - **Geschwindigkeit**: Schnelle Ergebnisse für direkte Informationssuche
     
-    ### Agenten-Suche (KI-gestützte Bewertung)
-    - **Intelligente Vorauswahl**: Zunächst mehr Quellen abrufen (z.B. 50 pro Zeitfenster)
+    #### LLM-Unterstützte Auswahl (KI-gestützte Bewertung)
+    - **Intelligente Vorauswahl**: Zunächst mehr Quellen abrufen (z.B. 50 pro Zeit-Intervall)
     - **KI-Bewertung**: Sprachmodell bewertet jeden Text hinsichtlich der Relevanz
-    - **Selektive Filterung**: Nur die besten Texte werden ausgewählt (z.B. 20 pro Zeitfenster)
+    - **Selektive Filterung**: Nur die besten Texte werden ausgewählt (z.B. 20 pro Zeit-Intervall)
     - **Transparente Begründungen**: Nachvollziehbare Erklärungen für jede Auswahl
-    - **Zeitfenster-Integration**: Gleichmäßige Verteilung über verschiedene Perioden
+    - **Zeit-Interval-Integration**: Gleichmäßige Verteilung über verschiedene Perioden
     - **Anpassbare Bewertungskriterien**: Verschiedene Prompt-Vorlagen für unterschiedliche Analysezwecke
+    - **Temperatur-Kontrolle**: Determinismus der KI-Bewertung konfigurierbar
+    
+    ### Phase 2: Analyse (Quellenverarbeitung)
+    
+    #### 1. Quellenauswahl
+    - **Interaktive Auswahl**: Checkbox-basierte Auswahl aus gefundenen Quellen
+    - **Vorauswahl**: Alle Quellen standardmäßig ausgewählt
+    - **Übertragung**: Explizite Übertragung ausgewählter Quellen zur Analyse
+    
+    #### 2. User-Prompt formulieren
+    - **Forschungsfrage**: Konkrete Fragestellung an die ausgewählten Quellen
+    - **Flexibilität**: Unabhängig von der ursprünglichen Retrieval-Query
+    
+    #### 3. LLM-Auswählen
+    - **Modellauswahl**: Verschiedene Sprachmodelle für unterschiedliche Anforderungen
+    - **Temperatur-Kontrolle**: Determinismus der Antwortgenerierung einstellbar
+    
+    #### 4. System-Prompt
+    - **Methodische Anleitung**: Steuerung der Analysemethodik
+    - **Wissenschaftliche Standards**: Fokus auf Quellentreue und akademische Präzision
+    - **Anpassbare Vorlagen**: Grundlegende Prompts für verschiedene Analyseansätze
     
     ## Verfügbare KI-Modelle
     
@@ -51,84 +78,94 @@ def create_info_panel():
     
     ### Externe Modelle (API-Schlüssel erforderlich)
     - **OpenAI GPT-4o**: Vielseitiges, leistungsstarkes Modell
-    - **Google Gemini Pro**: Großes Kontextfenster für umfangreiche Textanalysen
+    - **Google Gemini 2.5 Pro**: Großes Kontextfenster für umfangreiche Textanalysen
 
     ## Hauptfunktionen
     
-    - **Semantische Suche**: Findet Inhalte basierend auf Bedeutung, nicht nur nach Schlüsselwörtern
-    - **Zeitfenster-Analyse**: Ausgewogene Abdeckung verschiedener historischer Perioden
-    - **Flexible Textgrößen**: Optimieren Sie die Suche mit verschiedenen Chunk-Größen (500, 2000, 3000 Zeichen)
-    - **Vier leistungsstarke LLM-Optionen**: HU-LLM, DeepSeek R1, OpenAI GPT-4o, Google Gemini Pro
-    - **Umfassende Downloads**: JSON/CSV-Export mit Metadaten und KI-Bewertungen
-    - **Integrierter Workflow**: Beide Suchmethoden führen nahtlos zur Analyse
+    - **Retrieval-Query-Optimierung**: Semantische Suche mit wenigen Phrasen und vielen Begriffen
+    - **Zeit-Interval-Analyse**: Gleichmäßige Abdeckung verschiedener historischer Perioden
+    - **Flexible Chunking-Größen**: Optimieren Sie die Suche mit verschiedenen Chunk-Größen (500, 2000, 3000 Zeichen)
+    - **Vier leistungsstarke LLM-Optionen**: HU-LLM, DeepSeek R1, OpenAI GPT-4o, Google Gemini 2.5 Pro
+    - **Umfassende Downloads**: JSON/CSV-Export mit Metadaten und KI-Bewertungen, TXT-Export für Analysen
+    - **Integrierter Workflow**: Strukturierte Heuristik → Quellenauswahl → Analyse
     
     ## So nutzen Sie die Anwendung
     
-    ### 1. Quellen abrufen
+    ### 1. Heuristik durchführen
     
     **Schritt 1: Suchmethode wählen**
     - **Standard-Suche**: Für schnelle, direkte Informationssuche
-    - **Agenten-Suche**: Für sorgfältige, KI-gestützte Quellenauswahl
+    - **LLM-Unterstützte Auswahl**: Für sorgfältige, KI-gestützte Quellenauswahl
     
     **Schritt 2: Suchparameter konfigurieren**
-    - Geben Sie eine **Inhaltsbeschreibung** ein
+    - Geben Sie eine **Retrieval-Query** ein (wenige Phrasen, viele Begriffe)
     - Stellen Sie den **Zeitraum** ein (1948-1979)
-    - Wählen Sie die **Textgröße** (Chunk-Größe)
+    - Wählen Sie die **Chunking-Größe** (500/2000/3000 Zeichen)
     
     **Für Standard-Suche zusätzlich:**
-    - **Anzahl Ergebnisse** festlegen (1-50)
-    - Optional: **Schlagwort-Filterung** mit booleschen Ausdrücken
-    - Optional: **Semantische Erweiterung** für ähnliche Begriffe
-    - Optional: **Zeitfenster-Suche** für ausgewogene zeitliche Abdeckung
+    - **Anzahl Ergebnisse** festlegen (1-50 gesamt oder pro Zeit-Intervall)
+    - Optional: **Schlagwort-Filterung** mit booleschen Ausdrücken (immer strikte Filterung)
+    - Optional: **Semantische Erweiterung** für ähnliche Begriffe mit Häufigkeitsanalyse
+    - Optional: **Zeit-Interval-Suche** für ausgewogene zeitliche Abdeckung
     
-    **Für Agenten-Suche zusätzlich:**
-    - **Zeitfenster** konfigurieren (standardmäßig aktiviert)
-    - **Chunks pro Fenster** einstellen (Initial → Final, z.B. 50 → 20)
-    - **KI-Modell** für Bewertung wählen 
-    - **Bewertungs-Prompt** anpassen (vordefinierte Vorlagen verfügbar)
+    **Für LLM-Unterstützte Auswahl zusätzlich:**
+    - **Zeit-Intervalle** konfigurieren (standardmäßig aktiviert)
+    - **Chunks pro Intervall** einstellen (Initial → Final, z.B. 50 → 20)
+    - **KI-Modell** für Bewertung wählen mit **Temperatur-Kontrolle**
+    - **Bewertungs-Prompt** anpassen (Standard, Negative Reranking, Kontextuelle Bewertung)
     
-    **Schritt 3: Suche starten**
+    **Schritt 3: Heuristik starten**
     - Bei Standard-Suche: Sofortige Ergebnisse
-    - Bei Agenten-Suche: Fortschrittsanzeige mit Zeitfenster-Updates
+    - Bei LLM-Unterstützter Auswahl: Fortschrittsanzeige mit Zeit-Interval-Updates
     
-    ### 2. Ergebnisse prüfen und herunterladen
+    ### 2. Quellenauswahl treffen
     
-    - **Gefundene Texte** werden automatisch angezeigt
-    - **Download-Optionen**:
-      - **JSON/CSV**: Standard-Downloads für alle Suchmethoden
-      - **Umfassender Agent-Download**: Zusätzlich bei Agenten-Suche mit allen abgerufenen Texten und KI-Bewertungen
+    - **Gefundene Texte** werden mit Checkboxen angezeigt
+    - **Interaktive Auswahl**: Standardmäßig alle ausgewählt, individuell an-/abwählbar
+    - **Übertragung**: "Auswahl in Analyse übertragen" Button aktiviert Analyse-Phase
     
-    ### 3. Quellen analysieren
+    ### 3. Analyse durchführen
     
-    - Stellen Sie eine **konkrete Frage** zu den gefundenen Texten
-    - Wählen Sie ein **Sprachmodell** für die Analyse 
-    - Passen Sie bei Bedarf **System-Prompt** und **Parameter** an
-    - Erhalten Sie eine **fundierte Antwort** basierend auf den ausgewählten Quellen
+    - **User-Prompt formulieren**: Konkrete Forschungsfrage stellen
+    - **LLM-Modell** auswählen mit **Temperatur-Einstellung**
+    - **System-Prompt** konfigurieren für methodische Steuerung
+    - **Analyse starten** und Ergebnisse als TXT herunterladen
     
     ## Technische Details
     
     ### Datengrundlage
     - **Zeitraum**: Der Spiegel-Artikel 1948-1979
     - **Textverarbeitung**: Artikel in semantisch durchsuchbare Abschnitte unterteilt
-    - **Chunk-Größen**: 500, 2000 oder 3000 Zeichen pro Abschnitt
+    - **Chunking-Größen**: 500, 2000 oder 3000 Zeichen pro Abschnitt
     
     ### KI-Modelle im Detail
     - **HU-LLM 1 & 3**: Lokale Modelle für Standard-Aufgaben (HU-Netzwerk erforderlich)
     - **DeepSeek R1 32B**: Reasoning-Modell via Ollama für analytische Aufgaben (HU-Netzwerk erforderlich)
     - **OpenAI GPT-4o**: Vielseitigstes externes Modell für alle Aufgabentypen
-    - **Google Gemini Pro**: Großes Kontextfenster für umfangreiche Texte
+    - **Google Gemini 2.5 Pro**: Großes Kontextfenster für umfangreiche Texte
     
     ### Einbettungsmodelle
     - **Ollama nomic-embed-text**: Für semantische Vektorsuche
-    - **FastText**: Für Wortähnlichkeiten und semantische Erweiterung
+    - **FastText**: Für Wortähnlichkeiten und semantische Erweiterung mit Korpus-Häufigkeiten
     
     ## Tipps für optimale Ergebnisse
     
-    ### Allgemeine Empfehlungen:
-    1. **Präzise Beschreibungen**: Je spezifischer Ihre Inhaltsbeschreibung, desto relevanter die Ergebnisse
-    2. **Angemessene Zeiträume**: Nicht zu große Spannen wählen (max. 10-15 Jahre)
-    3. **Passende Chunk-Größe**: 3000 für Kontext, 2000 für Balance, 500 für Präzision
-    4. **Modell-Matching**: Einfache Aufgaben → HU-LLM, komplexe Analysen → DeepSeek R1
+    ### Retrieval-Query-Optimierung:
+    1. **Wenige Phrasen, viele Begriffe**: "Berliner Mauer Grenze DDR" statt "Wie wurde die Berliner Mauer dargestellt?"
+    2. **Zeitgenössische Sprache**: Nutzen Sie Begriffe aus der Zeit für bessere Retrieval-Qualität
+    3. **Semantische Erweiterung**: Aktivieren Sie diese für breitere Begriffsabdeckung
+    4. **Zeit-Interval-Suche**: Für diakrone Narrative und ausgewogene zeitliche Abdeckung
+    
+    ### Analyse-Optimierung:
+    1. **Chunking-Größe**: 3000 für Kontext, 2000 für Balance, 500 für Präzision
+    2. **Modell-Matching**: Einfache Aufgaben → HU-LLM, komplexe Analysen → DeepSeek R1
+    3. **Temperatur**: Niedrigere Werte (0.1-0.3) für konsistentere, fokussiertere Antworten
+    4. **System-Prompt**: Fokus auf wissenschaftliche Methodik und Quellentreue
+    
+    ### LLM-Unterstützte Auswahl:
+    1. **Negative Reranking**: Für kritische Bewertung mit Pro-/Contra-Argumentation
+    2. **Kontextuelle Bewertung**: Für historische Einordnung und Quellenwert-Bewertung
+    3. **Temperatur-Kontrolle**: Niedrigere Werte für konsistentere Bewertungen
     
     ## Systemvoraussetzungen
     
@@ -143,4 +180,14 @@ def create_info_panel():
     - **Archivdaten**: Unterliegen den Nutzungsbedingungen des Spiegel-Archivs
     - **Forschungszwecke**: System optimiert für akademische Nutzung
     
+    ## Begriffserklärungen
+    
+    - **Heuristik**: Systematische Quellensuche und -bewertung
+    - **Retrieval-Query**: Suchanfrage zur Quellenidentifikation
+    - **Chunking-Größe**: Länge der Textabschnitte für die Verarbeitung
+    - **Zeit-Interval-Suche**: Zeitlich ausgewogene Quellenauswahl
+    - **LLM-Unterstützte Auswahl**: KI-gestützte Quellenbewertung
+    - **User-Prompt**: Konkrete Forschungsfrage an die Quellen
+    - **System-Prompt**: Methodische Anweisungen an das KI-System
+    - **Temperatur**: Determinismus-Grad der KI-Generierung (0 = deterministisch, 1 = kreativ)
                   """)

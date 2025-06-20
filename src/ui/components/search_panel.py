@@ -1,7 +1,4 @@
-# src/ui/components/search_panel.py - Enhanced with chunks per window and improved agent prompts
-"""
-Enhanced search panel component with chunks per time window and improved agent system prompt editing.
-"""
+# src/ui/components/search_panel.py - Updated with new terminology and structure
 import gradio as gr
 from typing import Dict, Any, Callable
 
@@ -9,13 +6,11 @@ from src.config import settings
 
 def create_search_panel(
     retrieve_callback: Callable,
-    agent_search_callback: Callable,
+    llm_assisted_search_callback: Callable,
     preview_callback: Callable,
     toggle_api_key_callback: Callable
 ) -> Dict[str, Any]:
     """
-    Create the enhanced search panel with chunks per window and improved agent prompts.
-    
     Returns:
         Dictionary of UI components
     """
@@ -30,22 +25,23 @@ def create_search_panel(
         search_mode = gr.Radio(
             choices=[
                 ("Standard-Suche", "standard"),
-                ("Agenten-Suche", "agent")
+                ("LLM-Unterstützte Auswahl", "llm_assisted") 
             ],
             value="standard",
             label="Suchmethode",
-            info="Wählen Sie zwischen Standard-Suche (schnell) oder Agenten-Suche (KI-gestützte Bewertung)"
+            info="Wählen Sie zwischen Standard-Suche (schnell) oder LLM-Unterstützter Auswahl (KI-gestützte Bewertung)"
         )
     
     # Common fields (shown for both modes)
     with gr.Group():
         gr.Markdown("## Allgemeine Einstellungen")
         
-        content_description = gr.Textbox(
-            label="Inhaltsbeschreibung (welche Quellen gesucht werden sollen)",
+        # UPDATED: Changed to Retrieval-Query with helper text
+        retrieval_query = gr.Textbox(
+            label="Retrieval-Query (welche Quellen gesucht werden sollen)",
             placeholder="Beispiel: Berichterstattung über die Berliner Mauer",
             lines=2,
-            info="Beschreiben Sie, welche Art von Inhalten Sie im Archiv finden möchten."
+            info="Verwenden Sie wenige Stoppwörter und viele Begriffe. Beschreiben Sie, welche Art von Inhalten Sie im Archiv finden möchten."
         )
         
         with gr.Row():
@@ -68,10 +64,11 @@ def create_search_panel(
             )
         
         with gr.Row():
+            # UPDATED: Changed to Chunking-Größe
             chunk_size = gr.Dropdown(
                 choices=[500, 2000, 3000],
                 value=3000,
-                label="Textgröße",
+                label="Chunking-Größe",
                 info="Größe der Textabschnitte in Zeichen."
             )
     
@@ -79,9 +76,9 @@ def create_search_panel(
     with gr.Group(visible=True) as standard_settings:
         gr.Markdown("## Standard-Suche Einstellungen")
         
-        # ENHANCED: Different options for chunks based on time window usage
+        # Different options for chunks based on time interval usage
         with gr.Row():
-            # Total chunks (shown when time windows are disabled)
+            # Total chunks (shown when time intervals are disabled)
             top_k = gr.Slider(
                 minimum=1,
                 maximum=50,
@@ -92,29 +89,31 @@ def create_search_panel(
                 visible=True
             )
             
-            # Chunks per window (shown when time windows are enabled)
-            chunks_per_window = gr.Slider(
+            # Chunks per interval (shown when time intervals are enabled)
+            chunks_per_interval = gr.Slider(
                 minimum=1,
                 maximum=20,
                 value=5,
                 step=1,
-                label="Ergebnisse pro Zeitfenster",
-                info="Anzahl der Texte pro Zeitfenster.",
+                label="Ergebnisse pro Zeit-Intervall",
+                info="Anzahl der Texte pro Zeit-Intervall.",
                 visible=False
             )
         
         with gr.Accordion("Erweiterte Einstellungen", open=False):
-            # Keyword filtering
+            # Keyword filtering - UPDATED structure
             with gr.Accordion("Schlagwort-Filterung", open=False):
                 gr.Markdown("""
                 ### Schlagwort-Filterung
                 
-                Filtern Sie die Suchergebnisse nach bestimmten Schlagwörtern. Sie können auch boolesche Ausdrücke verwenden (AND, OR, NOT).
+                Filtern Sie die Suchergebnisse nach bestimmten Schlagwörtern. 
+                Dies kann helfen, die zeitgenössische Sprache der Artikel zu nutzen und die Retrieval-Qualität zu verbessern.
                 
                 **Beispiele:**
                 - `mauer` - Findet Texte, die "mauer" enthalten
                 - `berlin AND mauer` - Findet Texte, die sowohl "berlin" als auch "mauer" enthalten
                 - `berlin AND (mauer OR grenze) NOT sowjet` - Komplexere Ausdrücke sind möglich
+                - Wenn Sie nur Briefe möchten, dann suchen Sie in "Artikeltitel"
                 """)
                 
                 keywords = gr.Textbox(
@@ -123,19 +122,14 @@ def create_search_panel(
                     lines=2
                 )
                 
-                with gr.Row():
-                    search_in = gr.CheckboxGroup(
-                        choices=["Text", "Artikeltitel", "Schlagworte"],
-                        value=["Text"],
-                        label="Suche in"
-                    )
-                    
-                    enforce_keywords = gr.Checkbox(
-                        label="Strikte Filterung",
-                        value=True,
-                        info="Wenn aktiviert, werden nur Texte angezeigt, die die angegebenen Schlagwörter enthalten."
-                    )
-            
+                search_in = gr.CheckboxGroup(
+                    choices=["Text", "Artikeltitel", "Schlagworte"],
+                    value=["Text"],
+                    label="Suche in",
+                    info="Wenn Sie zum Beispiel nur Leserbriefe möchten, dann wählen Sie 'Artikeltitel' mit Brief als Schlagwort."
+                )
+                
+                # UPDATED: Reorganized semantic expansion controls
                 with gr.Row():
                     use_semantic_expansion = gr.Checkbox(
                         label="Semantische Erweiterung",
@@ -143,96 +137,106 @@ def create_search_panel(
                         info="Findet und berücksichtigt auch semantisch ähnliche Wörter"
                     )
                     
+                    # MOVED: Now under semantic expansion
                     semantic_expansion_factor = gr.Slider(
                         minimum=1,
                         maximum=10,
                         value=5,
                         step=1,
-                        label="Anzahl ähnlicher Wörter"
+                        label="Anzahl ähnlicher Wörter",
+                        info="Wie viele ähnliche Begriffe pro Schlagwort gesucht werden"
                     )
                 
                 with gr.Row():
                     preview_btn = gr.Button("Vorschau ähnlicher Wörter")
                 
-                expansion_output = gr.Markdown(label="Ähnliche Wörter")
+                # UPDATED: Show frequency and similarity
+                expansion_output = gr.Markdown(label="Ähnliche Wörter mit Häufigkeiten")
             
-            # ENHANCED: Time window search with per-window chunk control
-            with gr.Accordion("Zeitfenster-Suche", open=False):
+            # UPDATED: Zeit-Interval-Suche (formerly Zeitfenster-Suche)
+            with gr.Accordion("Zeit-Interval-Suche", open=False):
                 gr.Markdown("""
-                ### Zeitfenster-Suche
+                ### Zeit-Interval-Suche
                 
-                Die Zeitfenster-Suche unterteilt den Suchzeitraum in kleinere Abschnitte und sorgt dafür, 
-                dass Ergebnisse aus verschiedenen Zeitperioden berücksichtigt werden. Sie können wählen,
-                wie viele Texte pro Zeitfenster abgerufen werden sollen.
+                Die Zeit-Interval-Suche unterteilt den Suchzeitraum in kleinere Abschnitte und sorgt für 
+                eine gleichmäßige Verteilung der Ergebnisse über verschiedene Zeitperioden. Dies ermöglicht
+                ein diakrones Narrativ durch ausgewogene zeitliche Abdeckung.
                 """)
                 
-                with gr.Row():
-                    use_time_windows = gr.Checkbox(
-                        label="Zeitfenster-Suche aktivieren",
-                        value=False,
-                        info="Sucht in definierten Zeitfenstern anstatt im gesamten Zeitraum"
-                    )
-                    
-                    time_window_size = gr.Slider(
-                        minimum=1,
-                        maximum=10,
-                        value=5,
-                        step=1,
-                        label="Fenstergröße (Jahre)",
-                        info="Größe der einzelnen Zeitfenster in Jahren"
-                    )
+                # UPDATED: Moved window size under the checkbox
+                use_time_intervals = gr.Checkbox(
+                    label="Zeit-Interval-Suche aktivieren",
+                    value=False,
+                    info="Sucht in definierten Zeit-Intervallen für gleichmäßige zeitliche Verteilung"
+                )
+                
+                time_interval_size = gr.Slider(
+                    minimum=1,
+                    maximum=10,
+                    value=5,
+                    step=1,
+                    label="Intervall-Größe (Jahre)",
+                    info="Größe der einzelnen Zeit-Intervalle in Jahren"
+                )
+                
+                # NEW: Automatic calculation display
+                interval_calculation = gr.Markdown(
+                    value="", 
+                    label="Berechnete Aufteilung",
+                    visible=False
+                )
         
         standard_search_btn = gr.Button("Standard-Suche starten", variant="primary")
     
-    # Agent search specific settings
-    with gr.Group(visible=False) as agent_settings:
-        gr.Markdown("## Agenten-Suche Einstellungen")
+    # LLM-assisted search specific settings - UPDATED terminology
+    with gr.Group(visible=False) as llm_assisted_settings:
+        gr.Markdown("## LLM-Unterstützte Auswahl Einstellungen")
         
         gr.Markdown("""
-        Die Agenten-Suche verwendet KI-gestützte Bewertung zur Auswahl der relevantesten Quellen.
-        Sie können Zeitfenster verwenden und die Anzahl der Texte pro Fenster konfigurieren.
+        Die LLM-Unterstützte Auswahl verwendet KI-gestützte Bewertung zur Auswahl der relevantesten Quellen.
+        Sie können Zeit-Intervalle verwenden und die Anzahl der Texte pro Intervall konfigurieren.
         """)
         
-        # Agent time windows (default enabled)
+        # LLM-assisted time intervals (default enabled) - UPDATED terminology
         with gr.Row():
-            agent_use_time_windows = gr.Checkbox(
-                label="Zeitfenster verwenden",
-                value=settings.AGENT_DEFAULT_USE_TIME_WINDOWS,
-                info="Teilt den Zeitraum in kleinere Fenster auf"
+            llm_assisted_use_time_intervals = gr.Checkbox(
+                label="Zeit-Intervalle verwenden",
+                value=settings.LLM_ASSISTED_DEFAULT_USE_TIME_WINDOWS,
+                info="Teilt den Zeitraum in kleinere Intervalle auf"
             )
             
-            agent_time_window_size = gr.Slider(
+            llm_assisted_time_interval_size = gr.Slider(
                 minimum=1,
                 maximum=10,
-                value=settings.AGENT_DEFAULT_TIME_WINDOW_SIZE,
+                value=settings.LLM_ASSISTED_DEFAULT_TIME_WINDOW_SIZE,
                 step=1,
-                label="Fenstergröße (Jahre)",
-                info="Größe der einzelnen Zeitfenster"
+                label="Intervall-Größe (Jahre)",
+                info="Größe der einzelnen Zeit-Intervalle"
             )
         
-        # Chunks per window configuration
+        # Chunks per interval configuration
         with gr.Row():
-            chunks_per_window_initial = gr.Slider(
+            chunks_per_interval_initial = gr.Slider(
                 minimum=10,
                 maximum=200,
-                value=settings.AGENT_DEFAULT_CHUNKS_PER_WINDOW_INITIAL,
+                value=settings.LLM_ASSISTED_DEFAULT_CHUNKS_PER_WINDOW_INITIAL,
                 step=5,
-                label="Initial pro Fenster",
-                info="Anzahl der Texte, die zunächst pro Zeitfenster abgerufen werden"
+                label="Initial pro Intervall",
+                info="Anzahl der Texte, die zunächst pro Zeit-Intervall abgerufen werden"
             )
             
-            chunks_per_window_final = gr.Slider(
+            chunks_per_interval_final = gr.Slider(
                 minimum=5,
                 maximum=100,
-                value=settings.AGENT_DEFAULT_CHUNKS_PER_WINDOW_FINAL,
+                value=settings.LLM_ASSISTED_DEFAULT_CHUNKS_PER_WINDOW_FINAL,
                 step=5,
-                label="Final pro Fenster",
-                info="Anzahl der Texte, die nach KI-Bewertung pro Zeitfenster behalten werden"
+                label="Final pro Intervall",
+                info="Anzahl der Texte, die nach KI-Bewertung pro Zeit-Intervall behalten werden"
             )
         
-        # Agent minimum retrieval relevance score
+        # LLM-assisted minimum retrieval relevance score
         with gr.Row():
-            agent_min_retrieval_score = gr.Slider(
+            llm_assisted_min_retrieval_score = gr.Slider(
                 minimum=0.1,
                 maximum=0.8,
                 value=0.25,
@@ -241,37 +245,40 @@ def create_search_panel(
                 info="Minimale Ähnlichkeitsschwelle für die initiale Quellenauswahl (niedrigere Werte = mehr Kandidaten)"
             )
         
-        # Agent-specific keyword filtering (simplified)
+        # LLM-assisted-specific keyword filtering (simplified)
         with gr.Accordion("Schlagwort-Filterung", open=False):
-            agent_keywords = gr.Textbox(
+            llm_assisted_keywords = gr.Textbox(
                 label="Schlagwörter (boolescher Ausdruck)",
                 placeholder="berlin AND mauer",
                 lines=2
             )
             
-            with gr.Row():
-                agent_search_in = gr.CheckboxGroup(
-                    choices=["Text", "Artikeltitel", "Schlagworte"],
-                    value=["Text"],
-                    label="Suche in"
-                )
-                
-                agent_enforce_keywords = gr.Checkbox(
-                    label="Strikte Filterung",
-                    value=True,
-                    info="Nur Texte mit den angegebenen Schlagwörtern"
-                )
+            llm_assisted_search_in = gr.CheckboxGroup(
+                choices=["Text", "Artikeltitel", "Schlagworte"],
+                value=["Text"],
+                label="Suche in"
+            )
         
-        # ENHANCED: Agent LLM settings with editable system prompts (like question panel)
+        # UPDATED: LLM settings with temperature and new prompts
         with gr.Accordion("KI-Bewertungseinstellungen", open=True):
-            agent_model = gr.Radio(
-            choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
+            llm_assisted_model = gr.Radio(
+                choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
                 value="hu-llm3",
                 label="LLM-Modell für Bewertung",
                 info="Wählen Sie das Modell für die Quellenbewertung."
             )
             
-            # ENHANCED: System prompt template selection and editing (like question panel)
+            # NEW: Temperature control for LLM evaluation
+            llm_assisted_temperature = gr.Slider(
+                minimum=0.0,
+                maximum=1.0,
+                value=settings.LLM_ASSISTED_DEFAULT_TEMPERATURE,
+                step=0.1,
+                label="Temperatur",
+                info="Bestimmt den Determinismus der KI-Bewertung. Niedrigere Werte = konsistentere Bewertungen."
+            )
+            
+            # UPDATED: System prompt template selection and editing
             gr.Markdown("""
             ### System Prompt für Quellenbewertung
             
@@ -280,28 +287,28 @@ def create_search_panel(
             """)
             
             with gr.Row():
-                agent_system_prompt_template = gr.Dropdown(
-                    choices=list(settings.AGENT_SYSTEM_PROMPTS.keys()),
-                    value="agent_default",
+                llm_assisted_system_prompt_template = gr.Dropdown(
+                    choices=list(settings.LLM_ASSISTED_SYSTEM_PROMPTS.keys()),
+                    value="standard_evaluation",
                     label="Bewertungs-Prompt Vorlage",
                     info="Wählen Sie eine Vorlage als Ausgangspunkt"
                 )
                 
-                reset_agent_system_prompt_btn = gr.Button("Auf Vorlage zurücksetzen", size="sm")
+                reset_llm_assisted_system_prompt_btn = gr.Button("Auf Vorlage zurücksetzen", size="sm")
             
-            # ENHANCED: Editable system prompt text area (like question panel)
-            agent_system_prompt_text = gr.Textbox(
+            # Editable system prompt text area
+            llm_assisted_system_prompt_text = gr.Textbox(
                 label="System Prompt für Bewertung (bearbeitbar)",
-                value=settings.AGENT_SYSTEM_PROMPTS["agent_default"],
+                value=settings.LLM_ASSISTED_SYSTEM_PROMPTS["standard_evaluation"],
                 lines=8,
                 info="Bearbeiten Sie den System Prompt für die Quellenbewertung nach Ihren Bedürfnissen."
             )
         
-        agent_search_btn = gr.Button("Agenten-Suche starten", variant="primary")
+        llm_assisted_search_btn = gr.Button("LLM-Unterstützte Auswahl starten", variant="primary")
         
-        # Progress indicator for agent search
-        agent_progress = gr.Markdown("", visible=False)
-        agent_cancel_btn = gr.Button("Abbrechen", visible=False, variant="stop")
+        # Progress indicator for LLM-assisted search
+        llm_assisted_progress = gr.Markdown("", visible=False)
+        llm_assisted_cancel_btn = gr.Button("Abbrechen", visible=False, variant="stop")
     
     # Results display (common for both modes)
     with gr.Group():
@@ -314,17 +321,17 @@ def create_search_panel(
         outputs=[expansion_output, expanded_words_state]
     )
     
-    # ENHANCED: Show/hide chunk options based on time window selection
-    def toggle_chunk_options(use_time_windows_val):
-        if use_time_windows_val:
+    # Show/hide chunk options based on time interval selection
+    def toggle_chunk_options(use_time_intervals_val):
+        if use_time_intervals_val:
             return gr.update(visible=False), gr.update(visible=True)
         else:
             return gr.update(visible=True), gr.update(visible=False)
     
-    use_time_windows.change(
+    use_time_intervals.change(
         toggle_chunk_options,
-        inputs=[use_time_windows],
-        outputs=[top_k, chunks_per_window]
+        inputs=[use_time_intervals],
+        outputs=[top_k, chunks_per_interval]
     )
     
     # Show/hide settings based on search mode
@@ -337,37 +344,57 @@ def create_search_panel(
     search_mode.change(
         toggle_search_settings,
         inputs=[search_mode],
-        outputs=[standard_settings, agent_settings]
+        outputs=[standard_settings, llm_assisted_settings]
     )
     
-    # ENHANCED: Agent system prompt template management (like question panel)
-    def load_agent_system_prompt_template(template_name: str) -> str:
-        """Load the selected agent template into the text area."""
-        return settings.AGENT_SYSTEM_PROMPTS.get(template_name, settings.AGENT_SYSTEM_PROMPTS["agent_default"])
+    # NEW: Calculate and display time interval breakdown
+    def calculate_intervals(start_year, end_year, interval_size, use_intervals):
+        if not use_intervals:
+            return gr.update(value="", visible=False)
+        
+        interval_info = settings.calculate_time_intervals(start_year, end_year, interval_size)
+        intervals_text = f"""**Berechnete Aufteilung**: {interval_info['coverage']}
+        
+**Intervalle**: {', '.join([f"{start}-{end}" for start, end in interval_info['intervals']])}"""
+        
+        return gr.update(value=intervals_text, visible=True)
     
-    def reset_agent_to_template(template_name: str) -> str:
-        """Reset the agent text area to the selected template."""
-        return settings.AGENT_SYSTEM_PROMPTS.get(template_name, settings.AGENT_SYSTEM_PROMPTS["agent_default"])
+    # Connect interval calculation to inputs
+    for component in [year_start, year_end, time_interval_size, use_time_intervals]:
+        component.change(
+            calculate_intervals,
+            inputs=[year_start, year_end, time_interval_size, use_time_intervals],
+            outputs=[interval_calculation]
+        )
     
-    # Connect agent template dropdown to text area
-    agent_system_prompt_template.change(
-        load_agent_system_prompt_template,
-        inputs=[agent_system_prompt_template],
-        outputs=[agent_system_prompt_text]
+    # LLM-assisted system prompt template management
+    def load_llm_assisted_system_prompt_template(template_name: str) -> str:
+        """Load the selected LLM-assisted template into the text area."""
+        return settings.LLM_ASSISTED_SYSTEM_PROMPTS.get(template_name, settings.LLM_ASSISTED_SYSTEM_PROMPTS["standard_evaluation"])
+    
+    def reset_llm_assisted_to_template(template_name: str) -> str:
+        """Reset the LLM-assisted text area to the selected template."""
+        return settings.LLM_ASSISTED_SYSTEM_PROMPTS.get(template_name, settings.LLM_ASSISTED_SYSTEM_PROMPTS["standard_evaluation"])
+    
+    # Connect LLM-assisted template dropdown to text area
+    llm_assisted_system_prompt_template.change(
+        load_llm_assisted_system_prompt_template,
+        inputs=[llm_assisted_system_prompt_template],
+        outputs=[llm_assisted_system_prompt_text]
     )
     
-    # Connect agent reset button
-    reset_agent_system_prompt_btn.click(
-        reset_agent_to_template,
-        inputs=[agent_system_prompt_template],
-        outputs=[agent_system_prompt_text]
+    # Connect LLM-assisted reset button
+    reset_llm_assisted_system_prompt_btn.click(
+        reset_llm_assisted_to_template,
+        inputs=[llm_assisted_system_prompt_template],
+        outputs=[llm_assisted_system_prompt_text]
     )
     
-    # Define all components to be returned
+    # Define all components to be returned - UPDATED component names
     components = {
         # Common components
         "search_mode": search_mode,
-        "content_description": content_description,
+        "retrieval_query": retrieval_query,  # UPDATED from content_description
         "chunk_size": chunk_size,
         "year_start": year_start,
         "year_end": year_end,
@@ -377,40 +404,55 @@ def create_search_panel(
         
         # Standard search components
         "top_k": top_k,
-        "chunks_per_window": chunks_per_window,  # ENHANCED: New component
+        "chunks_per_interval": chunks_per_interval,  # UPDATED from chunks_per_window
         "keywords": keywords,
         "search_in": search_in,
         "use_semantic_expansion": use_semantic_expansion,
         "semantic_expansion_factor": semantic_expansion_factor,
-        "enforce_keywords": enforce_keywords,
-        "use_time_windows": use_time_windows,
-        "time_window_size": time_window_size,
+        "use_time_intervals": use_time_intervals,  # UPDATED from use_time_windows
+        "time_interval_size": time_interval_size,  # UPDATED from time_window_size
         "standard_search_btn": standard_search_btn,
         "expansion_output": expansion_output,
+        "interval_calculation": interval_calculation,  # NEW
         
-        # Agent search components
-        "agent_use_time_windows": agent_use_time_windows,
-        "agent_time_window_size": agent_time_window_size,
-        "chunks_per_window_initial": chunks_per_window_initial,
-        "chunks_per_window_final": chunks_per_window_final,
-        "agent_min_retrieval_score": agent_min_retrieval_score,
-        "agent_keywords": agent_keywords,
-        "agent_search_in": agent_search_in,
-        "agent_enforce_keywords": agent_enforce_keywords,
-        "agent_model": agent_model,
-        "agent_system_prompt_template": agent_system_prompt_template,
-        "agent_system_prompt_text": agent_system_prompt_text,  # ENHANCED: New editable component
-        "reset_agent_system_prompt_btn": reset_agent_system_prompt_btn,  # ENHANCED: Reset button
-        "agent_search_btn": agent_search_btn,
-        "agent_progress": agent_progress,
-        "agent_cancel_btn": agent_cancel_btn,
+        # LLM-assisted search components - UPDATED terminology
+        "llm_assisted_use_time_intervals": llm_assisted_use_time_intervals,
+        "llm_assisted_time_interval_size": llm_assisted_time_interval_size,
+        "chunks_per_interval_initial": chunks_per_interval_initial,
+        "chunks_per_interval_final": chunks_per_interval_final,
+        "llm_assisted_min_retrieval_score": llm_assisted_min_retrieval_score,
+        "llm_assisted_keywords": llm_assisted_keywords,
+        "llm_assisted_search_in": llm_assisted_search_in,
+        "llm_assisted_model": llm_assisted_model,
+        "llm_assisted_temperature": llm_assisted_temperature,  # NEW
+        "llm_assisted_system_prompt_template": llm_assisted_system_prompt_template,
+        "llm_assisted_system_prompt_text": llm_assisted_system_prompt_text,
+        "reset_llm_assisted_system_prompt_btn": reset_llm_assisted_system_prompt_btn,
+        "llm_assisted_search_btn": llm_assisted_search_btn,
+        "llm_assisted_progress": llm_assisted_progress,
+        "llm_assisted_cancel_btn": llm_assisted_cancel_btn,
         
         # UI groups for visibility control
         "standard_settings": standard_settings,
-        "agent_settings": agent_settings,
+        "llm_assisted_settings": llm_assisted_settings,
         
-        # DEPRECATED: Keep for backward compatibility
-        "agent_custom_system_prompt": agent_system_prompt_text  # Alias
+        # DEPRECATED: Keep for backward compatibility with updated names
+        "content_description": retrieval_query,  # Alias
+        "chunks_per_window": chunks_per_interval,  # Alias
+        "agent_use_time_windows": llm_assisted_use_time_intervals,  # Alias
+        "agent_time_window_size": llm_assisted_time_interval_size,  # Alias
+        "chunks_per_window_initial": chunks_per_interval_initial,  # Alias
+        "chunks_per_window_final": chunks_per_interval_final,  # Alias
+        "agent_min_retrieval_score": llm_assisted_min_retrieval_score,  # Alias
+        "agent_keywords": llm_assisted_keywords,  # Alias
+        "agent_search_in": llm_assisted_search_in,  # Alias
+        "agent_model": llm_assisted_model,  # Alias
+        "agent_system_prompt_template": llm_assisted_system_prompt_template,  # Alias
+        "agent_system_prompt_text": llm_assisted_system_prompt_text,  # Alias
+        "agent_search_btn": llm_assisted_search_btn,  # Alias
+        "agent_progress": llm_assisted_progress,  # Alias
+        "agent_cancel_btn": llm_assisted_cancel_btn,  # Alias
+        "agent_settings": llm_assisted_settings  # Alias
     }
     
     return components

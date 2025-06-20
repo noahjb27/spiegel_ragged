@@ -1,6 +1,10 @@
-# src/ui/handlers/search_handlers.py - Enhanced with chunk selection and chunks per window
+# src/ui/handlers/search_handlers.py - Updated with new terminology and chunk selection
 """
-Enhanced handler functions for search operations with chunk selection and improved time window support.
+Updated handler functions for search operations with new terminology:
+- Retrieval-Query (instead of content_description)
+- Zeit-Interval-Suche (instead of Zeitfenster-Suche)
+- LLM-Unterstützte Auswahl (instead of Agent search)
+- Enhanced chunk selection functionality
 """
 import json
 import logging
@@ -34,7 +38,7 @@ def set_rag_engine(engine: Any) -> None:
     rag_engine = engine
 
 def perform_retrieval(
-    content_description: str,
+    retrieval_query: str,  # UPDATED: from content_description
     chunk_size: int,
     year_start: int,
     year_end: int,
@@ -43,14 +47,13 @@ def perform_retrieval(
     use_semantic_expansion: bool,
     semantic_expansion_factor: int,
     expanded_words_json: str,
-    enforce_keywords: bool,
-    use_time_windows: bool,
-    time_window_size: int,
+    use_time_intervals: bool,  # UPDATED: from use_time_windows
+    time_interval_size: int,   # UPDATED: from time_window_size
     top_k: int,
-    chunks_per_window: int = 5  # ENHANCED: New parameter for chunks per window
+    chunks_per_interval: int = 5  # UPDATED: from chunks_per_window
 ) -> Tuple[str, Dict[str, Any]]:
     """
-    Perform source retrieval using the enhanced strategy-based approach with chunks per window support.
+    Perform source retrieval using the updated strategy-based approach with Zeit-Interval-Suche.
     """
     try:
         if not rag_engine:
@@ -59,45 +62,45 @@ def perform_retrieval(
         start_time = time.time()
         
         # Clean and validate parameters
-        content_description = content_description.strip() if content_description else ""
-        if not content_description:
-            return "Error: Content description is required", None
+        retrieval_query = retrieval_query.strip() if retrieval_query else ""
+        if not retrieval_query:
+            return "Error: Retrieval-Query ist erforderlich", None
         
         keywords_cleaned = keywords.strip() if keywords else None
         search_fields = search_in if search_in else ["Text"]
         
-        logger.info(f"Starting retrieval with time windows: {use_time_windows}")
-        logger.info(f"Content: '{content_description}', Keywords: '{keywords_cleaned}'")
+        logger.info(f"Starting retrieval with Zeit-Interval-Suche: {use_time_intervals}")
+        logger.info(f"Retrieval-Query: '{retrieval_query}', Keywords: '{keywords_cleaned}'")
         
-        # ENHANCED: Determine effective top_k based on time window usage
-        if use_time_windows:
-            # Calculate expected number of windows
+        # Determine effective top_k based on time interval usage
+        if use_time_intervals:
+            # Calculate expected number of intervals
             year_span = year_end - year_start + 1
-            num_windows = max(1, (year_span + time_window_size - 1) // time_window_size)
-            effective_top_k = chunks_per_window * num_windows
-            logger.info(f"Time windows: {num_windows} windows × {chunks_per_window} chunks = {effective_top_k} total target")
+            num_intervals = max(1, (year_span + time_interval_size - 1) // time_interval_size)
+            effective_top_k = chunks_per_interval * num_intervals
+            logger.info(f"Zeit-Intervalle: {num_intervals} Intervalle × {chunks_per_interval} chunks = {effective_top_k} total target")
         else:
             effective_top_k = top_k
             logger.info(f"Standard search: {effective_top_k} chunks total")
         
         # Create search configuration
         config = SearchConfig(
-            content_description=content_description,
+            content_description=retrieval_query,  # Map new terminology to existing field
             year_range=(year_start, year_end),
             chunk_size=chunk_size,
             keywords=keywords_cleaned,
             search_fields=search_fields,
-            enforce_keywords=enforce_keywords,
+            enforce_keywords=True,  # Always enforce keywords now
             top_k=effective_top_k
         )
         
         # Choose strategy based on user selection
-        if use_time_windows:
-            logger.info(f"Using TimeWindowSearchStrategy with window size: {time_window_size}")
-            # ENHANCED: Create custom strategy with chunks per window logic
-            strategy = EnhancedTimeWindowSearchStrategy(
-                window_size=time_window_size,
-                chunks_per_window=chunks_per_window
+        if use_time_intervals:
+            logger.info(f"Using Zeit-Interval-SearchStrategy with interval size: {time_interval_size}")
+            # Create custom strategy with chunks per interval logic
+            strategy = EnhancedTimeIntervalSearchStrategy(
+                interval_size=time_interval_size,
+                chunks_per_interval=chunks_per_interval
             )
         else:
             logger.info("Using StandardSearchStrategy")
@@ -130,9 +133,9 @@ def perform_retrieval(
                 'chunk_size': chunk_size,
                 'year_range': [year_start, year_end],
                 'keywords': keywords_cleaned,
-                'retrieval_method': 'time_window' if use_time_windows else 'standard',
-                'chunks_per_window': chunks_per_window if use_time_windows else None,  # ENHANCED
-                'effective_top_k': effective_top_k  # ENHANCED
+                'retrieval_method': 'zeit_interval' if use_time_intervals else 'standard',  # UPDATED
+                'chunks_per_interval': chunks_per_interval if use_time_intervals else None,  # UPDATED
+                'effective_top_k': effective_top_k
             }
         }
         
@@ -142,37 +145,37 @@ def perform_retrieval(
         num_chunks = len(chunks_for_ui)
         logger.info(f"Retrieval completed: {num_chunks} chunks in {retrieval_time:.2f}s")
         
-        # Create info message
-        method_name = "Zeitfenster-Suche" if use_time_windows else "Standard-Suche"
+        # Create info message with updated terminology
+        method_name = "Zeit-Interval-Suche" if use_time_intervals else "Standard-Suche"
         info_text = f"""
         ### Quellen erfolgreich abgerufen ({method_name})
         
-        **Inhaltsbeschreibung**: {content_description}  
+        **Retrieval-Query**: {retrieval_query}  
         **Zeitraum**: {year_start} - {year_end}  
         **Anzahl gefundener Quellen**: {num_chunks}  
         **Abrufzeit**: {retrieval_time:.2f} Sekunden
         """
         
-        if use_time_windows:
-            windows = search_result.metadata.get('windows', [])
+        if use_time_intervals:
+            intervals = search_result.metadata.get('intervals', [])  # UPDATED from windows
             info_text += f"""
-            **Zeitfenster**: {len(windows)} Fenster à {time_window_size} Jahre
-            **Chunks pro Fenster**: {chunks_per_window}
+            **Zeit-Intervalle**: {len(intervals)} Intervalle à {time_interval_size} Jahre
+            **Chunks pro Intervall**: {chunks_per_interval}
             **Ziel-Gesamtzahl**: {effective_top_k}
-            **Fenster**: {', '.join([f"{w[0]}-{w[1]}" for w in windows[:5]])}{'...' if len(windows) > 5 else ''}
+            **Intervalle**: {', '.join([f"{w[0]}-{w[1]}" for w in intervals[:5]])}{'...' if len(intervals) > 5 else ''}
             """
         
         if keywords_cleaned:
             info_text += f"""
             **Schlagwörter**: {keywords_cleaned}
-            **Semantische Erweiterung**: {'Ja' if use_semantic_expansion else 'Nein'}
+            **Semantische Erweiterung**: {'Aktiviert' if use_semantic_expansion else 'Deaktiviert'}
             """
         
         if num_chunks == 0:
             info_text = f"""
             ### Keine passenden Quellen gefunden
             
-            Versuchen Sie es mit einer anderen Inhaltsbeschreibung oder erweitern Sie die Filter.
+            Versuchen Sie es mit einer anderen Retrieval-Query oder erweitern Sie die Filter.
             - Zeitraum: {year_start} - {year_end}
             - Methode: {method_name}
             """
@@ -184,26 +187,26 @@ def perform_retrieval(
         return f"Error: {str(e)}", None
 
 def perform_analysis(
-    question: str,
+    user_prompt: str,  # UPDATED: from question
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
     system_prompt: str,
     temperature: float = 0.3,
-    selected_chunk_ids: Optional[List[int]] = None  # ENHANCED: New parameter for chunk selection
+    selected_chunk_ids: Optional[List[int]] = None
 ) -> Tuple[str, str, str]:
     """
     Perform analysis on retrieved chunks with optional chunk selection.
-    ENHANCED: Now supports filtering chunks by selected IDs.
+    UPDATED: Uses new terminology and enhanced chunk selection.
     """
     try:
         if not rag_engine:
             return "Error: RAG Engine failed to initialize", "", "Check the logs for details"
         
         if not retrieved_chunks or not retrieved_chunks.get('chunks'):
-            return "Bitte rufen Sie zuerst Quellen ab", "", "Keine Quellen abgerufen"
+            return "Bitte führen Sie zuerst eine Heuristik durch", "", "Keine Quellen abgerufen"
         
         start_time = time.time()
-        logger.info(f"Starting analysis with question: '{question}'")
+        logger.info(f"Starting analysis with user-prompt: '{user_prompt}'")
         logger.info(f"Using system prompt: {system_prompt[:100]}...")
         
         # Convert UI chunks back to Document format
@@ -211,7 +214,7 @@ def perform_analysis(
         
         chunks_data = retrieved_chunks.get('chunks', [])
         
-        # ENHANCED: Filter chunks if specific IDs are selected
+        # Filter chunks if specific IDs are selected
         if selected_chunk_ids is not None:
             logger.info(f"Filtering chunks by selected IDs: {selected_chunk_ids}")
             filtered_chunks = []
@@ -245,7 +248,7 @@ def perform_analysis(
         
         # Perform analysis with new engine using the provided system prompt directly
         analysis_result = rag_engine.analyze(
-            question=question,
+            question=user_prompt,
             chunks=documents,
             model=model_selection,
             system_prompt=system_prompt,
@@ -255,11 +258,11 @@ def perform_analysis(
         analysis_time = time.time() - start_time
         logger.info(f"Analysis completed in {analysis_time:.2f} seconds")
         
-        # Format results
+        # Format results with updated terminology
         answer_text = analysis_result.answer
         chunks_text = format_chunks(chunks_data, selected_chunk_ids=selected_chunk_ids)
         
-        # Format metadata with chunk selection info
+        # Format metadata with chunk selection info and updated terminology
         chunk_selection_info = ""
         if selected_chunk_ids is not None:
             chunk_selection_info = f"""
@@ -269,11 +272,11 @@ def perform_analysis(
         """
         
         metadata_text = f"""
-        ## Analyseparameter
-        - **Model**: {analysis_result.model}
-        - **Frage**: {question}
+        ## Analyse-Parameter
+        - **Modell**: {analysis_result.model}
+        - **User-Prompt**: {user_prompt}
         - **Analysezeit**: {analysis_time:.2f} Sekunden
-        - **Temperatur**: {temperature}
+        - **Temperatur**: {temperature} (Determinismus-Grad)
         {chunk_selection_info}
 
         ## System Prompt (verwendet)
@@ -285,6 +288,7 @@ def perform_analysis(
         - **Anzahl Quellen**: {len(documents)}
         - **Retrieval-Methode**: {retrieved_chunks.get('metadata', {}).get('retrieval_method', 'Unbekannt')}
         - **Original-Suchzeit**: {retrieved_chunks.get('metadata', {}).get('search_time', 0):.2f} Sekunden
+        - **Chunking-Größe**: {retrieved_chunks.get('metadata', {}).get('chunk_size', 'Unbekannt')}
         """
         
         return answer_text, chunks_text, metadata_text
@@ -294,7 +298,7 @@ def perform_analysis(
         return f"Error: {str(e)}", "", "Analysis failed, check logs for details."
 
 def perform_retrieval_and_update_ui(
-    content_description: str,
+    retrieval_query: str,  
     chunk_size: int,
     year_start: int,
     year_end: int,
@@ -303,22 +307,21 @@ def perform_retrieval_and_update_ui(
     use_semantic_expansion: bool,
     semantic_expansion_factor: int,
     expanded_words_json: str,
-    enforce_keywords: bool,
-    use_time_windows: bool,
-    time_window_size: int,
+    use_time_intervals: bool, 
+    time_interval_size: int,  
     top_k: int,
-    chunks_per_window: int = 5  # ENHANCED: New parameter
+    chunks_per_interval: int = 5 
 ) -> Tuple[str, Dict[str, Any], str, gr.Accordion, gr.Accordion, gr.Accordion]:
     """
-    Perform retrieval and update UI accordions with enhanced chunks per window support.
+    Perform retrieval and update UI accordions with updated terminology.
     """
     # Perform the retrieval
     info_text, retrieved_chunks = perform_retrieval(
-        content_description, chunk_size, year_start, year_end,
+        retrieval_query, chunk_size, year_start, year_end,
         keywords, search_in, use_semantic_expansion,
         semantic_expansion_factor, expanded_words_json,
-        enforce_keywords, use_time_windows, time_window_size, 
-        top_k, chunks_per_window  # ENHANCED: Pass chunks per window
+        use_time_intervals, time_interval_size, 
+        top_k, chunks_per_interval
     )
     
     # Format the retrieved chunks for display
@@ -326,15 +329,15 @@ def perform_retrieval_and_update_ui(
         formatted_chunks = format_chunks(
             retrieved_chunks.get('chunks'),
             keywords_to_use=keywords,
-            use_time_windows=use_time_windows,
-            time_window_size=time_window_size,
+            use_time_intervals=use_time_intervals,  # UPDATED
+            time_interval_size=time_interval_size,  # UPDATED
             year_start=year_start,
             year_end=year_end,
-            chunks_per_window=chunks_per_window  # ENHANCED: Pass for display info
+            chunks_per_interval=chunks_per_interval  # UPDATED
         )
         num_chunks = len(retrieved_chunks.get('chunks'))
         
-        # ENHANCED: Add chunk count info to metadata for chunk selection
+        # Add chunk count info to metadata for chunk selection
         retrieved_chunks['metadata']['total_chunks'] = num_chunks
     else:
         formatted_chunks = "Keine Texte gefunden."
@@ -344,27 +347,26 @@ def perform_retrieval_and_update_ui(
     if num_chunks > 0:
         retrieval_state = gr.update(open=False)
         retrieved_texts_state = gr.update(open=True)
-        question_state = gr.update(open=True)
+        analysis_state = gr.update(open=True)
     else:
         retrieval_state = gr.update(open=True)
         retrieved_texts_state = gr.update(open=False)
-        question_state = gr.update(open=False)
+        analysis_state = gr.update(open=False)
     
-    return info_text, retrieved_chunks, formatted_chunks, retrieval_state, retrieved_texts_state, question_state
+    return info_text, retrieved_chunks, formatted_chunks, retrieval_state, retrieved_texts_state, analysis_state
 
 def perform_analysis_and_update_ui(
-    question: str,
+    user_prompt: str,  # UPDATED: from question
     retrieved_chunks: Dict[str, Any],
     model_selection: str,
     system_prompt_template: str,
     system_prompt_text: str,
     temperature: float,
-    chunk_selection_mode: str = "all",  # ENHANCED: New parameter
-    selected_chunks_state: Optional[List[int]] = None  # ENHANCED: Selected chunk IDs
+    chunk_selection_mode: str = "all",
+    selected_chunks_state: Optional[List[int]] = None
 ) -> Tuple[str, str, gr.Accordion, gr.Accordion]:
     """
-    Perform analysis and update UI accordions with chunk selection support.
-    ENHANCED: Now supports filtering by selected chunk IDs.
+    Perform analysis and update UI accordions with updated terminology.
     """
     # Use the edited system prompt text directly
     system_prompt = system_prompt_text.strip()
@@ -376,49 +378,46 @@ def perform_analysis_and_update_ui(
     
     logger.info(f"Using system prompt text directly (length: {len(system_prompt)} chars)")
     
-    # ENHANCED: Determine which chunks to use based on selection mode
+    # Determine which chunks to use based on selection mode
     selected_chunk_ids = None
-    if chunk_selection_mode == "upload" or chunk_selection_mode == "manual":
+    if chunk_selection_mode == "selected" and selected_chunks_state:
         selected_chunk_ids = selected_chunks_state
-        if selected_chunk_ids:
-            logger.info(f"Using chunk selection mode '{chunk_selection_mode}' with {len(selected_chunk_ids)} selected chunks")
-        else:
-            logger.warning(f"Chunk selection mode '{chunk_selection_mode}' specified but no chunks selected, using all")
+        logger.info(f"Using chunk selection with {len(selected_chunk_ids)} selected chunks")
     
     # Perform the analysis
     answer_text, chunks_text, metadata_text = perform_analysis(
-        question=question,
+        user_prompt=user_prompt,
         retrieved_chunks=retrieved_chunks,
         model_selection=model_selection,
         system_prompt=system_prompt,
         temperature=temperature,
-        selected_chunk_ids=selected_chunk_ids  # ENHANCED: Pass selected chunk IDs
+        selected_chunk_ids=selected_chunk_ids
     )
     
     # Update UI accordions
-    question_state = gr.update(open=False)
+    analysis_config_state = gr.update(open=False)
     results_state = gr.update(open=True)
     
-    return answer_text, metadata_text, question_state, results_state
+    return answer_text, metadata_text, analysis_config_state, results_state
 
 def format_chunks(
     chunks: List[Dict],
     keywords_to_use: Optional[str] = None, 
     expanded_words: Optional[Dict] = None,
-    use_time_windows: bool = False, 
-    time_window_size: int = 5, 
+    use_time_intervals: bool = False,  # UPDATED: from use_time_windows
+    time_interval_size: int = 5,       # UPDATED: from time_window_size
     year_start: int = 1948, 
     year_end: int = 1979,
-    chunks_per_window: Optional[int] = None,  # ENHANCED: New parameter
-    selected_chunk_ids: Optional[List[int]] = None  # ENHANCED: For showing selection
+    chunks_per_interval: Optional[int] = None,  # UPDATED: from chunks_per_window
+    selected_chunk_ids: Optional[List[int]] = None
 ) -> str:
     """
-    Format retrieved chunks for display with enhanced time window and selection support.
+    Format retrieved chunks for display with updated terminology.
     """
     if not chunks:
         return "Keine passenden Texte gefunden."
     
-    # ENHANCED: Add selection info if applicable
+    # Add selection info if applicable
     selection_info = ""
     if selected_chunk_ids is not None:
         selection_info = f"**Hinweis**: Nur {len(chunks)} von ursprünglich gefundenen Texten werden angezeigt (ausgewählte IDs: {', '.join(map(str, selected_chunk_ids))})\n\n"
@@ -429,56 +428,56 @@ def format_chunks(
         year = chunk["metadata"].get("Jahrgang", "Unknown")
         if year not in chunks_by_year:
             chunks_by_year[year] = []
-        # ENHANCED: Add original index for chunk ID tracking
+        # Add original index for chunk ID tracking
         chunk_with_id = chunk.copy()
         chunk_with_id['display_id'] = i + 1
         chunks_by_year[year].append(chunk_with_id)
     
     chunks_text = selection_info
     
-    # Display chunks grouped by time window if using time windows
-    if use_time_windows:
-        chunks_text += "# Ergebnisse nach Zeitfenstern\n\n"
+    # Display chunks grouped by time interval if using Zeit-Interval-Suche
+    if use_time_intervals:
+        chunks_text += "# Ergebnisse nach Zeit-Intervallen\n\n"
         
-        # ENHANCED: Show chunks per window info
-        if chunks_per_window:
-            chunks_text += f"**Konfiguration**: {chunks_per_window} Chunks pro Zeitfenster\n\n"
+        # Show chunks per interval info
+        if chunks_per_interval:
+            chunks_text += f"**Konfiguration**: {chunks_per_interval} Chunks pro Zeit-Intervall\n\n"
         
-        # Create time windows
-        time_windows = []
-        for window_start in range(year_start, year_end + 1, time_window_size):
-            window_end = min(window_start + time_window_size - 1, year_end)
-            time_windows.append((window_start, window_end))
+        # Create time intervals
+        time_intervals = []
+        for interval_start in range(year_start, year_end + 1, time_interval_size):
+            interval_end = min(interval_start + time_interval_size - 1, year_end)
+            time_intervals.append((interval_start, interval_end))
         
-        # Group years into their respective time windows
-        for window_start, window_end in time_windows:
-            window_label = f"## Zeitfenster {window_start}-{window_end}\n\n"
-            window_chunks = []
+        # Group years into their respective time intervals
+        for interval_start, interval_end in time_intervals:
+            interval_label = f"## Zeit-Intervall {interval_start}-{interval_end}\n\n"
+            interval_chunks = []
             
-            # Collect chunks from years in this window
+            # Collect chunks from years in this interval
             for year in sorted(chunks_by_year.keys()):
-                if isinstance(year, int) and window_start <= year <= window_end:
-                    window_chunks.extend([(year, i, chunk) for i, chunk in enumerate(chunks_by_year[year])])
+                if isinstance(year, int) and interval_start <= year <= interval_end:
+                    interval_chunks.extend([(year, i, chunk) for i, chunk in enumerate(chunks_by_year[year])])
             
-            # Only add window if it has chunks
-            if window_chunks:
-                chunks_text += window_label
+            # Only add interval if it has chunks
+            if interval_chunks:
+                chunks_text += interval_label
                 
-                # Count chunks per year in this window
-                window_year_counts = {}
-                for y, _, _ in window_chunks:
-                    window_year_counts[y] = window_year_counts.get(y, 0) + 1
+                # Count chunks per year in this interval
+                interval_year_counts = {}
+                for y, _, _ in interval_chunks:
+                    interval_year_counts[y] = interval_year_counts.get(y, 0) + 1
                 
-                # Show year distribution within window
+                # Show year distribution within interval
                 chunks_text += "**Verteilung:** "
-                chunks_text += ", ".join([f"{y}: {count} Texte" for y, count in sorted(window_year_counts.items())])
+                chunks_text += ", ".join([f"{y}: {count} Texte" for y, count in sorted(interval_year_counts.items())])
                 chunks_text += "\n\n"
                 
                 # Add each chunk
                 current_year = None
                 chunk_in_year = 1
                 
-                for year, _, chunk in sorted(window_chunks):
+                for year, _, chunk in sorted(interval_chunks):
                     if year != current_year:
                         chunks_text += f"### {year}\n\n"
                         current_year = year
@@ -501,10 +500,10 @@ def format_chunks(
                 
                 chunks_text += "\n"
             else:
-                chunks_text += window_label
-                chunks_text += "Keine Texte gefunden in diesem Zeitfenster.\n\n"
+                chunks_text += interval_label
+                chunks_text += "Keine Texte gefunden in diesem Zeit-Intervall.\n\n"
     else:
-        # Regular display by year when not using time windows
+        # Regular display by year when not using Zeit-Interval-Suche
         chunks_text += f"# Gefundene Texte ({len(chunks)})\n\n"
         
         for year in sorted(chunks_by_year.keys()):
@@ -527,72 +526,72 @@ def format_chunks(
     return chunks_text
 
 
-# ENHANCED: Custom time window strategy with chunks per window control
-class EnhancedTimeWindowSearchStrategy:
-    """Enhanced time window search strategy with chunks per window control."""
+# UPDATED: Custom time interval strategy with new terminology
+class EnhancedTimeIntervalSearchStrategy:
+    """Enhanced Zeit-Interval search strategy with chunks per interval control."""
     
-    def __init__(self, window_size: int = 5, chunks_per_window: int = 5):
-        self.window_size = window_size
-        self.chunks_per_window = chunks_per_window
+    def __init__(self, interval_size: int = 5, chunks_per_interval: int = 5):
+        self.interval_size = interval_size
+        self.chunks_per_interval = chunks_per_interval
     
     def search(self, config, vector_store, progress_callback=None):
-        """Execute time-windowed search with controlled chunks per window."""
+        """Execute Zeit-Interval search with controlled chunks per interval."""
         from src.core.search.strategies import SearchResult
         
         start_time = time.time()
         start_year, end_year = config.year_range
         
-        # Create time windows
-        windows = []
-        for window_start in range(start_year, end_year + 1, self.window_size):
-            window_end = min(window_start + self.window_size - 1, end_year)
-            windows.append((window_start, window_end))
+        # Create time intervals
+        intervals = []
+        for interval_start in range(start_year, end_year + 1, self.interval_size):
+            interval_end = min(interval_start + self.interval_size - 1, end_year)
+            intervals.append((interval_start, interval_end))
         
-        logger.info(f"Enhanced time window search: {len(windows)} windows, {self.chunks_per_window} chunks per window")
+        logger.info(f"Enhanced Zeit-Interval search: {len(intervals)} intervals, {self.chunks_per_interval} chunks per interval")
         
         all_chunks = []
-        window_counts = {}
+        interval_counts = {}
         
-        # Search each window
-        for i, (window_start, window_end) in enumerate(windows):
+        # Search each interval
+        for i, (interval_start, interval_end) in enumerate(intervals):
             if progress_callback:
-                progress = (i / len(windows))
-                progress_callback(f"Searching {window_start}-{window_end}...", progress)
+                progress = (i / len(intervals))
+                progress_callback(f"Searching {interval_start}-{interval_end}...", progress)
             
-            # Create window-specific filter
-            window_filter = vector_store.build_metadata_filter(
-                year_range=[window_start, window_end],
+            # Create interval-specific filter
+            interval_filter = vector_store.build_metadata_filter(
+                year_range=[interval_start, interval_end],
                 keywords=None,
                 search_in=None
             )
             
             try:
-                # ENHANCED: Use chunks_per_window instead of total k
-                window_chunks = vector_store.similarity_search(
+                # Use chunks_per_interval instead of total k
+                interval_chunks = vector_store.similarity_search(
                     query=config.content_description,
                     chunk_size=config.chunk_size,
-                    k=self.chunks_per_window,  # Use per-window limit
-                    filter_dict=window_filter,
+                    k=self.chunks_per_interval,  # Use per-interval limit
+                    filter_dict=interval_filter,
                     min_relevance_score=0.3,
                     keywords=config.keywords,
                     search_in=config.search_fields,
                     enforce_keywords=config.enforce_keywords
                 )
                 
-                window_key = f"{window_start}-{window_end}"
-                window_counts[window_key] = len(window_chunks)
+                interval_key = f"{interval_start}-{interval_end}"
+                interval_counts[interval_key] = len(interval_chunks)
                 
-                # Add window metadata to each chunk
-                for doc, score in window_chunks:
-                    doc.metadata['time_window'] = window_key
-                    doc.metadata['window_start'] = window_start
-                    doc.metadata['window_end'] = window_end
+                # Add interval metadata to each chunk
+                for doc, score in interval_chunks:
+                    doc.metadata['time_interval'] = interval_key  # UPDATED: from time_window
+                    doc.metadata['interval_start'] = interval_start
+                    doc.metadata['interval_end'] = interval_end
                 
-                all_chunks.extend(window_chunks)
+                all_chunks.extend(interval_chunks)
                 
             except Exception as e:
-                logger.error(f"Error searching window {window_start}-{window_end}: {e}")
-                window_counts[f"{window_start}-{window_end}"] = 0
+                logger.error(f"Error searching interval {interval_start}-{interval_end}: {e}")
+                interval_counts[f"{interval_start}-{interval_end}"] = 0
         
         # Sort by relevance score
         all_chunks.sort(key=lambda x: x[1], reverse=True)
@@ -602,12 +601,12 @@ class EnhancedTimeWindowSearchStrategy:
         return SearchResult(
             chunks=all_chunks,
             metadata={
-                "strategy": "enhanced_time_window",
+                "strategy": "enhanced_time_interval",  # UPDATED
                 "search_time": search_time,
-                "window_size": self.window_size,
-                "chunks_per_window": self.chunks_per_window,
-                "windows": windows,
-                "window_counts": window_counts,
+                "interval_size": self.interval_size,
+                "chunks_per_interval": self.chunks_per_interval,
+                "intervals": intervals,  # UPDATED: from windows
+                "interval_counts": interval_counts,  # UPDATED: from window_counts
                 "total_chunks_found": len(all_chunks)
             }
         )

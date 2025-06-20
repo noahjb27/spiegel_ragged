@@ -1,44 +1,45 @@
-# src/ui/components/agent_results_panel.py
+# src/ui/components/llm_assisted_results_panel.py - Updated with new terminology
 """
-Fixed Agent results panel component with proper text visibility.
-This component displays the results from the agent-based search with readable text.
+Updated LLM-assisted results panel component with new terminology.
+UPDATED: Changed from "Agenten-Ergebnisse" to "LLM-Unterstützte Auswahl Ergebnisse"
+This component displays the results from the LLM-assisted search with readable text.
 """
 import gradio as gr
 from typing import Dict, Any
 
-def create_agent_results_panel() -> Dict[str, Any]:
+def create_llm_assisted_results_panel() -> Dict[str, Any]:
     """
-    Create the agent results panel UI components with fixed text visibility.
+    Create the LLM-assisted results panel UI components with updated terminology.
     
     Returns:
         Dictionary of UI components
     """
     with gr.Group():
-        # Enhanced CSS for proper text visibility
+        # Enhanced CSS for proper text visibility with new color scheme
         gr.HTML("""
         <style>
-            /* FIXED: Better styling for agent results with proper contrast */
-            .agent-results {
+            /* UPDATED: Better styling for LLM-assisted results with new color scheme */
+            .llm-assisted-results {
                 padding: 20px !important;
                 border-radius: 8px !important;
-                border: 1px solid #e0e0e0 !important;
+                border: 1px solid #968d84 !important;  /* NEW: Updated border color */
                 margin-top: 20px !important;
                 background-color: #ffffff !important;
             }
             
-            /* FIXED: Evaluation card styling with proper text contrast */
+            /* UPDATED: Evaluation card styling with new color scheme */
             .evaluation-card {
-                border-left: 4px solid #3498db !important;
+                border-left: 4px solid #d75425 !important;  /* NEW: Orange accent */
                 padding: 15px !important;
                 margin-bottom: 15px !important;
-                background-color: #f8f9fa !important;
+                background-color: #faf8f6 !important;  /* NEW: Light background */
                 border-radius: 8px !important;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
             }
             
-            /* FIXED: Ensure all text in evaluation cards is dark and readable */
+            /* UPDATED: Ensure all text in evaluation cards is dark and readable */
             .evaluation-card h4 {
-                color: #2c3e50 !important;
+                color: #5a5248 !important;  /* NEW: Darker shade of #968d84 */
                 margin-bottom: 10px !important;
                 font-weight: bold !important;
             }
@@ -59,56 +60,56 @@ def create_agent_results_panel() -> Dict[str, Any]:
                 font-weight: 600 !important;
             }
             
-            /* FIXED: Specific styling for different relevance levels */
+            /* UPDATED: Specific styling for different relevance levels with new colors */
             .evaluation-card.high-relevance {
-                background-color: #f1f8e9 !important;
-                border-left-color: #4caf50 !important;
+                background-color: #f9f8f4 !important;  /* NEW: Light yellow-green */
+                border-left-color: #b2b069 !important;  /* NEW: Yellow-green accent */
             }
             
             .evaluation-card.high-relevance h4,
             .evaluation-card.high-relevance p,
             .evaluation-card.high-relevance div,
             .evaluation-card.high-relevance strong {
-                color: #1b5e20 !important;
+                color: #6b6840 !important;  /* NEW: Darker yellow-green */
             }
             
             .evaluation-card.medium-relevance {
-                background-color: #fff8e1 !important;
-                border-left-color: #ff9800 !important;
+                background-color: #fef7f0 !important;  /* NEW: Light orange */
+                border-left-color: #d75425 !important;  /* NEW: Orange accent */
             }
             
             .evaluation-card.medium-relevance h4,
             .evaluation-card.medium-relevance p,
             .evaluation-card.medium-relevance div,
             .evaluation-card.medium-relevance strong {
-                color: #e65100 !important;
+                color: #a0471c !important;  /* NEW: Darker orange */
             }
             
             .evaluation-card.low-relevance {
-                background-color: #ffebee !important;
-                border-left-color: #f44336 !important;
+                background-color: #f4f1ee !important;  /* NEW: Light gray */
+                border-left-color: #968d84 !important;  /* NEW: Gray accent */
             }
             
             .evaluation-card.low-relevance h4,
             .evaluation-card.low-relevance p,
             .evaluation-card.low-relevance div,
             .evaluation-card.low-relevance strong {
-                color: #b71c1c !important;
+                color: #5a5248 !important;  /* NEW: Darker gray */
             }
             
-            /* FIXED: Progress visualization with readable text */
+            /* UPDATED: Progress visualization with new color scheme */
             .filter-stage {
                 margin-bottom: 20px !important;
-                background-color: #f8f9fa !important;
+                background-color: #faf8f6 !important;  /* NEW: Light background */
                 padding: 15px !important;
                 border-radius: 8px !important;
-                border: 1px solid #dee2e6 !important;
+                border: 1px solid #968d84 !important;  /* NEW: Gray border */
             }
             
             .filter-stage-title {
                 font-weight: bold !important;
                 margin-bottom: 8px !important;
-                color: #2c3e50 !important;
+                color: #5a5248 !important;  /* NEW: Dark gray */
                 font-size: 16px !important;
             }
             
@@ -123,7 +124,7 @@ def create_agent_results_panel() -> Dict[str, Any]:
             
             .filter-bar {
                 height: 100% !important;
-                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+                background: linear-gradient(90deg, #d75425 0%, #b2b069 100%) !important;  /* NEW: Custom gradient */
                 text-align: center !important;
                 color: white !important;
                 line-height: 30px !important;
@@ -134,83 +135,86 @@ def create_agent_results_panel() -> Dict[str, Any]:
                 justify-content: center !important;
             }
             
-            /* FIXED: Ensure explanation box has proper styling */
+            /* UPDATED: Explanation box with new colors */
             .explanation-box {
-                background-color: #e3f2fd !important;
+                background-color: #f9f8f4 !important;  /* NEW: Light yellow-green */
                 padding: 15px !important;
                 margin-bottom: 20px !important;
                 border-radius: 8px !important;
-                border-left: 4px solid #2196f3 !important;
+                border-left: 4px solid #b2b069 !important;  /* NEW: Yellow-green accent */
             }
             
             .explanation-box h4 {
-                color: #1565c0 !important;
+                color: #6b6840 !important;  /* NEW: Darker yellow-green */
                 margin-bottom: 10px !important;
                 font-weight: bold !important;
             }
             
             .explanation-box ul, .explanation-box li {
-                color: #0d47a1 !important;
+                color: #6b6840 !important;  /* NEW: Darker yellow-green */
                 line-height: 1.6 !important;
             }
             
             .explanation-box strong {
-                color: #0d47a1 !important;
+                color: #5a5248 !important;  /* NEW: Dark gray */
                 font-weight: 600 !important;
             }
             
             .explanation-box em {
-                color: #1565c0 !important;
+                color: #6b6840 !important;  /* NEW: Yellow-green */
                 font-style: italic !important;
             }
         </style>
         """)
         
-        # Answer section
-        agent_answer_output = gr.Markdown(
+        # Answer section - UPDATED terminology
+        llm_assisted_answer_output = gr.Markdown(
             value="Die Antwort wird hier angezeigt.",
-            label="Antwort des Agenten"
+            label="Antwort der LLM-Unterstützten Auswahl"
         )
         
-        # Process visualization
-        with gr.Accordion("Filterungsprozess", open=True):
-            agent_process_output = gr.HTML(
-                value="Der Filterungsprozess wird hier visualisiert, wenn die Suche abgeschlossen ist."
+        # Process visualization - UPDATED terminology
+        with gr.Accordion("LLM-Bewertungsprozess", open=True):
+            llm_assisted_process_output = gr.HTML(
+                value="Der LLM-Bewertungsprozess wird hier visualisiert, wenn die Suche abgeschlossen ist."
             )
         
-        # Chunk evaluations
-        with gr.Accordion("Textbewertungen", open=False):
-            agent_evaluations_output = gr.HTML(
-                value="Die Bewertungen der Textabschnitte werden hier angezeigt."
+        # Chunk evaluations - UPDATED terminology
+        with gr.Accordion("LLM-Textbewertungen", open=False):
+            llm_assisted_evaluations_output = gr.HTML(
+                value="Die LLM-Bewertungen der Textabschnitte werden hier angezeigt."
             )
         
-        # Retrieved chunks
-        with gr.Accordion("Gefundene Texte", open=False):
-            agent_chunks_output = gr.Markdown(
-                value="Die gefundenen Texte werden hier angezeigt."
+        # Retrieved chunks - UPDATED terminology
+        with gr.Accordion("Ausgewählte Texte", open=False):
+            llm_assisted_chunks_output = gr.Markdown(
+                value="Die durch LLM ausgewählten Texte werden hier angezeigt."
             )
             
-            # Add download functionality for agent results
+            # Add download functionality for LLM-assisted results
             with gr.Row():
-                agent_download_json_btn = gr.Button("📥 Agenten-Ergebnisse als JSON", elem_classes=["download-button"])
+                llm_assisted_download_json_btn = gr.Button(
+                    "📥 LLM-Ergebnisse als JSON", 
+                    elem_classes=["download-button"]
+                )
             
-            agent_download_json_file = gr.File(visible=False)
+            llm_assisted_download_json_file = gr.File(visible=False)
         
-        # Metadata
+        # Metadata - UPDATED terminology
         with gr.Accordion("Metadaten", open=False):
-            agent_metadata_output = gr.Markdown(
-                value="Metadaten zur Suche werden hier angezeigt."
+            llm_assisted_metadata_output = gr.Markdown(
+                value="Metadaten zur LLM-Unterstützten Auswahl werden hier angezeigt."
             )
     
-    # Define all components to be returned
+    # Define all components to be returned - UPDATED component names
     components = {
-        "agent_answer_output": agent_answer_output,
-        "agent_process_output": agent_process_output,
-        "agent_evaluations_output": agent_evaluations_output,
-        "agent_chunks_output": agent_chunks_output,
-        "agent_metadata_output": agent_metadata_output,
-        "agent_download_json_btn": agent_download_json_btn,
-        "agent_download_json_file": agent_download_json_file
+        "llm_assisted_answer_output": llm_assisted_answer_output,
+        "llm_assisted_process_output": llm_assisted_process_output,
+        "llm_assisted_evaluations_output": llm_assisted_evaluations_output,
+        "llm_assisted_chunks_output": llm_assisted_chunks_output,
+        "llm_assisted_metadata_output": llm_assisted_metadata_output,
+        "llm_assisted_download_json_btn": llm_assisted_download_json_btn,
+        "llm_assisted_download_json_file": llm_assisted_download_json_file,
     }
     
     return components

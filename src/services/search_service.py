@@ -92,7 +92,6 @@ class SearchService:
                        search_result: SearchResult,
                        model: str = "hu-llm",
                        temperature: float = 0.3,
-                       max_tokens: Optional[int] = None,
                        openai_api_key: Optional[str] = None,
                        system_prompt: Optional[str] = None) -> AnalysisResult:
         """
@@ -103,7 +102,6 @@ class SearchService:
             search_result: Previous search results
             model: LLM model to use
             temperature: Generation temperature
-            max_tokens: Maximum tokens
             openai_api_key: OpenAI API key if needed
             system_prompt: Custom system prompt
             
@@ -123,7 +121,6 @@ class SearchService:
                 model=model,
                 system_prompt=system_prompt,
                 temperature=temperature,
-                max_tokens=max_tokens,
                 openai_api_key=openai_api_key
             )
             

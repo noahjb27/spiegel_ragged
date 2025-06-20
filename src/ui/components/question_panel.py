@@ -1,7 +1,4 @@
-# src/ui/components/question_panel.py - Enhanced with chunk selection capability
-"""
-Enhanced question panel component with ability to load specific chunks by ID.
-"""
+# src/ui/components/question_panel.py 
 import gradio as gr
 from typing import Dict, Any
 
@@ -9,133 +6,123 @@ from src.config import settings
 
 def create_question_panel() -> Dict[str, Any]:
     """
-    Create the enhanced question panel UI components with chunk selection functionality.
-    
     Returns:
         Dictionary of UI components
     """
     with gr.Group():
-        gr.Markdown("## Frage stellen")
+        gr.Markdown("## Analyse")
         
-        question = gr.Textbox(
-            label="Frage (was Sie über die gefundenen Inhalte wissen möchten)",
-            placeholder="Beispiel: Wie wurde die Berliner Mauer in den westdeutschen Medien dargestellt?",
-            lines=2,
-            info="Formulieren Sie Ihre Frage, die anhand der gefundenen Texte beantwortet werden soll."
-        )
-        
-        # ENHANCED: Chunk selection options
-        with gr.Accordion("Quellenauswahl", open=False):
+        # 1. QUELLENAUSWAHL with chunk selection
+        with gr.Accordion("1. Quellenauswahl", open=True):
             gr.Markdown("""
             ### Quellenauswahl für Analyse
             
-            Sie können entweder alle gefundenen Quellen verwenden oder eine spezielle Auswahl treffen:
-            
-            - **Alle verwenden**: Nutzt alle bei der Suche gefundenen Texte
-            - **Auswahl hochladen**: Laden Sie eine CSV/JSON-Datei mit den gewünschten Chunk-IDs hoch
-            - **Manual IDs**: Geben Sie kommagetrennte Chunk-IDs direkt ein
+            Wählen Sie aus den gefundenen Quellen diejenigen aus, die Sie für die Analyse verwenden möchten.
+            Alle Quellen sind standardmäßig vorausgewählt.
             """)
             
-            chunk_selection_mode = gr.Radio(
-                choices=[
-                    ("Alle gefundenen Quellen verwenden", "all"),
-                    ("Auswahl aus Datei laden", "upload"),
-                    ("Chunk-IDs manuell eingeben", "manual")
-                ],
-                value="all",
-                label="Quellenauswahl-Modus"
+            # Chunk selection display area - will be populated dynamically
+            chunk_selection_area = gr.HTML(
+                value="<p><em>Quellen werden nach der Heuristik hier angezeigt...</em></p>",
+                label="Verfügbare Quellen"
             )
             
-            # File upload for chunk selection
-            with gr.Group(visible=False) as upload_group:
-                chunk_selection_file = gr.File(
-                    label="Chunk-Auswahl-Datei",
-                    file_types=[".csv", ".json"],
-                    info="Laden Sie eine CSV- oder JSON-Datei mit den gewünschten Chunk-IDs hoch."
+            # Selection summary and transfer button
+            with gr.Row():
+                selection_summary = gr.Markdown(
+                    value="**Keine Quellen verfügbar**",
+                    elem_id="selection_summary"
                 )
                 
-                upload_status = gr.Markdown("", visible=False)
-                
-                # Preview of uploaded selection
-                upload_preview = gr.Markdown("", visible=False)
-            
-            # Manual chunk ID input
-            with gr.Group(visible=False) as manual_group:
-                manual_chunk_ids = gr.Textbox(
-                    label="Chunk-IDs (kommagetrennt)",
-                    placeholder="1,3,5,7,9",
-                    lines=2,
-                    info="Geben Sie die IDs der Texte ein, die Sie für die Analyse verwenden möchten."
+                transfer_selection_btn = gr.Button(
+                    "Auswahl in Analyse übertragen",
+                    variant="primary",
+                    visible=False,
+                    elem_id="transfer_btn"
                 )
-                
-                manual_status = gr.Markdown("", visible=False)
             
-            # Current selection summary
-            selection_summary = gr.Markdown("**Aktuelle Auswahl**: Alle gefundenen Quellen werden verwendet.")
+            # Hidden state for selected chunks
+            selected_chunks_state = gr.State([])
+            chunks_transferred_state = gr.State(False)
         
-        # Model selection settings
-        with gr.Accordion("LLM-Einstellungen", open=False):
+        # 2. USER-PROMPT FORMULIEREN
+        with gr.Accordion("2. User-Prompt formulieren", open=False) as user_prompt_accordion:
+            gr.Markdown("""
+            ### Forschungsfrage formulieren
+            
+            Formulieren Sie hier Ihre konkrete Frage an die ausgewählten Quellen.
+            """)
+            
+            user_prompt = gr.Textbox(
+                label="User-Prompt (was Sie über die Quellen wissen möchten)",
+                placeholder="Beispiel: Wie wurde die Berliner Mauer in den westdeutschen Medien dargestellt?",
+                lines=3,
+                info="Formulieren Sie Ihre Forschungsfrage, die anhand der ausgewählten Texte beantwortet werden soll."
+            )
+        
+        # 3. LLM-AUSWÄHLEN
+        with gr.Accordion("3. LLM-Auswählen", open=False) as llm_selection_accordion:
             gr.Markdown("""
             ### Modellauswahl
             
-            Sie können zwischen verschiedenen LLM-Modellen wählen:
-            - **HU-LLM 1**: Lokales Modell (HU-Netzwerk erforderlich)
-            - **HU-LLM 3**: Lokales Modell (HU-Netzwerk erforderlich)  
-            - **DeepSeek R1 32B**: Fortschrittliches Reasoning-Modell via Ollama (HU-Netzwerk erforderlich)
-            - **OpenAI GPT-4o**: Leistungsstärkstes OpenAI-Modell
-            - **Google Gemini 2.5 Pro**: Googles intelligentestes Modell mit großem Kontextfenster
-            
+            Wählen Sie das Sprachmodell für die Analyse:
             """)
             
-            with gr.Row():
-                model_selection = gr.Radio(
-                    choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
-                    value="hu-llm3",
-                    label="LLM-Modell",
-                    info="Wählen Sie das zu verwendende Sprachmodell."
-                )
+            model_selection = gr.Radio(
+                choices=["hu-llm1", "hu-llm3", "deepseek-r1", "openai-gpt4o", "gemini-pro"],
+                value="hu-llm3",
+                label="LLM-Modell",
+                info="Wählen Sie das zu verwendende Sprachmodell."
+            )
             
-            # System prompt template selection and editing
+            # Temperature control
+            temperature = gr.Slider(
+                minimum=0.0,
+                maximum=1.0,
+                value=0.3,
+                step=0.1,
+                label="Temperatur",
+                info="Bestimmt den Determinismus der Antwortgenerierung. Niedrigere Werte = konsistentere, fokussiertere Antworten."
+            )
+        
+        # 4. SYSTEM-PROMPT
+        with gr.Accordion("4. System-Prompt", open=False) as system_prompt_accordion:
             gr.Markdown("""
-            ### System Prompt
+            ### System-Prompt konfigurieren
             
-            Wählen Sie eine Vorlage und bearbeiten Sie sie nach Ihren Bedürfnissen. Der System Prompt steuert, 
-            wie das LLM die Analyse durchführt.
-            """)
+            Der System-Prompt steuert, wie das LLM die Analyse durchführt. 
+            Fokussieren Sie auf akademische Präzision, Quellentreue und wissenschaftliche Methodik.
+            
+            **Hilfestellung für eigene Prompts:**
+            - Definieren Sie die Rolle (z.B. "Historiker", "Medienanalyst")
+            - Geben Sie methodische Anweisungen (Quellentreue, Belege, Struktur)
+            - Spezifizieren Sie das gewünschte Antwortformat
+            - Betonen Sie wissenschaftliche Standards
+            """) # HIER NOCH ETWAS ZU METAFRAGEN
             
             with gr.Row():
                 system_prompt_template = gr.Dropdown(
-                    choices=list(settings.SYSTEM_PROMPTS.keys()),
+                    choices=["default"],
                     value="default",
                     label="System Prompt Vorlage",
-                    info="Wählen Sie eine Vorlage als Ausgangspunkt"
+                    info="Grundlegende Vorlagen für wissenschaftliche Analyse"
                 )
                 
                 reset_system_prompt_btn = gr.Button("Auf Vorlage zurücksetzen", size="sm")
             
-            # Editable system prompt text area - initialized with default template
+            # Editable system prompt text area
             system_prompt_text = gr.Textbox(
                 label="System Prompt (bearbeitbar)",
                 value=settings.SYSTEM_PROMPTS["default"],
                 lines=8,
-                info="Bearbeiten Sie den System Prompt nach Ihren Bedürfnissen. Dieser Text wird an das LLM gesendet."
+                info="Bearbeiten Sie den System Prompt für eine präzise wissenschaftliche Analyse."
             )
-            
-            # Add temperature and max tokens
-            with gr.Row():
-                temperature = gr.Slider(
-                    minimum=0.0,
-                    maximum=1.0,
-                    value=0.3,
-                    step=0.1,
-                    label="Temperatur",
-                    info="Bestimmt die Wahrscheinlichkeitsverteilung, aus der Tokens ausgewählt werden – höher bedeutet kreativere, aber potenziell weniger kohärente Texte."
-                )
         
-        analyze_btn = gr.Button("Frage beantworten", variant="primary")
+        # UPDATED: Analyse starten button
+        analyze_btn = gr.Button("Analyse starten", variant="primary", visible=False)
         
-        # Hidden state for selected chunks
-        selected_chunks_state = gr.State(None)
+        # Analysis status
+        analysis_status = gr.Markdown("", visible=False)
     
     # Event handlers for system prompt template management
     def load_system_prompt_template(template_name: str) -> str:
@@ -147,124 +134,93 @@ def create_question_panel() -> Dict[str, Any]:
         return settings.SYSTEM_PROMPTS.get(template_name, settings.SYSTEM_PROMPTS["default"])
     
     # Event handlers for chunk selection
-    def toggle_chunk_selection_ui(mode: str):
-        """Show/hide UI elements based on selection mode."""
-        if mode == "upload":
-            return gr.update(visible=True), gr.update(visible=False), "**Aktuelle Auswahl**: Wird aus hochgeladener Datei geladen."
-        elif mode == "manual":
-            return gr.update(visible=False), gr.update(visible=True), "**Aktuelle Auswahl**: Manuelle Chunk-ID-Eingabe."
-        else:
-            return gr.update(visible=False), gr.update(visible=False), "**Aktuelle Auswahl**: Alle gefundenen Quellen werden verwendet."
-    
-    def process_uploaded_chunk_selection(file_obj):
-        """Process uploaded chunk selection file."""
-        if not file_obj:
-            return "Keine Datei hochgeladen.", "", None
+    def update_chunk_selection_display(retrieved_chunks):
+        """Update the chunk selection display with checkboxes."""
+        if not retrieved_chunks or not retrieved_chunks.get('chunks'):
+            return (
+                "<p><em>Keine Quellen verfügbar. Führen Sie zuerst eine Heuristik durch.</em></p>",
+                "**Keine Quellen verfügbar**",
+                gr.update(visible=False),
+                []
+            )
         
-        try:
-            import json
-            import csv
-            import os
-            
-            file_path = file_obj.name
-            file_extension = os.path.splitext(file_path)[1].lower()
-            
-            chunk_ids = []
-            
-            if file_extension == '.json':
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                
-                # Try different JSON structures
-                if isinstance(data, list):
-                    # Simple list of IDs
-                    chunk_ids = [int(x) for x in data if str(x).isdigit()]
-                elif isinstance(data, dict):
-                    # Dictionary with chunk_ids key
-                    if 'chunk_ids' in data:
-                        chunk_ids = [int(x) for x in data['chunk_ids'] if str(x).isdigit()]
-                    elif 'chunks' in data:
-                        # Extract chunk_id from chunks list
-                        for chunk in data['chunks']:
-                            if isinstance(chunk, dict) and 'chunk_id' in chunk:
-                                chunk_ids.append(int(chunk['chunk_id']))
-                            elif isinstance(chunk, dict) and 'id' in chunk:
-                                chunk_ids.append(int(chunk['id']))
-            
-            elif file_extension == '.csv':
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    # Try to detect if first column contains chunk IDs
-                    csv_reader = csv.reader(f)
-                    headers = next(csv_reader, None)
-                    
-                    # Look for chunk_id column
-                    chunk_id_col = None
-                    if headers:
-                        for i, header in enumerate(headers):
-                            if 'chunk_id' in header.lower() or 'id' in header.lower():
-                                chunk_id_col = i
-                                break
-                    
-                    # If no specific column found, use first column
-                    if chunk_id_col is None:
-                        chunk_id_col = 0
-                    
-                    # Read chunk IDs
-                    f.seek(0)
-                    csv_reader = csv.reader(f)
-                    if headers:
-                        next(csv_reader)  # Skip header
-                    
-                    for row in csv_reader:
-                        if len(row) > chunk_id_col and row[chunk_id_col].strip().isdigit():
-                            chunk_ids.append(int(row[chunk_id_col]))
-            
-            if not chunk_ids:
-                return "❌ Keine gültigen Chunk-IDs in der Datei gefunden.", "", None
-            
-            # Remove duplicates and sort
-            chunk_ids = sorted(list(set(chunk_ids)))
-            
-            status_msg = f"✅ {len(chunk_ids)} Chunk-IDs erfolgreich geladen."
-            preview_msg = f"**Geladene Chunk-IDs**: {', '.join(map(str, chunk_ids[:20]))}" + ("..." if len(chunk_ids) > 20 else "")
-            
-            return status_msg, preview_msg, chunk_ids
-            
-        except Exception as e:
-            return f"❌ Fehler beim Verarbeiten der Datei: {str(e)}", "", None
-    
-    def process_manual_chunk_ids(ids_text: str):
-        """Process manually entered chunk IDs."""
-        if not ids_text.strip():
-            return "Keine IDs eingegeben.", None
+        chunks = retrieved_chunks.get('chunks', [])
         
-        try:
-            # Parse comma-separated IDs
-            ids_text = ids_text.strip()
-            chunk_ids = []
+        # Create HTML with checkboxes for each chunk
+        html_content = "<div style='max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px;'>"
+        
+        for i, chunk in enumerate(chunks):
+            chunk_id = i + 1
+            metadata = chunk.get('metadata', {})
+            title = metadata.get('Artikeltitel', 'Kein Titel')
+            date = metadata.get('Datum', 'Unbekannt')
+            relevance = chunk.get('relevance_score', 0.0)
             
-            for part in ids_text.split(','):
-                part = part.strip()
-                if part.isdigit():
-                    chunk_ids.append(int(part))
-                elif '-' in part and len(part.split('-')) == 2:
-                    # Handle ranges like "1-5"
-                    start, end = part.split('-')
-                    if start.strip().isdigit() and end.strip().isdigit():
-                        start_id, end_id = int(start.strip()), int(end.strip())
-                        chunk_ids.extend(range(start_id, end_id + 1))
+            # Truncate content for preview
+            content_preview = chunk.get('content', '')[:200]
+            if len(chunk.get('content', '')) > 200:
+                content_preview += '...'
             
-            if not chunk_ids:
-                return "❌ Keine gültigen Chunk-IDs gefunden.", None
-            
-            # Remove duplicates and sort
-            chunk_ids = sorted(list(set(chunk_ids)))
-            
-            status_msg = f"✅ {len(chunk_ids)} Chunk-IDs erfolgreich verarbeitet: {', '.join(map(str, chunk_ids))}"
-            return status_msg, chunk_ids
-            
-        except Exception as e:
-            return f"❌ Fehler beim Verarbeiten der IDs: {str(e)}", None
+            html_content += f"""
+            <div style='margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 5px; background-color: #fafafa;'>
+                <div style='margin-bottom: 8px;'>
+                    <input type='checkbox' id='chunk_{chunk_id}' checked onchange='updateSelection()' style='margin-right: 8px;'>
+                    <label for='chunk_{chunk_id}' style='font-weight: bold; cursor: pointer;'>
+                        {chunk_id}. {title} ({date})
+                    </label>
+                    <span style='margin-left: 10px; color: #666; font-size: 0.9em;'>Relevanz: {relevance:.3f}</span>
+                </div>
+                <div style='margin-left: 24px; color: #555; font-size: 0.9em; line-height: 1.4;'>
+                    {content_preview}
+                </div>
+            </div>
+            """
+        
+        html_content += """
+        </div>
+        
+        <script>
+        function updateSelection() {
+            // This would need to be handled by Gradio's event system
+            console.log('Selection updated');
+        }
+        </script>
+        """
+        
+        # Initialize with all chunks selected
+        all_chunk_ids = list(range(1, len(chunks) + 1))
+        summary_text = f"**Ausgewählt**: {len(chunks)} von {len(chunks)} Quellen"
+        
+        return (
+            html_content,
+            summary_text,
+            gr.update(visible=True),
+            all_chunk_ids
+        )
+    
+    def transfer_chunks_to_analysis(selected_chunks, chunks_data):
+        """Transfer selected chunks to analysis section."""
+        if not selected_chunks:
+            return (
+                gr.update(visible=False),
+                "❌ Keine Quellen ausgewählt",
+                False,
+                gr.update(open=True),
+                gr.update(open=False),
+                gr.update(open=False),
+                gr.update(open=False)
+            )
+        
+        # Update UI to show analysis is ready
+        return (
+            gr.update(visible=True),
+            f"✅ {len(selected_chunks)} Quellen in die Analyse übertragen",
+            True,
+            gr.update(open=False),  # Close source selection
+            gr.update(open=True),   # Open user prompt
+            gr.update(open=False),  # Keep LLM selection closed
+            gr.update(open=False)   # Keep system prompt closed
+        )
     
     # Connect event handlers
     
@@ -282,57 +238,57 @@ def create_question_panel() -> Dict[str, Any]:
         outputs=[system_prompt_text]
     )
     
-    # Chunk selection mode changes
-    chunk_selection_mode.change(
-        toggle_chunk_selection_ui,
-        inputs=[chunk_selection_mode],
-        outputs=[upload_group, manual_group, selection_summary]
-    )
-    
-    # File upload processing
-    chunk_selection_file.change(
-        process_uploaded_chunk_selection,
-        inputs=[chunk_selection_file],
-        outputs=[upload_status, upload_preview, selected_chunks_state]
-    ).then(
-        lambda: gr.update(visible=True),
-        outputs=[upload_status]
-    ).then(
-        lambda: gr.update(visible=True),
-        outputs=[upload_preview]
-    )
-    
-    # Manual ID processing
-    manual_chunk_ids.change(
-        process_manual_chunk_ids,
-        inputs=[manual_chunk_ids],
-        outputs=[manual_status, selected_chunks_state]
-    ).then(
-        lambda: gr.update(visible=True),
-        outputs=[manual_status]
+    # Transfer button click
+    transfer_selection_btn.click(
+        transfer_chunks_to_analysis,
+        inputs=[selected_chunks_state, selected_chunks_state],  # Placeholder for now
+        outputs=[
+            analyze_btn,
+            analysis_status,
+            chunks_transferred_state,
+            user_prompt_accordion,
+            llm_selection_accordion,
+            system_prompt_accordion,
+            analysis_status
+        ]
     )
     
     # Define all components to be returned
     components = {
-        "question": question,
+        # NEW: Source selection components
+        "chunk_selection_area": chunk_selection_area,
+        "selection_summary": selection_summary,
+        "transfer_selection_btn": transfer_selection_btn,
+        "selected_chunks_state": selected_chunks_state,
+        "chunks_transferred_state": chunks_transferred_state,
+        
+        # UPDATED: Analysis components with new names
+        "user_prompt": user_prompt,  # UPDATED from "question"
         "model_selection": model_selection,
         "system_prompt_template": system_prompt_template,
         "system_prompt_text": system_prompt_text,
         "reset_system_prompt_btn": reset_system_prompt_btn,
         "temperature": temperature,
         "analyze_btn": analyze_btn,
+        "analysis_status": analysis_status,
         
-        # ENHANCED: Chunk selection components
-        "chunk_selection_mode": chunk_selection_mode,
-        "chunk_selection_file": chunk_selection_file,
-        "upload_status": upload_status,
-        "upload_preview": upload_preview,
-        "manual_chunk_ids": manual_chunk_ids,
-        "manual_status": manual_status,
-        "selection_summary": selection_summary,
-        "selected_chunks_state": selected_chunks_state,
+        # Accordion references for dynamic control
+        "user_prompt_accordion": user_prompt_accordion,
+        "llm_selection_accordion": llm_selection_accordion,
+        "system_prompt_accordion": system_prompt_accordion,
         
-        # Keep these for backward compatibility but mark as deprecated
+        # Helper function for external use
+        "update_chunk_selection_display": update_chunk_selection_display,
+        
+        # DEPRECATED: Keep for backward compatibility
+        "question": user_prompt,  # Alias
+        "chunk_selection_mode": gr.State("all"),  # Dummy for compatibility
+        "chunk_selection_file": gr.State(None),  # Dummy for compatibility
+        "upload_status": gr.State(""),  # Dummy for compatibility
+        "upload_preview": gr.State(""),  # Dummy for compatibility
+        "manual_chunk_ids": gr.State(""),  # Dummy for compatibility
+        "manual_status": gr.State(""),  # Dummy for compatibility
+        "selection_summary_old": selection_summary,  # Alias
         "custom_system_prompt": system_prompt_text  # Alias for backward compatibility
     }
     
