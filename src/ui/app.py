@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from src.core.engine import SpiegelRAG
-from src.ui.handlers.search_handlers import set_rag_engine
+from src.ui.handlers.search_handlers import set_rag_engine, update_chunks_display_handler
 from src.ui.components.search_panel import create_search_panel
 from src.ui.components.question_panel import create_question_panel
 from src.ui.components.results_panel import create_results_panel
@@ -40,15 +40,13 @@ from src.ui.components.retrieved_chunks_display import (
     update_chunks_display,
     handle_select_all,
     handle_deselect_all,
+    confirm_selection,
     transfer_chunks_to_analysis
 )
 
 from src.ui.utils.ui_helpers import toggle_api_key_visibility
-from src.ui.utils.checkbox_handler import (
-    create_checkbox_state_handler, 
-    handle_checkbox_state_update,
-    WORKING_CHECKBOX_JAVASCRIPT
-)
+from src.ui.utils.checkbox_handler import (create_checkbox_state_handler)
+
 
 from src.config import settings
 
@@ -58,11 +56,11 @@ logger = logging.getLogger(__name__)
 
 
 
-# FIXED: Import and create the separate update function
 def update_chunks_display_handler(retrieved_chunks: Dict[str, Any]) -> tuple:
     """Handle updating the chunks display after retrieval."""
     from src.ui.components.retrieved_chunks_display import update_chunks_display
     return update_chunks_display(retrieved_chunks)
+
 
 def perform_analysis_and_update_ui_with_transferred_chunks(
     user_prompt: str,
@@ -1012,11 +1010,10 @@ UTILITY CLASSES
                 analysis_accordion
             ]
         ).then(
-            # FIXED: Separate update for chunks display
             lambda: gr.update(visible=False),  # Hide comprehensive download for standard
             outputs=[download_comprehensive_btn]
         ).then(
-            # NEW: Update interactive chunks display
+            # Update interactive chunks display
             update_chunks_display_handler,
             inputs=[search_components["retrieved_chunks_state"]],
             outputs=[
@@ -1024,13 +1021,14 @@ UTILITY CLASSES
                 chunks_display_components["selection_summary"],
                 chunks_display_components["select_all_btn"],
                 chunks_display_components["deselect_all_btn"],
+                chunks_display_components["confirm_selection_btn"],  # NEW
                 chunks_display_components["transfer_to_analysis_btn"],
                 chunks_display_components["available_chunks_state"],
-                chunks_display_components["selected_chunk_ids_state"]
+                chunks_display_components["confirmed_selection_state"]  # NEW
             ]
         )
-                
-        
+            # LLM-assisted search - update chunks display
+
         search_components["llm_assisted_search_btn"].click(
             perform_llm_assisted_search_threaded,
             inputs=[
@@ -1053,7 +1051,6 @@ UTILITY CLASSES
             outputs=[
                 search_components["search_status"],
                 search_components["retrieved_chunks_state"],
-                # REMOVED: Direct accordion outputs that were causing the error
                 search_components["search_mode"],
                 search_components["llm_assisted_search_btn"],
                 search_components["llm_assisted_cancel_btn"],
@@ -1065,7 +1062,7 @@ UTILITY CLASSES
             lambda: gr.update(visible=True),  # Show comprehensive download for LLM-assisted
             outputs=[download_comprehensive_btn]
         ).then(
-            # NEW: Update interactive chunks display for LLM-assisted
+            # Update interactive chunks display for LLM-assisted
             update_chunks_display_handler,
             inputs=[search_components["retrieved_chunks_state"]],
             outputs=[
@@ -1073,40 +1070,48 @@ UTILITY CLASSES
                 chunks_display_components["selection_summary"],
                 chunks_display_components["select_all_btn"],
                 chunks_display_components["deselect_all_btn"],
+                chunks_display_components["confirm_selection_btn"],  # NEW
                 chunks_display_components["transfer_to_analysis_btn"],
                 chunks_display_components["available_chunks_state"],
-                chunks_display_components["selected_chunk_ids_state"]
+                chunks_display_components["confirmed_selection_state"]  # NEW
             ]
         )
- 
+
         chunks_display_components["select_all_btn"].click(
-            handle_select_all,
+            None,  # No Python function needed
+            js="() => { window.selectAllChunks(); return []; }",  # Call JavaScript
+            outputs=[]
+        ).then(
+            handle_select_all,  # Then update Gradio state
             inputs=[chunks_display_components["available_chunks_state"]],
-            outputs=[
-                chunks_display_components["selection_summary"],
-                chunks_display_components["selected_chunk_ids_state"]
-            ]
+            outputs=[chunks_display_components["selection_summary"]]
         )
         
-        checkbox_handler["checkbox_states_input"].change(
-            handle_checkbox_state_update,
+        # Deselect all button - just visual update
+        chunks_display_components["deselect_all_btn"].click(
+            None,  # No Python function needed
+            js="() => { window.deselectAllChunks(); return []; }",  # Call JavaScript
+            outputs=[]
+        ).then(
+            handle_deselect_all,  # Then update Gradio state
+            inputs=[chunks_display_components["available_chunks_state"]],
+            outputs=[chunks_display_components["selection_summary"]]
+        )
+
+        chunks_display_components["confirm_selection_btn"].click(
+            None,  # No Python function for the initial click
+            js="() => { window.confirmCurrentSelection(); return []; }",  # Call JavaScript to read state
+            outputs=[]
+        ).then(
+            confirm_selection,  # Then process the state in Python
             inputs=[
-                checkbox_handler["checkbox_states_input"],
-                chunks_display_components["available_chunks_state"],
-                chunks_display_components["selected_chunk_ids_state"]
+                chunks_display_components["js_selection_input"],
+                chunks_display_components["available_chunks_state"]
             ],
             outputs=[
-                chunks_display_components["selected_chunk_ids_state"],
-                chunks_display_components["selection_summary"]
-            ]
-        )
-        # Deselect all button
-        chunks_display_components["deselect_all_btn"].click(
-            handle_deselect_all,
-            inputs=[chunks_display_components["available_chunks_state"]],
-            outputs=[
+                chunks_display_components["confirmed_selection_state"],
                 chunks_display_components["selection_summary"],
-                chunks_display_components["selected_chunk_ids_state"]
+                chunks_display_components["transfer_to_analysis_btn"]
             ]
         )
 
@@ -1114,7 +1119,7 @@ UTILITY CLASSES
             transfer_chunks_to_analysis,
             inputs=[
                 chunks_display_components["available_chunks_state"],
-                chunks_display_components["selected_chunk_ids_state"]
+                chunks_display_components["confirmed_selection_state"]  # FIXED: Use confirmed state
             ],
             outputs=[
                 chunks_display_components["transfer_status"],
@@ -1133,6 +1138,11 @@ UTILITY CLASSES
             # Open analysis accordion and close retrieval accordion
             lambda: (gr.update(open=False), gr.update(open=True)),
             outputs=[retrieved_texts_accordion, analysis_accordion]
+        )
+
+        chunks_display_components["js_selection_input"].change(
+            lambda: "Auswahl geändert - Klicken Sie 'Auswahl bestätigen' um zu übernehmen",
+            outputs=[chunks_display_components["selection_summary"]]
         )
 
         # LLM-assisted search cancellation
