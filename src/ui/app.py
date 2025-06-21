@@ -985,6 +985,7 @@ UTILITY CLASSES
         
         # Connect event handlers
         
+        # Standard search - update chunks display
         search_components["standard_search_btn"].click(
             perform_retrieval_and_update_ui,
             inputs=[
@@ -1024,11 +1025,11 @@ UTILITY CLASSES
                 chunks_display_components["confirm_selection_btn"],  # NEW
                 chunks_display_components["transfer_to_analysis_btn"],
                 chunks_display_components["available_chunks_state"],
-                chunks_display_components["confirmed_selection_state"]  # NEW
+                chunks_display_components["confirmed_selection_state"]  # NEW - starts empty
             ]
         )
-            # LLM-assisted search - update chunks display
 
+        # LLM-assisted search - update chunks display
         search_components["llm_assisted_search_btn"].click(
             perform_llm_assisted_search_threaded,
             inputs=[
@@ -1077,29 +1078,23 @@ UTILITY CLASSES
             ]
         )
 
+        # Select all button - just updates summary text, JavaScript handles checkboxes
         chunks_display_components["select_all_btn"].click(
-            handle_select_all,  # Directly call the Python handler
+            handle_select_all,
             inputs=[chunks_display_components["available_chunks_state"]],
             outputs=[chunks_display_components["selection_summary"]]
         )
         
-        # Deselect all button - just visual update
+        # Deselect all button - just updates summary text, JavaScript handles checkboxes  
         chunks_display_components["deselect_all_btn"].click(
-            None,  # No Python function needed
-            js="() => { window.deselectAllChunks(); return []; }",  # Call JavaScript
-            outputs=[]
-        ).then(
-            handle_deselect_all,  # Then update Gradio state
+            handle_deselect_all,
             inputs=[chunks_display_components["available_chunks_state"]],
             outputs=[chunks_display_components["selection_summary"]]
         )
 
+        # NEW: Confirmation button - just reads the hidden input state
         chunks_display_components["confirm_selection_btn"].click(
-            None,  # No Python function for the initial click
-            js="() => { window.confirmCurrentSelection(); return []; }",  # Call JavaScript to read state
-            outputs=[]
-        ).then(
-            confirm_selection,  # Then process the state in Python
+            confirm_selection,
             inputs=[
                 chunks_display_components["js_selection_input"],
                 chunks_display_components["available_chunks_state"]
@@ -1111,6 +1106,7 @@ UTILITY CLASSES
             ]
         )
 
+        # FIXED: Transfer button - uses confirmed selection state
         chunks_display_components["transfer_to_analysis_btn"].click(
             transfer_chunks_to_analysis,
             inputs=[
@@ -1134,11 +1130,6 @@ UTILITY CLASSES
             # Open analysis accordion and close retrieval accordion
             lambda: (gr.update(open=False), gr.update(open=True)),
             outputs=[retrieved_texts_accordion, analysis_accordion]
-        )
-
-        chunks_display_components["js_selection_input"].change(
-            lambda: "Auswahl geändert - Klicken Sie 'Auswahl bestätigen' um zu übernehmen",
-            outputs=[chunks_display_components["selection_summary"]]
         )
 
         # LLM-assisted search cancellation

@@ -56,19 +56,18 @@ def create_fixed_retrieved_chunks_display() -> Dict[str, Any]:
         js_selection_input = gr.Textbox(
             value="",
             visible=False,
-            elem_id="js_selection_input",
+            elem_id="js_selection_input",  # Important: JavaScript needs this ID
             interactive=True
         )
         
-        # Simple JavaScript for visual management only
+        # Simple JavaScript with button integration
         gr.HTML("""
 <script>
-// SIMPLIFIED: Visual checkbox management only
+// SIMPLIFIED: Visual checkbox management with button integration
 function updateVisualSummary() {
     const checkboxes = document.querySelectorAll('input[name="chunk_selection"]');
     const checkedBoxes = document.querySelectorAll('input[name="chunk_selection"]:checked');
     
-    // Just update visual display - no Gradio state sync
     const total = checkboxes.length;
     const selected = checkedBoxes.length;
     
@@ -97,7 +96,7 @@ function deselectAllChunks() {
     updateVisualSummary();
 }
 
-// NEW: Function to get current selection for confirmation
+// Function to get current selection and update hidden input
 function confirmCurrentSelection() {
     const checkedBoxes = document.querySelectorAll('input[name="chunk_selection"]:checked');
     const selectedIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
@@ -115,7 +114,7 @@ function confirmCurrentSelection() {
     return selectedIds;
 }
 
-// Initialize after content loads
+// Initialize checkboxes
 function initializeChunks() {
     document.querySelectorAll('input[name="chunk_selection"]').forEach(checkbox => {
         checkbox.addEventListener('change', updateVisualSummary);
@@ -123,9 +122,47 @@ function initializeChunks() {
     updateVisualSummary();
 }
 
+// FIXED: Auto-trigger JavaScript functions when Gradio buttons are clicked
+function setupButtonHandlers() {
+    // Find buttons by their text content and add click handlers
+    const buttons = document.querySelectorAll('button');
+    
+    buttons.forEach(button => {
+        const buttonText = button.textContent.trim();
+        
+        if (buttonText === '✅ Alle auswählen') {
+            button.addEventListener('click', function(e) {
+                setTimeout(selectAllChunks, 10); // Small delay to let Gradio process first
+            });
+        }
+        else if (buttonText === '❌ Alle abwählen') {
+            button.addEventListener('click', function(e) {
+                setTimeout(deselectAllChunks, 10); // Small delay to let Gradio process first
+            });
+        }
+        else if (buttonText === '🔍 Auswahl bestätigen') {
+            button.addEventListener('click', function(e) {
+                setTimeout(confirmCurrentSelection, 10); // Small delay to let Gradio process first
+            });
+        }
+    });
+}
+
 // Setup with multiple strategies
-document.addEventListener('DOMContentLoaded', initializeChunks);
-setTimeout(initializeChunks, 500);
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChunks();
+    setupButtonHandlers();
+});
+
+setTimeout(function() {
+    initializeChunks();
+    setupButtonHandlers();
+}, 500);
+
+setTimeout(function() {
+    initializeChunks();
+    setupButtonHandlers();
+}, 2000);
 
 // Watch for dynamic content
 const observer = new MutationObserver(function(mutations) {
@@ -135,13 +172,19 @@ const observer = new MutationObserver(function(mutations) {
             if (checkboxes.length > 0) {
                 initializeChunks();
             }
+            
+            // Also check for new buttons
+            const buttons = document.querySelectorAll('button');
+            if (buttons.length > 0) {
+                setupButtonHandlers();
+            }
         }
     });
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
 
-// FIXED: Make functions globally available for Gradio button clicks
+// Global access for debugging
 window.selectAllChunks = selectAllChunks;
 window.deselectAllChunks = deselectAllChunks;
 window.confirmCurrentSelection = confirmCurrentSelection;
@@ -338,7 +381,8 @@ def confirm_selection(js_selection_json: str, available_chunks: List[Dict]) -> t
             if not isinstance(selected_ids, list):
                 selected_ids = []
         else:
-            selected_ids = []
+            # If no data from JavaScript, assume all are selected (default state)
+            selected_ids = list(range(1, len(available_chunks) + 1))
         
         # Validate and filter the IDs
         valid_ids = []
@@ -374,7 +418,7 @@ def confirm_selection(js_selection_json: str, available_chunks: List[Dict]) -> t
     except (json.JSONDecodeError, ValueError, TypeError) as e:
         # Error parsing - default to all selected
         all_ids = list(range(1, len(available_chunks) + 1))
-        summary = f"**Verfügbare Texte**: {len(available_chunks)} | **Bestätigt ausgewählt**: {len(all_ids)} (alle - Fehler beim Lesen der Auswahl) ⚠️"
+        summary = f"**Verfügbare Texte**: {len(available_chunks)} | **Bestätigt ausgewählt**: {len(all_ids)} (alle - Fallback wegen Lesefehler) ⚠️"
         return (all_ids, summary, gr.update(visible=True))
 
 def transfer_chunks_to_analysis(
