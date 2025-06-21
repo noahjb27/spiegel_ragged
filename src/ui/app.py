@@ -55,13 +55,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
-def update_chunks_display_handler(retrieved_chunks: Dict[str, Any]) -> tuple:
-    """Handle updating the chunks display after retrieval."""
-    from src.ui.components.retrieved_chunks_display import update_chunks_display
-    return update_chunks_display(retrieved_chunks)
-
-
 def perform_analysis_and_update_ui_with_transferred_chunks(
     user_prompt: str,
     transferred_chunks: list,
