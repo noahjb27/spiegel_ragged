@@ -1,4 +1,4 @@
-# src/ui/components/question_panel.py 
+# src/ui/components/question_panel.py - Updated to show transferred chunks
 import gradio as gr
 from typing import Dict, Any
 
@@ -6,59 +6,51 @@ from src.config import settings
 
 def create_question_panel() -> Dict[str, Any]:
     """
+    Create updated question panel that shows transferred chunks instead of allowing selection.
+    
     Returns:
         Dictionary of UI components
     """
     with gr.Group(elem_classes=["form-container"]):
         gr.HTML("<h3 style='margin-top: 0; color: var(--text-primary);'>📊 Analyse</h3>")
    
-        
-        # 1. QUELLENAUSWAHL with chunk selection
-        with gr.Accordion("1. Quellenauswahl", open=True):
+        # 1. ÜBERTRAGENE QUELLEN (Read-only display)
+        with gr.Accordion("1. Übertragene Quellen", open=True):
             gr.Markdown("""
-            ### Quellenauswahl für Analyse
+            ### Aus der Heuristik übertragene Quellen
             
-            Wählen Sie aus den gefundenen Quellen diejenigen aus, die Sie für die Analyse verwenden möchten.
-            Alle Quellen sind standardmäßig vorausgewählt.
+            Diese Texte wurden aus der Heuristik-Phase zur Analyse übertragen.
+            Um die Auswahl zu ändern, kehren Sie zur Heuristik zurück.
             """)
             
-            # Chunk selection display area - will be populated dynamically
-            chunk_selection_area = gr.HTML(
-                value="<p><em>Quellen werden nach der Heuristik hier angezeigt...</em></p>",
-                label="Verfügbare Quellen"
+            # Display area for transferred chunks (read-only)
+            transferred_chunks_display = gr.HTML(
+                value="<p><em>Noch keine Quellen übertragen. Führen Sie zuerst eine Heuristik durch und übertragen Sie Quellen.</em></p>",
+                label="Übertragene Quellen"
             )
             
-            # Selection summary and transfer button
-            with gr.Row():
-                selection_summary = gr.Markdown(
-                    value="**Keine Quellen verfügbar**",
-                    elem_id="selection_summary"
-                )
-                
-                transfer_selection_btn = gr.Button(
-                    "Auswahl in Analyse übertragen",
-                    variant="primary",
-                    visible=False,
-                    elem_id="transfer_btn"
-                )
+            # Summary of transferred chunks
+            transferred_summary = gr.Markdown(
+                value="**Keine Quellen übertragen**",
+                elem_id="transferred_summary"
+            )
             
-            # Hidden state for selected chunks
-            selected_chunks_state = gr.State([])
-            chunks_transferred_state = gr.State(False)
+            # Hidden state for transferred chunks
+            transferred_chunks_state = gr.State([])
         
         # 2. USER-PROMPT FORMULIEREN
         with gr.Accordion("2. User-Prompt formulieren", open=False) as user_prompt_accordion:
             gr.Markdown("""
             ### Forschungsfrage formulieren
             
-            Formulieren Sie hier Ihre konkrete Frage an die ausgewählten Quellen.
+            Formulieren Sie hier Ihre konkrete Frage an die übertragenen Quellen.
             """)
             
             user_prompt = gr.Textbox(
                 label="User-Prompt (was Sie über die Quellen wissen möchten)",
                 placeholder="Beispiel: Wie wurde die Berliner Mauer in den westdeutschen Medien dargestellt?",
                 lines=3,
-                info="Formulieren Sie Ihre Forschungsfrage, die anhand der ausgewählten Texte beantwortet werden soll."
+                info="Formulieren Sie Ihre Forschungsfrage, die anhand der übertragenen Texte beantwortet werden soll."
             )
         
         # 3. LLM-AUSWÄHLEN
@@ -93,13 +85,7 @@ def create_question_panel() -> Dict[str, Any]:
             
             Der System-Prompt steuert, wie das LLM die Analyse durchführt. 
             Fokussieren Sie auf akademische Präzision, Quellentreue und wissenschaftliche Methodik.
-            
-            **Hilfestellung für eigene Prompts:**
-            - Definieren Sie die Rolle (z.B. "Historiker", "Medienanalyst")
-            - Geben Sie methodische Anweisungen (Quellentreue, Belege, Struktur)
-            - Spezifizieren Sie das gewünschte Antwortformat
-            - Betonen Sie wissenschaftliche Standards
-            """) # HIER NOCH ETWAS ZU METAFRAGEN
+            """)
             
             with gr.Row():
                 system_prompt_template = gr.Dropdown(
@@ -119,7 +105,7 @@ def create_question_panel() -> Dict[str, Any]:
                 info="Bearbeiten Sie den System Prompt für eine präzise wissenschaftliche Analyse."
             )
         
-        # UPDATED: Analyse starten button
+        # ANALYSE STARTEN button
         analyze_btn = gr.Button("Analyse starten", variant="primary", visible=False)
         
         # Analysis status
@@ -134,93 +120,69 @@ def create_question_panel() -> Dict[str, Any]:
         """Reset the text area to the selected template."""
         return settings.SYSTEM_PROMPTS.get(template_name, settings.SYSTEM_PROMPTS["default"])
     
-    # Event handlers for chunk selection
-    def update_chunk_selection_display(retrieved_chunks):
-        """Update the chunk selection display with checkboxes."""
-        if not retrieved_chunks or not retrieved_chunks.get('chunks'):
+    def update_transferred_chunks_display(transferred_chunks: list) -> tuple:
+        """
+        Update the display of transferred chunks.
+        
+        Args:
+            transferred_chunks: List of transferred chunk data
+            
+        Returns:
+            Tuple of (display_html, summary_text, analyze_btn_visibility)
+        """
+        if not transferred_chunks:
             return (
-                "<p><em>Keine Quellen verfügbar. Führen Sie zuerst eine Heuristik durch.</em></p>",
-                "**Keine Quellen verfügbar**",
-                gr.update(visible=False),
-                []
+                "<p><em>Noch keine Quellen übertragen. Führen Sie zuerst eine Heuristik durch und übertragen Sie Quellen.</em></p>",
+                "**Keine Quellen übertragen**",
+                gr.update(visible=False)  # Hide analyze button
             )
         
-        chunks = retrieved_chunks.get('chunks', [])
+        # Create HTML display for transferred chunks
+        html_content = f"""
+        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background-color: #f9f9f9;">
+            <h4 style="margin-top: 0; color: #2c3e50;">Zur Analyse übertragene Texte ({len(transferred_chunks)})</h4>
+        """
         
-        # Create HTML with checkboxes for each chunk
-        html_content = "<div style='max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px;'>"
-        
-        for i, chunk in enumerate(chunks):
-            chunk_id = i + 1
+        for i, chunk in enumerate(transferred_chunks):
+            chunk_id = chunk.get('transferred_id', i + 1)
             metadata = chunk.get('metadata', {})
             title = metadata.get('Artikeltitel', 'Kein Titel')
             date = metadata.get('Datum', 'Unbekannt')
             relevance = chunk.get('relevance_score', 0.0)
+            url = metadata.get('URL', '')
             
-            # Truncate content for preview
-            content_preview = chunk.get('content', '')[:200]
-            if len(chunk.get('content', '')) > 200:
-                content_preview += '...'
+            # Create content preview
+            content = chunk.get('content', '')
+            content_preview = content[:200] + '...' if len(content) > 200 else content
+            
+            # Create URL link if available
+            title_display = title
+            if url and url != 'Keine URL':
+                title_display = f'<a href="{url}" target="_blank" style="color: #d75425; text-decoration: none;">{title}</a>'
             
             html_content += f"""
-            <div style='margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 5px; background-color: #fafafa;'>
-                <div style='margin-bottom: 8px;'>
-                    <input type='checkbox' id='chunk_{chunk_id}' checked onchange='updateSelection()' style='margin-right: 8px;'>
-                    <label for='chunk_{chunk_id}' style='font-weight: bold; cursor: pointer;'>
-                        {chunk_id}. {title} ({date})
-                    </label>
-                    <span style='margin-left: 10px; color: #666; font-size: 0.9em;'>Relevanz: {relevance:.3f}</span>
+            <div style="margin-bottom: 15px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; background-color: white;">
+                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">
+                    {chunk_id}. {title_display}
                 </div>
-                <div style='margin-left: 24px; color: #555; font-size: 0.9em; line-height: 1.4;'>
+                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                    <strong>Datum:</strong> {date} | <strong>Relevanz:</strong> {relevance:.3f}
+                </div>
+                <div style="font-size: 13px; color: #555; line-height: 1.4; border-left: 3px solid #b2b069; padding-left: 10px;">
                     {content_preview}
                 </div>
             </div>
             """
         
-        html_content += """
-        </div>
+        html_content += "</div>"
         
-        <script>
-        function updateSelection() {
-            // This would need to be handled by Gradio's event system
-            console.log('Selection updated');
-        }
-        </script>
-        """
-        
-        # Initialize with all chunks selected
-        all_chunk_ids = list(range(1, len(chunks) + 1))
-        summary_text = f"**Ausgewählt**: {len(chunks)} von {len(chunks)} Quellen"
+        # Create summary
+        summary_text = f"**Übertragene Quellen**: {len(transferred_chunks)} Texte bereit für die Analyse"
         
         return (
             html_content,
             summary_text,
-            gr.update(visible=True),
-            all_chunk_ids
-        )
-    
-    def transfer_chunks_to_analysis(selected_chunks, chunks_data):
-        """Transfer selected chunks to analysis section."""
-        if not selected_chunks:
-            return (
-                gr.update(visible=False),
-                "❌ Keine Quellen ausgewählt",
-                False,
-                gr.update(open=True),
-                gr.update(open=False),
-                gr.update(open=False),
-                gr.update(open=False)
-            )
-        
-        # Update UI to show analysis is ready
-        return (
-            gr.update(visible=True),
-            f"✅ {len(selected_chunks)} Quellen in die Analyse übertragen",
-            True,
-            gr.update(open=False),  # Close source selection
-            gr.update(open=True),   # Open user prompt
-            gr.update(open=False),  # Keep LLM selection closed
-            gr.update(open=False)   # Keep system prompt closed
+            gr.update(visible=True)  # Show analyze button
         )
     
     # Connect event handlers
@@ -239,32 +201,16 @@ def create_question_panel() -> Dict[str, Any]:
         outputs=[system_prompt_text]
     )
     
-    # Transfer button click
-    transfer_selection_btn.click(
-        transfer_chunks_to_analysis,
-        inputs=[selected_chunks_state, selected_chunks_state],  # Placeholder for now
-        outputs=[
-            analyze_btn,
-            analysis_status,
-            chunks_transferred_state,
-            user_prompt_accordion,
-            llm_selection_accordion,
-            system_prompt_accordion,
-            analysis_status
-        ]
-    )
-    
     # Define all components to be returned
     components = {
-        # NEW: Source selection components
-        "chunk_selection_area": chunk_selection_area,
-        "selection_summary": selection_summary,
-        "transfer_selection_btn": transfer_selection_btn,
-        "selected_chunks_state": selected_chunks_state,
-        "chunks_transferred_state": chunks_transferred_state,
+        # NEW: Transferred chunks components
+        "transferred_chunks_display": transferred_chunks_display,
+        "transferred_summary": transferred_summary,
+        "transferred_chunks_state": transferred_chunks_state,
+        "update_transferred_chunks_display": update_transferred_chunks_display,
         
-        # UPDATED: Analysis components with new names
-        "user_prompt": user_prompt,  # UPDATED from "question"
+        # Analysis components
+        "user_prompt": user_prompt,
         "model_selection": model_selection,
         "system_prompt_template": system_prompt_template,
         "system_prompt_text": system_prompt_text,
@@ -278,19 +224,10 @@ def create_question_panel() -> Dict[str, Any]:
         "llm_selection_accordion": llm_selection_accordion,
         "system_prompt_accordion": system_prompt_accordion,
         
-        # Helper function for external use
-        "update_chunk_selection_display": update_chunk_selection_display,
-        
-        # DEPRECATED: Keep for backward compatibility
-        "question": user_prompt,  # Alias
-        "chunk_selection_mode": gr.State("all"),  # Dummy for compatibility
-        "chunk_selection_file": gr.State(None),  # Dummy for compatibility
-        "upload_status": gr.State(""),  # Dummy for compatibility
-        "upload_preview": gr.State(""),  # Dummy for compatibility
-        "manual_chunk_ids": gr.State(""),  # Dummy for compatibility
-        "manual_status": gr.State(""),  # Dummy for compatibility
-        "selection_summary_old": selection_summary,  # Alias
-        "custom_system_prompt": system_prompt_text  # Alias for backward compatibility
+        # BACKWARD COMPATIBILITY: Aliases for existing code
+        "question": user_prompt,
+        "chunk_selection_mode": gr.State("transferred"),  # Always use transferred chunks
+        "selected_chunks_state": transferred_chunks_state,  # Map to transferred chunks
     }
     
     return components

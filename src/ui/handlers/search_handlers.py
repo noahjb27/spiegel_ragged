@@ -311,9 +311,10 @@ def perform_retrieval_and_update_ui(
     time_interval_size: int,  
     top_k: int,
     chunks_per_interval: int = 5 
-) -> Tuple[str, Dict[str, Any], str, gr.Accordion, gr.Accordion, gr.Accordion]:
+) -> Tuple[str, Dict[str, Any], gr.update, gr.update, gr.update]:
     """
     Perform retrieval and update UI accordions with updated terminology.
+    FIXED: Returns proper gr.update objects instead of raw accordions.
     """
     # Perform the retrieval
     info_text, retrieved_chunks = perform_retrieval(
@@ -324,23 +325,13 @@ def perform_retrieval_and_update_ui(
         top_k, chunks_per_interval
     )
     
-    # Format the retrieved chunks for display
+    # Format the retrieved chunks for display (if needed for backward compatibility)
     if retrieved_chunks and retrieved_chunks.get('chunks'):
-        formatted_chunks = format_chunks(
-            retrieved_chunks.get('chunks'),
-            keywords_to_use=keywords,
-            use_time_intervals=use_time_intervals,  # UPDATED
-            time_interval_size=time_interval_size,  # UPDATED
-            year_start=year_start,
-            year_end=year_end,
-            chunks_per_interval=chunks_per_interval  # UPDATED
-        )
         num_chunks = len(retrieved_chunks.get('chunks'))
         
         # Add chunk count info to metadata for chunk selection
         retrieved_chunks['metadata']['total_chunks'] = num_chunks
     else:
-        formatted_chunks = "Keine Texte gefunden."
         num_chunks = 0
     
     # Update UI accordions based on retrieval success
@@ -353,7 +344,76 @@ def perform_retrieval_and_update_ui(
         retrieved_texts_state = gr.update(open=False)
         analysis_state = gr.update(open=False)
     
-    return info_text, retrieved_chunks, formatted_chunks, retrieval_state, retrieved_texts_state, analysis_state
+    return info_text, retrieved_chunks, retrieval_state, retrieved_texts_state, analysis_state
+
+def update_chunks_display_handler(retrieved_chunks: Dict[str, Any]) -> tuple:
+    """
+    Handle updating the chunks display after retrieval.
+    
+    Args:
+        retrieved_chunks: Retrieved chunks data
+        
+    Returns:
+        Tuple for updating chunks display components
+    """
+    # Import here to avoid circular imports
+    from src.ui.components.retrieved_chunks_display import update_chunks_display
+    
+    return update_chunks_display(retrieved_chunks)
+
+def perform_analysis_and_update_ui_with_transferred_chunks(
+    user_prompt: str,
+    transferred_chunks: list,
+    model_selection: str,
+    system_prompt_template: str,
+    system_prompt_text: str,
+    temperature: float
+) -> Tuple[str, str, gr.update, gr.update]:
+    """
+    Perform analysis using transferred chunks.
+    FIXED: Returns proper gr.update objects.
+    
+    Args:
+        user_prompt: User's research question
+        transferred_chunks: Chunks transferred from heuristic phase
+        model_selection: Selected LLM model
+        system_prompt_template: Template name
+        system_prompt_text: Actual system prompt text
+        temperature: Generation temperature
+        
+    Returns:
+        Tuple of analysis results for UI update
+    """
+    if not transferred_chunks:
+        return (
+            "❌ Keine Quellen für die Analyse verfügbar. Bitte übertragen Sie zuerst Quellen aus der Heuristik.",
+            "**Fehler**: Keine übertragenen Quellen",
+            gr.update(open=True),   # Keep analysis accordion open
+            gr.update(open=False)   # Keep results closed
+        )
+    
+    # Convert transferred chunks to the format expected by existing analysis function
+    retrieved_chunks_format = {
+        'chunks': transferred_chunks,
+        'metadata': {
+            'total_chunks': len(transferred_chunks),
+            'source': 'transferred_from_heuristic'
+        }
+    }
+    
+    # Use existing analysis function with adapted format
+    answer_text, metadata_text, analysis_config_state, results_state = perform_analysis_and_update_ui(
+        user_prompt=user_prompt,
+        retrieved_chunks=retrieved_chunks_format,
+        model_selection=model_selection,
+        system_prompt_template=system_prompt_template,
+        system_prompt_text=system_prompt_text,
+        temperature=temperature,
+        chunk_selection_mode="all",  # Use all transferred chunks
+        selected_chunks_state=None   # Not needed since we use all transferred
+    )
+    
+    return answer_text, metadata_text, analysis_config_state, results_state
 
 def perform_analysis_and_update_ui(
     user_prompt: str,  # UPDATED: from question
