@@ -1,20 +1,16 @@
-# src/ui/components/question_panel.py - Updated to show transferred chunks
+# src/ui/components/question_panel.py - FIXED: Dark theme CSS integration
 import gradio as gr
 from typing import Dict, Any
 
 from src.config import settings
 
 def create_question_panel() -> Dict[str, Any]:
-    """
-    Create updated question panel that shows transferred chunks instead of allowing selection.
+    """Create updated question panel that shows transferred chunks with proper dark theme."""
     
-    Returns:
-        Dictionary of UI components
-    """
     with gr.Group(elem_classes=["form-container"]):
         gr.HTML("<h3 style='margin-top: 0; color: var(--text-primary);'>📊 Analyse</h3>")
    
-        # 1. ÜBERTRAGENE QUELLEN (Read-only display)
+        # 1. ÜBERTRAGENE QUELLEN - FIXED: Better dark theme integration
         with gr.Accordion("1. Übertragene Quellen", open=True):
             gr.Markdown("""
             ### Aus der Heuristik übertragene Quellen
@@ -23,13 +19,15 @@ def create_question_panel() -> Dict[str, Any]:
             Um die Auswahl zu ändern, kehren Sie zur Heuristik zurück.
             """)
             
-            # Display area for transferred chunks (read-only)
+            # FIXED: Display area with proper dark theme styling
             transferred_chunks_display = gr.HTML(
-                value="<p><em>Noch keine Quellen übertragen. Führen Sie zuerst eine Heuristik durch und übertragen Sie Quellen.</em></p>",
+                value="""<div class='info-message'>
+                <p><em>Noch keine Quellen übertragen. Führen Sie zuerst eine Heuristik durch und übertragen Sie Quellen.</em></p>
+                </div>""",
                 label="Übertragene Quellen"
             )
             
-            # Summary of transferred chunks
+            # Summary with proper styling
             transferred_summary = gr.Markdown(
                 value="**Keine Quellen übertragen**",
                 elem_id="transferred_summary"
@@ -68,7 +66,6 @@ def create_question_panel() -> Dict[str, Any]:
                 info="Wählen Sie das zu verwendende Sprachmodell."
             )
             
-            # Temperature control
             temperature = gr.Slider(
                 minimum=0.0,
                 maximum=1.0,
@@ -97,7 +94,6 @@ def create_question_panel() -> Dict[str, Any]:
                 
                 reset_system_prompt_btn = gr.Button("Auf Vorlage zurücksetzen", size="sm")
             
-            # Editable system prompt text area
             system_prompt_text = gr.Textbox(
                 label="System Prompt (bearbeitbar)",
                 value=settings.SYSTEM_PROMPTS["default"],
@@ -107,8 +103,6 @@ def create_question_panel() -> Dict[str, Any]:
         
         # ANALYSE STARTEN button
         analyze_btn = gr.Button("Analyse starten", variant="primary", visible=False)
-        
-        # Analysis status
         analysis_status = gr.Markdown("", visible=False)
     
     # Event handlers for system prompt template management
@@ -122,25 +116,28 @@ def create_question_panel() -> Dict[str, Any]:
     
     def update_transferred_chunks_display(transferred_chunks: list) -> tuple:
         """
-        Update the display of transferred chunks.
-        
-        Args:
-            transferred_chunks: List of transferred chunk data
-            
-        Returns:
-            Tuple of (display_html, summary_text, analyze_btn_visibility)
+        FIXED: Update the display of transferred chunks with proper dark theme CSS.
         """
         if not transferred_chunks:
             return (
-                "<p><em>Noch keine Quellen übertragen. Führen Sie zuerst eine Heuristik durch und übertragen Sie Quellen.</em></p>",
+                """<div class="info-message">
+                <p><em>Noch keine Quellen übertragen. Führen Sie zuerst eine Heuristik durch und übertragen Sie Quellen.</em></p>
+                </div>""",
                 "**Keine Quellen übertragen**",
                 gr.update(visible=False)  # Hide analyze button
             )
         
-        # Create HTML display for transferred chunks
+        # FIXED: Create HTML display with proper dark theme CSS
         html_content = f"""
-        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background-color: #f9f9f9;">
-            <h4 style="margin-top: 0; color: #2c3e50;">Zur Analyse übertragene Texte ({len(transferred_chunks)})</h4>
+        <div class="results-container" style="max-height: 60vh; overflow-y: auto;">
+            <div class="success-message" style="margin-bottom: 20px;">
+                <h4 style="color: var(--text-primary); margin-top: 0;">
+                    ✅ Zur Analyse übertragene Texte ({len(transferred_chunks)})
+                </h4>
+                <p style="color: var(--text-secondary);">
+                    Diese Texte wurden aus der Heuristik übertragen und werden für die Analyse verwendet.
+                </p>
+            </div>
         """
         
         for i, chunk in enumerate(transferred_chunks):
@@ -151,26 +148,52 @@ def create_question_panel() -> Dict[str, Any]:
             relevance = chunk.get('relevance_score', 0.0)
             url = metadata.get('URL', '')
             
-            # Create content preview
+            # Get content with reasonable preview length
             content = chunk.get('content', '')
-            content_preview = content[:200] + '...' if len(content) > 200 else content
+            content_preview = content[:400] + '...' if len(content) > 400 else content
             
             # Create URL link if available
             title_display = title
             if url and url != 'Keine URL':
-                title_display = f'<a href="{url}" target="_blank" style="color: #d75425; text-decoration: none;">{title}</a>'
+                title_display = f'<a href="{url}" target="_blank" style="color: var(--brand-primary); text-decoration: none;">{title} 🔗</a>'
             
+            # FIXED: Use proper CSS classes and variables for dark theme
             html_content += f"""
-            <div style="margin-bottom: 15px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; background-color: white;">
-                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">
-                    {chunk_id}. {title_display}
+            <div class="evaluation-card" style="margin-bottom: 15px;">
+                <div style="margin-bottom: 10px;">
+                    <div style="color: var(--text-primary); font-weight: 600; font-size: 16px; margin-bottom: 6px;">
+                        {chunk_id}. {title_display}
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 10px;">
+                        <strong>Datum:</strong> {date} | <strong>Relevanz:</strong> {relevance:.3f}
+                    </div>
                 </div>
-                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
-                    <strong>Datum:</strong> {date} | <strong>Relevanz:</strong> {relevance:.3f}
-                </div>
-                <div style="font-size: 13px; color: #555; line-height: 1.4; border-left: 3px solid #b2b069; padding-left: 10px;">
-                    {content_preview}
-                </div>
+                
+                <details style="margin-top: 10px;">
+                    <summary style="
+                        color: var(--text-primary); 
+                        font-weight: 500; 
+                        cursor: pointer; 
+                        padding: 5px 0;
+                        border-bottom: 1px solid var(--border-primary);
+                    ">
+                        📄 Textvorschau anzeigen
+                    </summary>
+                    <div style="
+                        border-left: 3px solid var(--brand-secondary); 
+                        padding: 12px; 
+                        background: var(--bg-primary); 
+                        border-radius: 4px; 
+                        margin-top: 10px;
+                        color: var(--text-secondary);
+                        line-height: 1.6;
+                        white-space: pre-wrap;
+                        max-height: 300px;
+                        overflow-y: auto;
+                    ">
+                        {content_preview}
+                    </div>
+                </details>
             </div>
             """
         
@@ -186,15 +209,12 @@ def create_question_panel() -> Dict[str, Any]:
         )
     
     # Connect event handlers
-    
-    # Template dropdown to text area
     system_prompt_template.change(
         load_system_prompt_template,
         inputs=[system_prompt_template],
         outputs=[system_prompt_text]
     )
     
-    # Reset button
     reset_system_prompt_btn.click(
         reset_to_template,
         inputs=[system_prompt_template],
@@ -226,8 +246,8 @@ def create_question_panel() -> Dict[str, Any]:
         
         # BACKWARD COMPATIBILITY: Aliases for existing code
         "question": user_prompt,
-        "chunk_selection_mode": gr.State("transferred"),  # Always use transferred chunks
-        "selected_chunks_state": transferred_chunks_state,  # Map to transferred chunks
+        "chunk_selection_mode": gr.State("transferred"),
+        "selected_chunks_state": transferred_chunks_state,
     }
     
     return components

@@ -1,41 +1,26 @@
-# src/ui/handlers/keyword_handlers.py - Updated to show word frequencies
+# src/ui/handlers/keyword_handlers.py - FIXED: Boolean expression expansion
 """
-Updated handler functions for keyword analysis with frequency information.
-Shows both similarity scores and corpus frequency for better keyword understanding.
+FIXED: Handler functions for keyword analysis with working boolean expansion.
+- Fixed the logic error in expand_boolean_expression
+- Simplified the code structure
+- Better error handling
 """
 import json
 import logging
 from typing import Dict, List, Tuple, Optional, Any
 
-# Configure logging
 logger = logging.getLogger(__name__)
 
 # Global reference to the embedding service
-# This will be initialized in the main app
 embedding_service = None
 
 def set_embedding_service(service: Any) -> None:
-    """
-    Set the global embedding service reference.
-    
-    Args:
-        service: The WordEmbeddingService instance
-    """
+    """Set the global embedding service reference."""
     global embedding_service
     embedding_service = service
 
 def find_similar_words(keyword: str, expansion_factor: int) -> str:
-    """
-    Find similar words for a given keyword using FastText embeddings.
-    UPDATED: Now includes frequency information from the corpus.
-    
-    Args:
-        keyword: The keyword to find similar words for
-        expansion_factor: Number of similar words to return
-        
-    Returns:
-        Markdown formatted string with similar words and frequencies
-    """
+    """Find similar words for a given keyword using FastText embeddings."""
     if not keyword.strip():
         return "Bitte geben Sie ein Schlagwort ein."
     
@@ -60,7 +45,6 @@ def find_similar_words(keyword: str, expansion_factor: int) -> str:
                 result += f"**'{keyword}'** kommt nicht im Korpus vor.\n"
             return result
         
-        # UPDATED: Enhanced formatting with frequency information
         result = f"### Ähnliche Wörter für '{keyword}':\n\n"
         
         # Show input word frequency
@@ -78,9 +62,7 @@ def find_similar_words(keyword: str, expansion_factor: int) -> str:
             similarity = word_info['similarity']
             frequency = word_info.get('frequency', 0)
             
-            # Format frequency with thousands separator
             freq_display = f"{frequency:,}" if frequency > 0 else "0"
-            
             result += f"| **{word}** | {similarity:.4f} | {freq_display} |\n"
         
         # Add summary statistics
@@ -90,7 +72,10 @@ def find_similar_words(keyword: str, expansion_factor: int) -> str:
         result += f"\n**Zusammenfassung**:\n"
         result += f"- Gefundene ähnliche Wörter: {len(similar_words)}\n"
         result += f"- Durchschnittliche Häufigkeit: {avg_frequency:,.1f}\n"
-        result += f"- Häufigster Begriff: {max(similar_words, key=lambda x: x.get('frequency', 0))['word']} ({max(similar_words, key=lambda x: x.get('frequency', 0)).get('frequency', 0):,} mal)\n"
+        
+        if similar_words:
+            most_frequent = max(similar_words, key=lambda x: x.get('frequency', 0))
+            result += f"- Häufigster Begriff: {most_frequent['word']} ({most_frequent.get('frequency', 0):,} mal)\n"
         
         return result
         
@@ -100,15 +85,8 @@ def find_similar_words(keyword: str, expansion_factor: int) -> str:
 
 def expand_boolean_expression(expression: str, expansion_factor: int) -> Tuple[str, str]:
     """
-    Expand a boolean expression with semantically similar words.
-    UPDATED: Now includes frequency information for better term selection.
-    
-    Args:
-        expression: Boolean expression to expand
-        expansion_factor: Number of similar words to find for each term
-        
-    Returns:
-        Tuple of (display text with frequencies, JSON string of expanded words)
+    FIXED: Expand a boolean expression with semantically similar words.
+    The original logic was incorrect - fixed the iteration over expanded terms.
     """
     if not expression.strip():
         return "Bitte geben Sie einen booleschen Ausdruck ein.", ""
@@ -117,59 +95,59 @@ def expand_boolean_expression(expression: str, expansion_factor: int) -> Tuple[s
         return "Embedding-Service nicht verfügbar.", ""
     
     try:
-        # Parse the boolean expression
-        parsed_terms = embedding_service.parse_boolean_expression(expression)
+        # SIMPLIFIED: Direct approach to parsing and expanding
+        # Split the expression into individual terms (ignoring operators for now)
+        import re
         
-        # Expand terms with semantically similar words
-        expanded_terms = embedding_service.filter_by_semantic_similarity(
-            parsed_terms, 
-            expansion_factor=expansion_factor
-        )
+        # Extract words (ignore AND, OR, NOT, parentheses)
+        terms = re.findall(r'\b(?!AND|OR|NOT\b)[a-zA-ZäöüÄÖÜß]+\b', expression, re.IGNORECASE)
         
-        # Format the expanded terms for display with frequency information
+        if not terms:
+            return "Keine gültigen Begriffe im Ausdruck gefunden.", ""
+        
         display_result = f"## Erweiterte Schlagwörter mit Korpus-Häufigkeiten\n\n"
+        display_result += f"**Original-Ausdruck**: `{expression}`\n\n"
         
         # Save expanded words for potential use in search
         expanded_words = {}
         
-        for terms in expanded_terms.items():
-            if terms:
-                for term_data in terms:
-                    original = term_data.get('original', '')
-                    expanded = term_data.get('expanded', {}).get(original, [])
-                    
-                    # Get frequency for original term
-                    original_frequency = embedding_service.get_word_frequency(original.lower())
-                    
-                    display_result += f"**{original}** (Häufigkeit: {original_frequency:,})\n\n"
-                    
-                    if expanded:
-                        # Create table for similar words with frequencies
-                        display_result += "| Ähnliches Wort | Ähnlichkeit | Häufigkeit |\n"
-                        display_result += "|----------------|-------------|------------|\n"
-                        
-                        for item in expanded:
-                            word = item['word']
-                            similarity = item['similarity']
-                            
-                            # Get frequency for each similar word
-                            frequency = embedding_service.get_word_frequency(word.lower())
-                            freq_display = f"{frequency:,}" if frequency > 0 else "0"
-                            
-                            display_result += f"| {word} | {similarity:.3f} | {freq_display} |\n"
-                        
-                        display_result += "\n"
-                        
-                        # Add to expanded_words for search
-                        if original not in expanded_words:
-                            expanded_words[original] = []
-                        for item in expanded:
-                            expanded_words[original].append(item['word'])
-                    else:
-                        display_result += "Keine ähnlichen Wörter gefunden.\n\n"
+        # FIXED: Simplified logic - process each unique term
+        for term in set(terms):  # Remove duplicates
+            term_clean = term.lower().strip()
             
-        # Prepare a JSON structure to be used later in search
-        encoded_expanded = json.dumps(expanded_words)
+            # Get frequency for original term
+            original_frequency = embedding_service.get_word_frequency(term_clean)
+            
+            display_result += f"**{term}** (Häufigkeit: {original_frequency:,})\n\n"
+            
+            # Get similar words
+            similar_words = embedding_service.find_similar_words(term_clean, top_n=expansion_factor)
+            
+            if similar_words:
+                # Create table for similar words with frequencies
+                display_result += "| Ähnliches Wort | Ähnlichkeit | Häufigkeit |\n"
+                display_result += "|----------------|-------------|------------|\n"
+                
+                expanded_for_term = []
+                for word_info in similar_words:
+                    word = word_info['word']
+                    similarity = word_info['similarity']
+                    frequency = word_info.get('frequency', 0)
+                    
+                    freq_display = f"{frequency:,}" if frequency > 0 else "0"
+                    display_result += f"| {word} | {similarity:.3f} | {freq_display} |\n"
+                    
+                    expanded_for_term.append(word)
+                
+                display_result += "\n"
+                
+                # Store for search use
+                expanded_words[term] = expanded_for_term
+            else:
+                display_result += "Keine ähnlichen Wörter gefunden.\n\n"
+        
+        # FIXED: Create proper JSON structure
+        encoded_expanded = json.dumps(expanded_words, ensure_ascii=False)
         
         return display_result, encoded_expanded
         
@@ -178,16 +156,7 @@ def expand_boolean_expression(expression: str, expansion_factor: int) -> Tuple[s
         return f"Fehler bei der Erweiterung des Ausdrucks: {str(e)}", ""
 
 def analyze_term_frequencies(terms: List[str]) -> str:
-    """
-    Analyze frequency patterns for a list of terms.
-    NEW: Helper function for frequency analysis.
-    
-    Args:
-        terms: List of terms to analyze
-        
-    Returns:
-        Formatted analysis of term frequencies
-    """
+    """Analyze frequency patterns for a list of terms."""
     if not embedding_service or not terms:
         return "Keine Begriffe zur Analyse verfügbar."
     
@@ -221,19 +190,11 @@ def analyze_term_frequencies(terms: List[str]) -> str:
         return f"Fehler bei der Häufigkeitsanalyse: {str(e)}"
 
 def get_corpus_statistics() -> str:
-    """
-    Get general statistics about the corpus.
-    NEW: Helper function for corpus information.
-    
-    Returns:
-        Formatted corpus statistics
-    """
+    """Get general statistics about the corpus."""
     if not embedding_service:
         return "Embedding-Service nicht verfügbar."
     
     try:
-        # This would need to be implemented in the embedding service
-        # For now, return basic information
         result = "### Korpus-Informationen\n\n"
         result += "- **Zeitraum**: 1948-1979 (Der Spiegel)\n"
         result += "- **Modell**: FastText Word Embeddings\n"

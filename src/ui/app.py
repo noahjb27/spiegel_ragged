@@ -36,7 +36,7 @@ from src.ui.handlers.download_handlers import (
 )
 
 from src.ui.components.retrieved_chunks_display import (
-    create_retrieved_chunks_display,
+    create_fixed_retrieved_chunks_display,
     update_chunks_display,
     handle_select_all,
     handle_deselect_all,
@@ -44,20 +44,19 @@ from src.ui.components.retrieved_chunks_display import (
 )
 
 from src.ui.utils.ui_helpers import toggle_api_key_visibility
+from src.ui.utils.checkbox_handler import (
+    create_checkbox_state_handler, 
+    handle_checkbox_state_update,
+    WORKING_CHECKBOX_JAVASCRIPT
+)
+
 from src.config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def handle_checkbox_state_update(
-    checkbox_states_json: str, 
-    available_chunks: List[Dict],
-    current_selected: List[int]
-) -> Tuple[List[int], str]:
-    """Handle checkbox state updates from JavaScript."""
-    from src.ui.utils.checkbox_handler import handle_checkbox_state_update as handler
-    return handler(checkbox_states_json, available_chunks, current_selected)
+
 
 # FIXED: Import and create the separate update function
 def update_chunks_display_handler(retrieved_chunks: Dict[str, Any]) -> tuple:
@@ -944,7 +943,7 @@ UTILITY CLASSES
                 """)
                 
                 # NEW: Interactive chunks display component
-                chunks_display_components = create_retrieved_chunks_display()
+                chunks_display_components = create_fixed_retrieved_chunks_display()
                 
                 # Add the checkbox state handler
                 from src.ui.utils.checkbox_handler import create_checkbox_state_handler
