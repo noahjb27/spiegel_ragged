@@ -1078,11 +1078,7 @@ UTILITY CLASSES
         )
 
         chunks_display_components["select_all_btn"].click(
-            None,  # No Python function needed
-            js="() => { window.selectAllChunks(); return []; }",  # Call JavaScript
-            outputs=[]
-        ).then(
-            handle_select_all,  # Then update Gradio state
+            handle_select_all,  # Directly call the Python handler
             inputs=[chunks_display_components["available_chunks_state"]],
             outputs=[chunks_display_components["selection_summary"]]
         )
