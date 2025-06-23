@@ -1,233 +1,283 @@
-# src/ui/components/retrieved_chunks_display.py
+# src/ui/components/retrieved_chunks_display_enhanced.py
 """
-FIXED: Simplified chunk selection with explicit state confirmation.
-- Added "Auswahl bestätigen" button to explicitly read checkbox state
-- Simplified JavaScript to just manage visual state
-- Clear separation between visual interaction and state management
+ENHANCED NATIVE SOLUTION: Combines native CheckboxGroup selection with full content display.
+Handles large numbers of chunks (150+) efficiently while showing all metadata and content.
 """
 import gradio as gr
-from typing import Dict, List, Any, Optional
-import json
+from typing import Dict, List, Any, Optional, Tuple
+import math
 
-def create_fixed_retrieved_chunks_display() -> Dict[str, Any]:
-    """Create WORKING chunks display with explicit state confirmation."""
+def create_enhanced_chunks_display() -> Dict[str, Any]:
+    """Create enhanced chunks display with native selection + full content view."""
     
     with gr.Group(elem_classes=["form-container"]):
         gr.HTML("<h3 style='margin-top: 0; color: var(--text-primary);'>📄 Gefundene Texte</h3>")
         
-        # Main display area
-        chunks_selection_html = gr.HTML(
-            value="<div class='info-message'><p><em>Führen Sie zuerst eine Heuristik durch...</em></p></div>"
+        # Status and summary
+        chunks_status = gr.Markdown("**Noch keine Texte verfügbar**")
+        
+        # Detailed content display with pagination for large datasets
+        gr.Markdown("#### Vollständige Textansicht")
+        
+        # PROMINENT Pagination controls for large datasets
+        with gr.Row():
+            pagination_info = gr.Markdown("", visible=False)
+        with gr.Row():
+            prev_page_btn = gr.Button("⬅️ Vorherige Seite", size="sm", visible=False, elem_classes=["btn-secondary"])
+            page_selector = gr.Dropdown(
+                choices=[],
+                value=None,
+                label="Springe zu Seite",
+                visible=False,
+                interactive=True,
+                scale=2
+            )
+            next_page_btn = gr.Button("Nächste Seite ➡️", size="sm", visible=False, elem_classes=["btn-secondary"])
+        
+        # Full content display (paginated for performance)
+        chunks_content_display = gr.HTML(
+            value="<div class='info-message'><p><em>Führen Sie zuerst eine Heuristik durch...</em></p></div>",
+            elem_classes=["chunks-content-display"]
         )
         
-        # Selection summary and controls
-        with gr.Row():
-            selection_summary = gr.Markdown("**Noch keine Texte verfügbar**")
+        # MOVED: Selection interface BELOW the content display
+        gr.Markdown("---")
+        gr.Markdown("#### Auswahl für Analyse")
         
+        # CORE: Native CheckboxGroup for selection (handles 150+ items efficiently)
+        chunks_selector = gr.CheckboxGroup(
+            choices=[],
+            value=[],
+            label="Wählen Sie die Texte aus, die zur Analyse übertragen werden sollen:",
+            visible=False,
+            interactive=True,
+            elem_classes=["chunks-selector"]
+        )
+        
+        # Control buttons with clear explanations
         with gr.Row():
             select_all_btn = gr.Button("✅ Alle auswählen", size="sm", visible=False)
             deselect_all_btn = gr.Button("❌ Alle abwählen", size="sm", visible=False)
-            
-        # NEW: Explicit confirmation button
-        with gr.Row():
-            confirm_selection_btn = gr.Button(
-                "🔍 Auswahl bestätigen", 
-                variant="secondary", 
-                size="sm",
-                visible=False,
-                info="Liest die aktuellen Checkbox-Einstellungen und aktualisiert die Auswahl"
-            )
+            invert_selection_btn = gr.Button("🔄 Auswahl umkehren", size="sm", visible=False)
         
-        # Transfer button
-        transfer_to_analysis_btn = gr.Button(
-            "🔄 Bestätigte Quellen zur Analyse übertragen",
-            variant="primary",
-            visible=False
-        )
+        # Selection summary
+        selection_summary = gr.Markdown("", visible=False)
+        
+        # Filter options for large datasets
+        with gr.Accordion("Anzeige-Optionen", open=False, visible=False) as display_options:
+            with gr.Row():
+                show_selected_only = gr.Checkbox(
+                    label="Nur ausgewählte anzeigen",
+                    value=False
+                )
+                chunks_per_page = gr.Dropdown(
+                    choices=[10, 25, 50, 100],
+                    value=25,
+                    label="Texte pro Seite"
+                )
+        
+        # Transfer section
+        with gr.Row():
+            transfer_btn = gr.Button(
+                "🔄 Ausgewählte Quellen zur Analyse übertragen",
+                variant="primary",
+                visible=False
+            )
         
         transfer_status = gr.Markdown(value="", visible=False)
         
-        # SIMPLIFIED: State management
+        # State management
         available_chunks_state = gr.State([])
-        confirmed_selection_state = gr.State([])  # NEW: Explicitly confirmed selection
         transferred_chunks_state = gr.State([])
-        
-        # Hidden input for JavaScript communication
-        js_selection_input = gr.Textbox(
-            value="",
-            visible=False,
-            elem_id="js_selection_input",  # Important: JavaScript needs this ID
-            interactive=True
-        )
-        
-        # Simple JavaScript with button integration
-        gr.HTML("""
-<script>
-// SIMPLIFIED: Visual checkbox management with button integration
-function updateVisualSummary() {
-    const checkboxes = document.querySelectorAll('input[name="chunk_selection"]');
-    const checkedBoxes = document.querySelectorAll('input[name="chunk_selection"]:checked');
-    
-    const total = checkboxes.length;
-    const selected = checkedBoxes.length;
-    
-    if (total > 0) {
-        let status = `**Verfügbare Texte**: ${total} | **Visuell ausgewählt**: ${selected}`;
-        if (selected === total) status += ' (alle)';
-        else if (selected === 0) status += ' (keine)';
-        else status += ` (${Math.round(selected/total*100)}%)`;
-        status += ' - Klicken Sie "Auswahl bestätigen" um die Auswahl zu übernehmen';
-        
-        // Update the summary display
-        const summaryElement = document.querySelector('#selection_summary p');
-        if (summaryElement) {
-            summaryElement.innerHTML = status;
-        }
-    }
-}
-
-function selectAllChunks() {
-    document.querySelectorAll('input[name="chunk_selection"]').forEach(cb => cb.checked = true);
-    updateVisualSummary();
-}
-
-function deselectAllChunks() {
-    document.querySelectorAll('input[name="chunk_selection"]').forEach(cb => cb.checked = false);
-    updateVisualSummary();
-}
-
-// Function to get current selection and update hidden input
-function confirmCurrentSelection() {
-    const checkedBoxes = document.querySelectorAll('input[name="chunk_selection"]:checked');
-    const selectedIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
-    
-    // Send to hidden Gradio input
-    const hiddenInput = document.getElementById('js_selection_input');
-    if (hiddenInput) {
-        hiddenInput.value = JSON.stringify(selectedIds);
-        
-        // Trigger Gradio's change event
-        const event = new Event('input', { bubbles: true });
-        hiddenInput.dispatchEvent(event);
-    }
-    
-    return selectedIds;
-}
-
-// Initialize checkboxes
-function initializeChunks() {
-    document.querySelectorAll('input[name="chunk_selection"]').forEach(checkbox => {
-        checkbox.addEventListener('change', updateVisualSummary);
-    });
-    updateVisualSummary();
-}
-
-// FIXED: Auto-trigger JavaScript functions when Gradio buttons are clicked
-function setupButtonHandlers() {
-    // Find buttons by their text content and add click handlers
-    const buttons = document.querySelectorAll('button');
-    
-    buttons.forEach(button => {
-        const buttonText = button.textContent.trim();
-        
-        if (buttonText === '✅ Alle auswählen') {
-            button.addEventListener('click', function(e) {
-                setTimeout(selectAllChunks, 10); // Small delay to let Gradio process first
-            });
-        }
-        else if (buttonText === '❌ Alle abwählen') {
-            button.addEventListener('click', function(e) {
-                setTimeout(deselectAllChunks, 10); // Small delay to let Gradio process first
-            });
-        }
-        else if (buttonText === '🔍 Auswahl bestätigen') {
-            button.addEventListener('click', function(e) {
-                setTimeout(confirmCurrentSelection, 10); // Small delay to let Gradio process first
-            });
-        }
-    });
-}
-
-// Setup with multiple strategies
-document.addEventListener('DOMContentLoaded', function() {
-    initializeChunks();
-    setupButtonHandlers();
-});
-
-setTimeout(function() {
-    initializeChunks();
-    setupButtonHandlers();
-}, 500);
-
-setTimeout(function() {
-    initializeChunks();
-    setupButtonHandlers();
-}, 2000);
-
-// Watch for dynamic content
-const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-        if (mutation.type === 'childList') {
-            const checkboxes = document.querySelectorAll('input[name="chunk_selection"]');
-            if (checkboxes.length > 0) {
-                initializeChunks();
-            }
-            
-            // Also check for new buttons
-            const buttons = document.querySelectorAll('button');
-            if (buttons.length > 0) {
-                setupButtonHandlers();
-            }
-        }
-    });
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
-
-// Global access for debugging
-window.selectAllChunks = selectAllChunks;
-window.deselectAllChunks = deselectAllChunks;
-window.confirmCurrentSelection = confirmCurrentSelection;
-</script>
-        """, visible=False)
+        current_page_state = gr.State(1)
+        chunks_per_page_state = gr.State(25)
     
     return {
-        "chunks_selection_html": chunks_selection_html,
-        "selection_summary": selection_summary,
+        "chunks_status": chunks_status,
+        "chunks_selector": chunks_selector,
+        "chunks_content_display": chunks_content_display,
         "select_all_btn": select_all_btn,
         "deselect_all_btn": deselect_all_btn,
-        "confirm_selection_btn": confirm_selection_btn,  # NEW
-        "transfer_to_analysis_btn": transfer_to_analysis_btn,
+        "invert_selection_btn": invert_selection_btn,
+        "selection_summary": selection_summary,
+        "transfer_btn": transfer_btn,
         "transfer_status": transfer_status,
         "available_chunks_state": available_chunks_state,
-        "confirmed_selection_state": confirmed_selection_state,  # NEW
         "transferred_chunks_state": transferred_chunks_state,
-        "js_selection_input": js_selection_input  # NEW
+        
+        # Pagination components
+        "pagination_info": pagination_info,
+        "prev_page_btn": prev_page_btn,
+        "page_selector": page_selector,
+        "next_page_btn": next_page_btn,
+        "current_page_state": current_page_state,
+        "chunks_per_page_state": chunks_per_page_state,
+        
+        # Display options
+        "display_options": display_options,
+        "show_selected_only": show_selected_only,
+        "chunks_per_page": chunks_per_page,
     }
 
-def format_chunks_with_checkboxes(retrieved_chunks: Dict[str, Any]) -> str:
-    """SIMPLIFIED: Format chunks with simple checkboxes."""
+def update_chunks_display_enhanced(retrieved_chunks: Dict[str, Any]) -> Tuple:
+    """Update display when new chunks are retrieved - optimized for large datasets."""
+    
     if not retrieved_chunks or not retrieved_chunks.get('chunks'):
-        return "<div class='info-message'><p><em>Keine Texte verfügbar.</em></p></div>"
+        return (
+            "**Noch keine Texte verfügbar**",  # chunks_status
+            gr.update(choices=[], value=[], visible=False),  # chunks_selector
+            "<div class='info-message'><p><em>Keine Texte verfügbar.</em></p></div>",  # chunks_content_display
+            gr.update(visible=False),  # select_all_btn
+            gr.update(visible=False),  # deselect_all_btn
+            gr.update(visible=False),  # invert_selection_btn
+            "",  # selection_summary
+            gr.update(visible=False),  # transfer_btn
+            [],  # available_chunks_state
+            gr.update(visible=False),  # pagination_info
+            gr.update(visible=False),  # prev_page_btn
+            gr.update(choices=[], value=None, visible=False),  # page_selector
+            gr.update(visible=False),  # next_page_btn
+            gr.update(visible=False),  # display_options
+            1,  # current_page_state
+            25  # chunks_per_page_state
+        )
     
     chunks = retrieved_chunks.get('chunks', [])
+    total_chunks = len(chunks)
     
-    html_content = """<div style='max-height: 80vh; overflow-y: auto; padding: 10px;'>"""
-    
+    # Create choices for CheckboxGroup - optimized format
+    choices = []
     for i, chunk in enumerate(chunks, 1):
+        title = chunk.get('metadata', {}).get('Artikeltitel', 'Kein Titel')
+        score = chunk.get('relevance_score', 0.0)
+        
+        # Truncate long titles for CheckboxGroup performance
+        if len(title) > 50:
+            title = title[:47] + "..."
+        
+        # Format: "1. Title (Score: 0.123)"
+        choice_label = f"{i}. {title} (Score: {score:.3f})"
+        choices.append(choice_label)
+    
+    # Default: select all chunks
+    selected_choices = choices.copy()
+    
+    # Determine if pagination is needed (for 25+ chunks instead of 50+ for better UX)
+    use_pagination = total_chunks > 25
+    chunks_per_page = 25
+    total_pages = math.ceil(total_chunks / chunks_per_page) if use_pagination else 1
+    
+    # Create initial content display (first page)
+    content_html = create_paginated_content_display(
+        chunks, 
+        page=1, 
+        chunks_per_page=chunks_per_page,
+        selected_indices=list(range(1, total_chunks + 1)),  # All selected initially
+        show_selected_only=False
+    )
+    
+    # Status message
+    search_method = retrieved_chunks.get('metadata', {}).get('retrieval_method', 'standard')
+    method_display = "LLM-Unterstützte Auswahl" if 'llm_assisted' in search_method else "Standard-Heuristik"
+    
+    status_text = f"**Verfügbare Texte**: {total_chunks} ({method_display})"
+    if use_pagination:
+        status_text += f" | **Seitenweise Anzeige**: {chunks_per_page} Texte pro Seite"
+    
+    # Pagination setup - IMPROVED VISIBILITY
+    page_choices = [f"Seite {i}" for i in range(1, total_pages + 1)] if use_pagination else []
+    pagination_text = f"**📄 Seite 1 von {total_pages}** | Texte 1-{min(chunks_per_page, total_chunks)} von {total_chunks}" if use_pagination else ""
+    
+    # Selection summary
+    selection_text = f"**Ausgewählt**: {total_chunks} von {total_chunks} (alle)"
+    
+    return (
+        status_text,  # chunks_status
+        gr.update(choices=choices, value=selected_choices, visible=True),  # chunks_selector
+        content_html,  # chunks_content_display
+        gr.update(visible=True),  # select_all_btn
+        gr.update(visible=True),  # deselect_all_btn
+        gr.update(visible=True),  # invert_selection_btn
+        selection_text,  # selection_summary
+        gr.update(visible=True),  # transfer_btn
+        chunks,  # available_chunks_state
+        gr.update(value=pagination_text, visible=use_pagination),  # pagination_info
+        gr.update(visible=use_pagination),  # prev_page_btn - ALWAYS show if pagination needed
+        gr.update(choices=page_choices, value="Seite 1" if use_pagination else None, visible=use_pagination),  # page_selector
+        gr.update(visible=use_pagination),  # next_page_btn - ALWAYS show if pagination needed
+        gr.update(visible=use_pagination),  # display_options
+        1,  # current_page_state
+        chunks_per_page  # chunks_per_page_state
+    )
+
+def create_paginated_content_display(
+    chunks: List[Dict], 
+    page: int = 1, 
+    chunks_per_page: int = 25,
+    selected_indices: List[int] = None,
+    show_selected_only: bool = False
+) -> str:
+    """Create paginated HTML display with full content, metadata, and scores."""
+    
+    if not chunks:
+        return "<div class='info-message'><p><em>Keine Texte verfügbar.</em></p></div>"
+    
+    # Filter chunks if showing selected only
+    display_chunks = []
+    if show_selected_only and selected_indices:
+        for idx in selected_indices:
+            if 1 <= idx <= len(chunks):
+                chunk = chunks[idx - 1].copy()
+                chunk['display_id'] = idx
+                display_chunks.append(chunk)
+    else:
+        display_chunks = [chunk.copy() for chunk in chunks]
+        for i, chunk in enumerate(display_chunks):
+            chunk['display_id'] = i + 1
+    
+    total_display_chunks = len(display_chunks)
+    
+    # Calculate pagination
+    start_idx = (page - 1) * chunks_per_page
+    end_idx = min(start_idx + chunks_per_page, total_display_chunks)
+    page_chunks = display_chunks[start_idx:end_idx]
+    
+    if not page_chunks:
+        return "<div class='info-message'><p><em>Keine Texte auf dieser Seite.</em></p></div>"
+    
+    # Create performance-optimized HTML
+    html_content = f"""
+    <div style='max-height: 80vh; overflow-y: auto; padding: 10px;'>
+        <div class="success-message" style="margin-bottom: 15px;">
+            <h4 style="color: var(--text-primary); margin-top: 0;">
+                📄 Angezeigt: Texte {start_idx + 1}-{end_idx} von {total_display_chunks}
+            </h4>
+            <p style="color: var(--text-secondary); margin: 5px 0;">
+                Verwenden Sie die Navigationsschaltflächen oben, um zwischen den Seiten zu wechseln.
+            </p>
+        </div>
+    """
+    
+    for chunk in page_chunks:
+        display_id = chunk.get('display_id', '?')
         metadata = chunk.get('metadata', {})
         content = chunk.get('content', '')
         relevance_score = chunk.get('relevance_score', 0.0)
         
-        # Get additional scores if available
+        # Get additional scores if available (LLM-assisted search)
         vector_score = chunk.get('vector_similarity_score', relevance_score)
         llm_score = chunk.get('llm_evaluation_score', None)
         
-        # Metadata
+        # Metadata extraction
         title = metadata.get('Artikeltitel', 'Kein Titel')
         date = metadata.get('Datum', 'Unbekannt')
         year = metadata.get('Jahrgang', 'Unbekannt')
         url = metadata.get('URL', '')
+        authors = metadata.get('Autoren', '')
+        
+        # Selection indicator
+        is_selected = selected_indices and display_id in selected_indices
+        selection_indicator = "✅" if is_selected else "◻️"
         
         html_content += f"""
         <div style="
@@ -236,28 +286,22 @@ def format_chunks_with_checkboxes(retrieved_chunks: Dict[str, Any]) -> str:
             border-radius: 8px; 
             padding: 15px; 
             margin-bottom: 15px;
-            border-left: 4px solid var(--brand-secondary);
+            border-left: 4px solid {'var(--brand-primary)' if is_selected else 'var(--brand-secondary)'};
         ">
-            <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
-                <input 
-                    type="checkbox" 
-                    name="chunk_selection" 
-                    value="{i}" 
-                    checked 
-                    onchange="updateVisualSummary()"
-                    style="accent-color: var(--brand-primary); transform: scale(1.3); margin-top: 2px;"
-                >
+            <!-- Header with selection status -->
+            <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px;">
+                <span style="font-size: 18px;">{selection_indicator}</span>
                 <div style="flex: 1;">
                     <div style="color: var(--text-primary); font-weight: 600; font-size: 16px; margin-bottom: 6px;">
-                        {i}. {title}
+                        {display_id}. {title}
                     </div>
-                    <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 10px;">
+                    <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">
                         <strong>Datum:</strong> {date} | 
                         <strong>Jahr:</strong> {year} | 
                         <strong>Relevanz:</strong> {relevance_score:.3f}
         """
         
-        # Add dual scores if available
+        # Add dual scores if available (LLM-assisted)
         if llm_score is not None:
             html_content += f"""<br>
                         <span style="color: var(--brand-accent);">
@@ -265,10 +309,17 @@ def format_chunks_with_checkboxes(retrieved_chunks: Dict[str, Any]) -> str:
                             <strong>LLM:</strong> {llm_score:.3f}
                         </span>"""
         
+        # Add author info if available
+        if authors:
+            html_content += f"""<br>
+                        <strong>Autoren:</strong> {authors}"""
+        
         # Add URL if available
         if url and url != 'Keine URL':
             html_content += f"""<br>
-                        <a href="{url}" target="_blank" style="color: var(--brand-primary); text-decoration: none;">🔗 Artikel öffnen</a>"""
+                        <a href="{url}" target="_blank" style="color: var(--brand-primary); text-decoration: none;">
+                            🔗 Artikel öffnen
+                        </a>"""
         
         html_content += """
                     </div>
@@ -276,7 +327,7 @@ def format_chunks_with_checkboxes(retrieved_chunks: Dict[str, Any]) -> str:
             </div>
         """
         
-        # Show evaluation text if available
+        # Show LLM evaluation text if available
         evaluation_text = metadata.get('evaluation_text', '')
         if evaluation_text:
             html_content += f"""
@@ -285,167 +336,213 @@ def format_chunks_with_checkboxes(retrieved_chunks: Dict[str, Any]) -> str:
                 border-left: 3px solid var(--brand-accent); 
                 padding: 10px; 
                 border-radius: 4px; 
-                margin-bottom: 10px;
+                margin-bottom: 12px;
                 color: var(--text-secondary);
             ">
                 <strong style="color: var(--brand-accent);">🤖 KI-Bewertung:</strong> {evaluation_text}
             </div>
             """
         
-        # Show full text content
-        html_content += f"""
+        # Full text content with collapsible option for very long texts
+        content_length = len(content)
+        if content_length > 2000:
+            # For very long texts, show preview + expandable
+            content_preview = content[:500] + "..."
+            html_content += f"""
+            <details style="margin-top: 10px;">
+                <summary style="
+                    color: var(--text-primary); 
+                    font-weight: 500; 
+                    cursor: pointer; 
+                    padding: 8px 0;
+                    border-bottom: 1px solid var(--border-primary);
+                ">
+                    📄 Volltext anzeigen ({content_length:,} Zeichen)
+                </summary>
+                <div style="
+                    background: var(--bg-primary); 
+                    border-left: 3px solid var(--brand-secondary); 
+                    padding: 15px; 
+                    border-radius: 4px; 
+                    margin-top: 10px;
+                    color: var(--text-secondary);
+                    line-height: 1.6;
+                    white-space: pre-wrap;
+                    max-height: 400px;
+                    overflow-y: auto;
+                ">
+                    {content}
+                </div>
+            </details>
+            """
+        else:
+            # For shorter texts, show directly
+            html_content += f"""
             <div style="
                 background: var(--bg-primary); 
                 border-left: 3px solid var(--brand-secondary); 
-                padding: 12px; 
-                border-radius: 4px;
+                padding: 15px; 
+                border-radius: 4px; 
+                margin-top: 10px;
                 color: var(--text-secondary);
                 line-height: 1.6;
                 white-space: pre-wrap;
-                max-height: 400px;
-                overflow-y: auto;
             ">
                 <strong style="color: var(--text-primary);">Volltext:</strong><br><br>
                 {content}
             </div>
-        </div>
-        """
+            """
+        
+        html_content += "</div>"
     
     html_content += "</div>"
     return html_content
 
-def update_chunks_display(retrieved_chunks: Dict[str, Any]) -> tuple:
-    """Update the chunks display with retrieved results."""
-    if not retrieved_chunks or not retrieved_chunks.get('chunks'):
-        return (
-            "<div class='info-message'><p><em>Keine Texte verfügbar.</em></p></div>",
-            "**Noch keine Texte verfügbar**",
-            gr.update(visible=False),  # select_all_btn
-            gr.update(visible=False),  # deselect_all_btn
-            gr.update(visible=False),  # confirm_selection_btn
-            gr.update(visible=False),  # transfer_btn
-            [],  # available_chunks_state
-            []   # confirmed_selection_state
-        )
+def update_selection_and_display(
+    selected_choices: List[str],
+    available_chunks: List[Dict],
+    current_page: int,
+    chunks_per_page: int,
+    show_selected_only: bool
+) -> Tuple[str, str, gr.update]:
+    """Update selection summary and content display when selection changes."""
     
-    chunks = retrieved_chunks.get('chunks', [])
-    chunks_html = format_chunks_with_checkboxes(retrieved_chunks)
+    if not available_chunks:
+        return "**Keine Texte verfügbar**", "", gr.update(visible=False)
     
-    search_method = retrieved_chunks.get('metadata', {}).get('retrieval_method', 'standard')
-    method_display = "LLM-Unterstützte Auswahl" if 'llm_assisted' in search_method else "Standard-Heuristik"
+    total_chunks = len(available_chunks)
+    selected_count = len(selected_choices)
     
-    summary_text = f"**Verfügbare Texte**: {len(chunks)} ({method_display}) | **Visuell ausgewählt**: {len(chunks)} (alle) - Klicken Sie 'Auswahl bestätigen' um die Auswahl zu übernehmen"
+    # Extract selected indices from choices
+    selected_indices = []
+    for choice in selected_choices:
+        try:
+            chunk_id = int(choice.split('.')[0])
+            selected_indices.append(chunk_id)
+        except (ValueError, IndexError):
+            continue
     
-    return (
-        chunks_html,
-        summary_text,
-        gr.update(visible=True),   # select_all_btn
-        gr.update(visible=True),   # deselect_all_btn
-        gr.update(visible=True),   # confirm_selection_btn
-        gr.update(visible=True),   # transfer_btn
-        chunks,                    # available_chunks_state
-        []                         # confirmed_selection_state (empty until confirmed)
+    # Update content display
+    content_html = create_paginated_content_display(
+        available_chunks,
+        page=current_page,
+        chunks_per_page=chunks_per_page,
+        selected_indices=selected_indices,
+        show_selected_only=show_selected_only
     )
-
-def handle_select_all(available_chunks: List[Dict]) -> str:
-    """Handle select all - just updates visual state."""
-    if not available_chunks:
-        return "**Keine Texte verfügbar**"
     
-    summary = f"**Verfügbare Texte**: {len(available_chunks)} | **Visuell ausgewählt**: {len(available_chunks)} (alle) - Klicken Sie 'Auswahl bestätigen' um die Auswahl zu übernehmen"
-    return summary
-
-def handle_deselect_all(available_chunks: List[Dict]) -> str:
-    """Handle deselect all - just updates visual state."""
-    if not available_chunks:
-        return "**Keine Texte verfügbar**"
+    # Update selection summary
+    if selected_count == total_chunks:
+        selection_text = f"**Ausgewählt**: {selected_count} von {total_chunks} (alle)"
+    elif selected_count == 0:
+        selection_text = f"**Ausgewählt**: 0 von {total_chunks} (keine)"
+    else:
+        percentage = (selected_count / total_chunks) * 100
+        selection_text = f"**Ausgewählt**: {selected_count} von {total_chunks} ({percentage:.0f}%)"
     
-    summary = f"**Verfügbare Texte**: {len(available_chunks)} | **Visuell ausgewählt**: 0 (keine) - Klicken Sie 'Auswahl bestätigen' um die Auswahl zu übernehmen"
-    return summary
-
-def confirm_selection(js_selection_json: str, available_chunks: List[Dict]) -> tuple:
-    """
-    NEW: Confirm the current visual selection and update Gradio state.
-    """
-    if not available_chunks:
-        return (
-            [],  # confirmed_selection_state
-            "**Keine Texte verfügbar**",  # selection_summary
-            gr.update(visible=False)  # transfer_btn
-        )
+    # Show/hide transfer button
+    transfer_btn_state = gr.update(visible=selected_count > 0)
     
-    try:
-        # Parse the selection from JavaScript
-        if js_selection_json.strip():
-            selected_ids = json.loads(js_selection_json)
-            if not isinstance(selected_ids, list):
-                selected_ids = []
-        else:
-            # If no data from JavaScript, assume all are selected (default state)
-            selected_ids = list(range(1, len(available_chunks) + 1))
-        
-        # Validate and filter the IDs
-        valid_ids = []
-        for chunk_id in selected_ids:
-            if isinstance(chunk_id, (int, str)) and str(chunk_id).isdigit():
-                chunk_id = int(chunk_id)
-                if 1 <= chunk_id <= len(available_chunks):
-                    valid_ids.append(chunk_id)
-        
-        valid_ids = sorted(list(set(valid_ids)))  # Remove duplicates and sort
-        
-        # Update summary
-        if valid_ids:
-            percentage = (len(valid_ids) / len(available_chunks) * 100)
-            summary = f"**Verfügbare Texte**: {len(available_chunks)} | **Bestätigt ausgewählt**: {len(valid_ids)}"
-            
-            if len(valid_ids) == len(available_chunks):
-                summary += " (alle) ✅"
-            else:
-                summary += f" ({percentage:.0f}%) ✅"
-            
-            summary += f" | **IDs**: {', '.join(map(str, valid_ids[:10]))}"
-            if len(valid_ids) > 10:
-                summary += "..."
-            
-            transfer_btn_state = gr.update(visible=True)
-        else:
-            summary = f"**Verfügbare Texte**: {len(available_chunks)} | **Bestätigt ausgewählt**: 0 (keine) ❌"
-            transfer_btn_state = gr.update(visible=False)
-        
-        return (valid_ids, summary, transfer_btn_state)
-        
-    except (json.JSONDecodeError, ValueError, TypeError) as e:
-        # Error parsing - default to all selected
-        all_ids = list(range(1, len(available_chunks) + 1))
-        summary = f"**Verfügbare Texte**: {len(available_chunks)} | **Bestätigt ausgewählt**: {len(all_ids)} (alle - Fallback wegen Lesefehler) ⚠️"
-        return (all_ids, summary, gr.update(visible=True))
+    return selection_text, content_html, transfer_btn_state
 
-def transfer_chunks_to_analysis(
-    available_chunks: List[Dict], 
-    confirmed_selection: List[int]
-) -> tuple:
-    """
-    SIMPLIFIED: Transfer confirmed chunks to analysis.
-    """
+def handle_page_navigation(
+    direction: str,
+    current_page: int,
+    available_chunks: List[Dict],
+    chunks_per_page: int,
+    selected_choices: List[str],
+    show_selected_only: bool,
+    goto_page: int = None
+) -> Tuple[str, str, int]:
+    """Handle pagination navigation."""
+    
+    if not available_chunks:
+        return "", "Keine Texte verfügbar", current_page
+    
+    total_chunks = len(available_chunks)
+    total_pages = math.ceil(total_chunks / chunks_per_page)
+    
+    # Calculate new page
+    if direction == "next":
+        new_page = min(current_page + 1, total_pages)
+    elif direction == "prev":
+        new_page = max(current_page - 1, 1)
+    elif direction == "goto" and goto_page:
+        new_page = max(1, min(goto_page, total_pages))
+    else:
+        new_page = current_page
+    
+    # Extract selected indices
+    selected_indices = []
+    for choice in selected_choices:
+        try:
+            chunk_id = int(choice.split('.')[0])
+            selected_indices.append(chunk_id)
+        except (ValueError, IndexError):
+            continue
+    
+    # Update content display
+    content_html = create_paginated_content_display(
+        available_chunks,
+        page=new_page,
+        chunks_per_page=chunks_per_page,
+        selected_indices=selected_indices,
+        show_selected_only=show_selected_only
+    )
+    
+    # Update pagination info
+    start_idx = (new_page - 1) * chunks_per_page + 1
+    end_idx = min(new_page * chunks_per_page, total_chunks)
+    pagination_text = f"**📄 Seite {new_page} von {total_pages}** | Texte {start_idx}-{end_idx} von {total_chunks}"
+    
+    return pagination_text, content_html, new_page
+
+# Simple selection handlers
+def handle_select_all_enhanced(all_choices: List[str]) -> List[str]:
+    """Select all chunks."""
+    return all_choices
+
+def handle_deselect_all_enhanced() -> List[str]:
+    """Deselect all chunks."""
+    return []
+
+def handle_invert_selection_enhanced(selected_choices: List[str], all_choices: List[str]) -> List[str]:
+    """Invert current selection."""
+    return [choice for choice in all_choices if choice not in selected_choices]
+
+def transfer_chunks_enhanced(
+    selected_choices: List[str], 
+    available_chunks: List[Dict]
+) -> Tuple[gr.update, List[Dict]]:
+    """Transfer selected chunks to analysis."""
+    
     if not available_chunks:
         error_message = """<div class="error-message">
         <h4>❌ Keine Texte verfügbar</h4>
         <p>Führen Sie zuerst eine Heuristik durch.</p>
         </div>"""
-        return (gr.update(value=error_message, visible=True), [])
+        return gr.update(value=error_message, visible=True), []
     
-    if not confirmed_selection:
+    if not selected_choices:
         error_message = """<div class="error-message">
         <h4>❌ Keine Texte ausgewählt</h4>
-        <p>Bestätigen Sie zuerst Ihre Auswahl mit "Auswahl bestätigen".</p>
+        <p>Wählen Sie mindestens einen Text aus.</p>
         </div>"""
-        return (gr.update(value=error_message, visible=True), [])
+        return gr.update(value=error_message, visible=True), []
     
-    # Filter chunks by confirmed selection
+    # Extract chunk IDs from choices
+    selected_ids = []
+    for choice in selected_choices:
+        try:
+            chunk_id = int(choice.split('.')[0])
+            selected_ids.append(chunk_id)
+        except (ValueError, IndexError):
+            continue
+    
+    # Transfer selected chunks
     transferred_chunks = []
-    for chunk_id in confirmed_selection:
-        index = chunk_id - 1  # Convert to 0-based index
+    for chunk_id in sorted(selected_ids):
+        index = chunk_id - 1
         if 0 <= index < len(available_chunks):
             chunk = available_chunks[index].copy()
             chunk['transferred_id'] = chunk_id
@@ -454,20 +551,18 @@ def transfer_chunks_to_analysis(
     if not transferred_chunks:
         error_message = """<div class="error-message">
         <h4>❌ Übertragung fehlgeschlagen</h4>
-        <p>Keine gültigen Texte in der bestätigten Auswahl.</p>
+        <p>Keine gültigen Texte in der Auswahl gefunden.</p>
         </div>"""
-        return (gr.update(value=error_message, visible=True), [])
+        return gr.update(value=error_message, visible=True), []
     
     success_message = f"""<div class="success-message">
     <h4>✅ Texte erfolgreich übertragen</h4>
     <p><strong>{len(transferred_chunks)} von {len(available_chunks)} Texten</strong> wurden zur Analyse übertragen.</p>
     
-    <p><strong>Übertragene Text-IDs:</strong> {', '.join(map(str, confirmed_selection))}</p>
+    <p><strong>Übertragene Text-IDs:</strong> {', '.join(map(str, sorted(selected_ids[:10])))}</p>
+    {f'<p><em>...und {len(selected_ids) - 10} weitere</em></p>' if len(selected_ids) > 10 else ''}
     
     <p><em>Sie können jederzeit eine neue Auswahl treffen und erneut übertragen.</em></p>
     </div>"""
     
-    return (
-        gr.update(value=success_message, visible=True),
-        transferred_chunks
-    )
+    return gr.update(value=success_message, visible=True), transferred_chunks

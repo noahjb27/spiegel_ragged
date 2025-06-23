@@ -36,17 +36,20 @@ from src.ui.handlers.download_handlers import (
 )
 
 from src.ui.components.retrieved_chunks_display import (
-    create_fixed_retrieved_chunks_display,
-    update_chunks_display,
-    handle_select_all,
-    handle_deselect_all,
-    confirm_selection,
-    transfer_chunks_to_analysis
+    create_enhanced_chunks_display,
+    update_chunks_display_enhanced,
+    handle_select_all_enhanced,
+    handle_deselect_all_enhanced,
+    handle_invert_selection_enhanced,
+    transfer_chunks_enhanced,
+    update_selection_and_display,
+    handle_page_navigation
 )
 
-from src.ui.utils.ui_helpers import toggle_api_key_visibility
-from src.ui.utils.checkbox_handler import (create_checkbox_state_handler)
 
+from src.ui.utils.ui_helpers import toggle_api_key_visibility
+from src.ui.utils.checkbox_handler import create_checkbox_state_handler
+checkbox_handler = create_checkbox_state_handler()
 
 from src.config import settings
 
@@ -933,8 +936,8 @@ UTILITY CLASSES
                 Sie können einzelne Texte an- oder abwählen und dann zur Analyse übertragen.
                 """)
                 
-                # NEW: Interactive chunks display component
-                chunks_display_components = create_fixed_retrieved_chunks_display()
+                # Simplified chunks display component  
+                chunks_display_components = create_enhanced_chunks_display()
                 
                 # Add the checkbox state handler
                 from src.ui.utils.checkbox_handler import create_checkbox_state_handler
@@ -1004,23 +1007,28 @@ UTILITY CLASSES
                 analysis_accordion
             ]
         ).then(
-            lambda: gr.update(visible=False),  # Hide comprehensive download for standard
-            outputs=[download_comprehensive_btn]
-        ).then(
-            # Update interactive chunks display
-            update_chunks_display_handler,
-            inputs=[search_components["retrieved_chunks_state"]],
-            outputs=[
-                chunks_display_components["chunks_selection_html"],
-                chunks_display_components["selection_summary"],
-                chunks_display_components["select_all_btn"],
-                chunks_display_components["deselect_all_btn"],
-                chunks_display_components["confirm_selection_btn"],  # NEW
-                chunks_display_components["transfer_to_analysis_btn"],
-                chunks_display_components["available_chunks_state"],
-                chunks_display_components["confirmed_selection_state"]  # NEW - starts empty
-            ]
-        )
+                # ENHANCED: Update with pagination and full content
+                update_chunks_display_enhanced,
+                inputs=[search_components["retrieved_chunks_state"]],
+                outputs=[
+                    chunks_display_components["chunks_status"],
+                    chunks_display_components["chunks_selector"],
+                    chunks_display_components["chunks_content_display"],
+                    chunks_display_components["select_all_btn"],
+                    chunks_display_components["deselect_all_btn"],
+                    chunks_display_components["invert_selection_btn"],
+                    chunks_display_components["selection_summary"],
+                    chunks_display_components["transfer_btn"],
+                    chunks_display_components["available_chunks_state"],
+                    chunks_display_components["pagination_info"],
+                    chunks_display_components["prev_page_btn"],
+                    chunks_display_components["page_selector"],
+                    chunks_display_components["next_page_btn"],
+                    chunks_display_components["display_options"],
+                    chunks_display_components["current_page_state"],
+                    chunks_display_components["chunks_per_page_state"]
+                ]
+            )
 
         # LLM-assisted search - update chunks display
         search_components["llm_assisted_search_btn"].click(
@@ -1053,65 +1061,223 @@ UTILITY CLASSES
                 analysis_accordion
             ]
         ).then(
-            lambda: gr.update(visible=True),  # Show comprehensive download for LLM-assisted
-            outputs=[download_comprehensive_btn]
-        ).then(
-            # Update interactive chunks display for LLM-assisted
-            update_chunks_display_handler,
-            inputs=[search_components["retrieved_chunks_state"]],
-            outputs=[
-                chunks_display_components["chunks_selection_html"],
-                chunks_display_components["selection_summary"],
-                chunks_display_components["select_all_btn"],
-                chunks_display_components["deselect_all_btn"],
-                chunks_display_components["confirm_selection_btn"],  # NEW
-                chunks_display_components["transfer_to_analysis_btn"],
-                chunks_display_components["available_chunks_state"],
-                chunks_display_components["confirmed_selection_state"]  # NEW
-            ]
-        )
-
-        # Select all button - just updates summary text, JavaScript handles checkboxes
+                # Same enhanced update for LLM-assisted results
+                update_chunks_display_enhanced,
+                inputs=[search_components["retrieved_chunks_state"]],
+                outputs=[
+                    chunks_display_components["chunks_status"],
+                    chunks_display_components["chunks_selector"],
+                    chunks_display_components["chunks_content_display"],
+                    chunks_display_components["select_all_btn"],
+                    chunks_display_components["deselect_all_btn"],
+                    chunks_display_components["invert_selection_btn"],
+                    chunks_display_components["selection_summary"],
+                    chunks_display_components["transfer_btn"],
+                    chunks_display_components["available_chunks_state"],
+                    chunks_display_components["pagination_info"],
+                    chunks_display_components["prev_page_btn"],
+                    chunks_display_components["page_selector"],
+                    chunks_display_components["next_page_btn"],
+                    chunks_display_components["display_options"],
+                    chunks_display_components["current_page_state"],
+                    chunks_display_components["chunks_per_page_state"]
+                ]
+            )
+            
+        # Select all
         chunks_display_components["select_all_btn"].click(
-            handle_select_all,
-            inputs=[chunks_display_components["available_chunks_state"]],
-            outputs=[chunks_display_components["selection_summary"]]
-        )
-        
-        # Deselect all button - just updates summary text, JavaScript handles checkboxes  
-        chunks_display_components["deselect_all_btn"].click(
-            handle_deselect_all,
-            inputs=[chunks_display_components["available_chunks_state"]],
-            outputs=[chunks_display_components["selection_summary"]]
-        )
-
-        # NEW: Confirmation button - just reads the hidden input state
-        chunks_display_components["confirm_selection_btn"].click(
-            confirm_selection,
+            lambda choices: choices,  # Return all choices
+            inputs=[chunks_display_components["chunks_selector"]],
+            outputs=[chunks_display_components["chunks_selector"]]
+        ).then(
+            update_selection_and_display,
             inputs=[
-                chunks_display_components["js_selection_input"],
-                chunks_display_components["available_chunks_state"]
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["available_chunks_state"],
+                chunks_display_components["current_page_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["show_selected_only"]
             ],
             outputs=[
-                chunks_display_components["confirmed_selection_state"],
                 chunks_display_components["selection_summary"],
-                chunks_display_components["transfer_to_analysis_btn"]
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["transfer_btn"]
+            ]
+        )
+        
+        # Deselect all
+        chunks_display_components["deselect_all_btn"].click(
+            lambda: [],  # Return empty list
+            outputs=[chunks_display_components["chunks_selector"]]
+        ).then(
+            update_selection_and_display,
+            inputs=[
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["available_chunks_state"],
+                chunks_display_components["current_page_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["show_selected_only"]
+            ],
+            outputs=[
+                chunks_display_components["selection_summary"],
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["transfer_btn"]
+            ]
+        )
+        
+        # NEW: Invert selection
+        chunks_display_components["invert_selection_btn"].click(
+            handle_invert_selection_enhanced,
+            inputs=[
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["chunks_selector"]  # All choices
+            ],
+            outputs=[chunks_display_components["chunks_selector"]]
+        ).then(
+            update_selection_and_display,
+            inputs=[
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["available_chunks_state"],
+                chunks_display_components["current_page_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["show_selected_only"]
+            ],
+            outputs=[
+                chunks_display_components["selection_summary"],
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["transfer_btn"]
             ]
         )
 
-        # FIXED: Transfer button - uses confirmed selection state
-        chunks_display_components["transfer_to_analysis_btn"].click(
-            transfer_chunks_to_analysis,
+        # Selection change handler - updates display in real-time
+        chunks_display_components["chunks_selector"].change(
+            update_selection_and_display,
             inputs=[
+                chunks_display_components["chunks_selector"],
                 chunks_display_components["available_chunks_state"],
-                chunks_display_components["confirmed_selection_state"]  # FIXED: Use confirmed state
+                chunks_display_components["current_page_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["show_selected_only"]
+            ],
+            outputs=[
+                chunks_display_components["selection_summary"],
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["transfer_btn"]
+            ]
+        )
+
+        # PAGINATION HANDLERS - For large datasets (150+ chunks)
+        
+        # Previous page
+        chunks_display_components["prev_page_btn"].click(
+            lambda current_page, chunks, per_page, selected, show_selected: handle_page_navigation(
+                "prev", current_page, chunks, per_page, selected, show_selected
+            ),
+            inputs=[
+                chunks_display_components["current_page_state"],
+                chunks_display_components["available_chunks_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["show_selected_only"]
+            ],
+            outputs=[
+                chunks_display_components["pagination_info"],
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["current_page_state"]
+            ]
+        )
+        
+        # Next page
+        chunks_display_components["next_page_btn"].click(
+            lambda current_page, chunks, per_page, selected, show_selected: handle_page_navigation(
+                "next", current_page, chunks, per_page, selected, show_selected
+            ),
+            inputs=[
+                chunks_display_components["current_page_state"],
+                chunks_display_components["available_chunks_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["show_selected_only"]
+            ],
+            outputs=[
+                chunks_display_components["pagination_info"],
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["current_page_state"]
+            ]
+        )
+        
+        # Page selector dropdown
+        chunks_display_components["page_selector"].change(
+            lambda page_str, chunks, per_page, selected, show_selected: handle_page_navigation(
+                "goto", int(page_str.split()[1]) if page_str else 1, chunks, per_page, selected, show_selected
+            ),
+            inputs=[
+                chunks_display_components["page_selector"],
+                chunks_display_components["available_chunks_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["show_selected_only"]
+            ],
+            outputs=[
+                chunks_display_components["pagination_info"],
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["current_page_state"]
+            ]
+        )
+
+        # DISPLAY OPTIONS - For customizing view
+        
+        # Show selected only toggle
+        chunks_display_components["show_selected_only"].change(
+            update_selection_and_display,
+            inputs=[
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["available_chunks_state"],
+                chunks_display_components["current_page_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["show_selected_only"]
+            ],
+            outputs=[
+                chunks_display_components["selection_summary"],
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["transfer_btn"]
+            ]
+        )
+        
+        # Chunks per page selector
+        chunks_display_components["chunks_per_page"].change(
+            lambda new_per_page: new_per_page,  # Update state
+            inputs=[chunks_display_components["chunks_per_page"]],
+            outputs=[chunks_display_components["chunks_per_page_state"]]
+        ).then(
+            update_selection_and_display,
+            inputs=[
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["available_chunks_state"],
+                chunks_display_components["current_page_state"],
+                chunks_display_components["chunks_per_page_state"],
+                chunks_display_components["show_selected_only"]
+            ],
+            outputs=[
+                chunks_display_components["selection_summary"],
+                chunks_display_components["chunks_content_display"],
+                chunks_display_components["transfer_btn"]
+            ]
+        )
+
+        # TRANSFER HANDLER - Enhanced with better feedback
+        chunks_display_components["transfer_btn"].click(
+            transfer_chunks_enhanced,
+            inputs=[
+                chunks_display_components["chunks_selector"],
+                chunks_display_components["available_chunks_state"]
             ],
             outputs=[
                 chunks_display_components["transfer_status"],
                 chunks_display_components["transferred_chunks_state"]
             ]
         ).then(
-            # Update the analysis section with transferred chunks
+            # Update the analysis section with transferred chunks (same as before)
             question_components["update_transferred_chunks_display"],
             inputs=[chunks_display_components["transferred_chunks_state"]],
             outputs=[
@@ -1120,7 +1286,7 @@ UTILITY CLASSES
                 question_components["analyze_btn"]
             ]
         ).then(
-            # Open analysis accordion and close retrieval accordion
+            # Open analysis accordion (same as before)
             lambda: (gr.update(open=False), gr.update(open=True)),
             outputs=[retrieved_texts_accordion, analysis_accordion]
         )
