@@ -18,48 +18,82 @@ def load_results(filepath):
     """Load JSON results from search"""
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+            print(f"✓ Loaded {filepath}")
+            
+            # Quick structure check
+            if 'heuristik_metadata' in data and 'evaluations' in data['heuristik_metadata']:
+                eval_count = len(data['heuristik_metadata']['evaluations'])
+                print(f"  → LLM-assisted format with {eval_count} evaluations")
+            elif 'chunks' in data:
+                chunk_count = len(data['chunks'])
+                print(f"  → Standard format with {chunk_count} chunks")
+            else:
+                print(f"  → Unknown format, keys: {list(data.keys())}")
+            
+            return data
     except FileNotFoundError:
-        print(f"Warning: {filepath} not found")
+        print(f"✗ File not found: {filepath}")
+        return {'chunks': []}
+    except json.JSONDecodeError as e:
+        print(f"✗ JSON decode error in {filepath}: {e}")
+        return {'chunks': []}
+    except Exception as e:
+        print(f"✗ Error loading {filepath}: {e}")
         return {'chunks': []}
 
 def normalize_chunk_data(results):
     """Normalize chunk data from different result formats"""
     normalized_chunks = []
     
+    if not isinstance(results, dict):
+        print(f"Warning: Invalid results format: {type(results)}")
+        return normalized_chunks
+    
     # Handle LLM-assisted results (evaluations array)
-    if 'evaluations' in results.get('heuristik_metadata', {}):
-        for eval_item in results['heuristik_metadata']['evaluations']:
+    heuristik_metadata = results.get('heuristik_metadata', {})
+    if 'evaluations' in heuristik_metadata:
+        evaluations = heuristik_metadata.get('evaluations', [])
+        print(f"Found {len(evaluations)} evaluations in LLM-assisted results")
+        
+        for eval_item in evaluations:
             # Use original_llm_score (0-10) if available, otherwise llm_score (0-1)
             llm_score = eval_item.get('original_llm_score', eval_item.get('llm_score', 0))
-            if llm_score <= 1.0:  # If it's normalized, convert back to 0-10 scale
+            if isinstance(llm_score, (int, float)) and llm_score <= 1.0:  # If it's normalized, convert back to 0-10 scale
                 llm_score = llm_score * 10
                 
             normalized_chunks.append({
-                'title': eval_item.get('title', 'No title'),
-                'date': eval_item.get('date', 'No date'),
-                'vector_score': eval_item.get('vector_score', 0),
-                'llm_score': llm_score,
-                'original_llm_score': eval_item.get('original_llm_score', 0),
-                'content': eval_item.get('evaluation', ''),  # Use evaluation text as content
-                'window': eval_item.get('window', ''),
+                'title': str(eval_item.get('title', 'No title')),
+                'date': str(eval_item.get('date', 'No date')),
+                'vector_score': float(eval_item.get('vector_score', 0)),
+                'llm_score': float(llm_score),
+                'original_llm_score': float(eval_item.get('original_llm_score', 0)),
+                'content': str(eval_item.get('evaluation', ''))[:200],  # Use evaluation text as content preview
+                'window': str(eval_item.get('window', '')),
                 'source_type': 'llm_assisted'
             })
     
     # Handle standard search results (chunks array)
     elif 'chunks' in results:
-        for chunk in results['chunks']:
+        chunks = results.get('chunks', [])
+        print(f"Found {len(chunks)} chunks in standard search results")
+        
+        for chunk in chunks:
             metadata = chunk.get('metadata', {})
             normalized_chunks.append({
-                'title': metadata.get('titel', 'No title'),
-                'date': metadata.get('datum', 'No date'),
-                'vector_score': chunk.get('relevance_score', 0),
-                'llm_score': 0,  # No LLM score in standard search
-                'original_llm_score': 0,
-                'content': chunk.get('content', '')[:200],  # Use content preview
+                'title': str(metadata.get('titel', 'No title')),
+                'date': str(metadata.get('datum', 'No date')),
+                'vector_score': float(chunk.get('relevance_score', 0)),
+                'llm_score': 0.0,  # No LLM score in standard search
+                'original_llm_score': 0.0,
+                'content': str(chunk.get('content', ''))[:200],  # Use content preview
                 'window': '',
                 'source_type': 'standard'
             })
+    
+    else:
+        print(f"Warning: No recognized data structure found in results")
+        print(f"Available keys: {list(results.keys())}")
     
     return normalized_chunks
 
@@ -68,7 +102,8 @@ def get_chunk_signature(chunk):
     # Use title + date for matching (more reliable than content)
     title = chunk.get('title', 'unknown')
     date = chunk.get('date', 'unknown')
-    return f"{title}_{date}_{hash(str(chunk.get('content', '')))[:4]}"
+    content_hash = str(abs(hash(str(chunk.get('content', '')))))[:4]
+    return f"{title}_{date}_{content_hash}"
 
 def analyze_retrieval_overlap(results_dict, case_name="Case"):
     """Analyze chunk overlap across different retrieval methods"""
@@ -340,8 +375,8 @@ def main():
         
         # Consistency test if available
         consistency_files = {
-            'run1': 'entnaziG_openai_consistency1.json',
-            'run2': 'entnaziG_openai_consistency2.json'
+            'run1': 'texte/entnaziG_openai_consistency1.json',
+            'run2': 'texte/entnaziG_openai_consistency2.json'
         }
         consistency_results = {}
         for run, filepath in consistency_files.items():
