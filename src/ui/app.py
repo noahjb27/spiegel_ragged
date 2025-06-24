@@ -78,15 +78,17 @@ def perform_analysis_and_update_ui_with_transferred_chunks(
         temperature: Generation temperature
         
     Returns:
-        Tuple of analysis results for UI update
-    """
+        Tuple of analysis results for UI update    """
     if not transferred_chunks:
+        print(f"DEBUG: No transferred chunks - received: {type(transferred_chunks)} with value: {transferred_chunks}")
         return (
             "❌ Keine Quellen für die Analyse verfügbar. Bitte übertragen Sie zuerst Quellen aus der Heuristik.",
             "**Fehler**: Keine übertragenen Quellen",
             gr.update(open=True),   # Keep analysis accordion open
             gr.update(open=False)   # Keep results closed
         )
+    
+    print(f"DEBUG: Analysis starting with {len(transferred_chunks)} transferred chunks")
     
     # Convert transferred chunks to the format expected by existing analysis function
     retrieved_chunks_format = {
@@ -1261,9 +1263,7 @@ UTILITY CLASSES
                 chunks_display_components["chunks_content_display"],
                 chunks_display_components["transfer_btn"]
             ]
-        )
-
-        # TRANSFER HANDLER - Enhanced with better feedback
+        )        # TRANSFER HANDLER - Enhanced with better feedback
         chunks_display_components["transfer_btn"].click(
             transfer_chunks_enhanced,
             inputs=[
@@ -1275,13 +1275,14 @@ UTILITY CLASSES
                 chunks_display_components["transferred_chunks_state"]
             ]
         ).then(
-            # Update the analysis section with transferred chunks (same as before)
+            # Update the analysis section with transferred chunks AND sync the state
             question_components["update_transferred_chunks_display"],
             inputs=[chunks_display_components["transferred_chunks_state"]],
             outputs=[
                 question_components["transferred_chunks_display"],
                 question_components["transferred_summary"],
-                question_components["analyze_btn"]
+                question_components["analyze_btn"],
+                question_components["transferred_chunks_state"]  # FIXED: Update the question panel's state too
             ]
         ).then(
             # Open analysis accordion (same as before)

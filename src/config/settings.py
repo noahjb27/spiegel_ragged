@@ -178,6 +178,8 @@ LLM_ASSISTED_SYSTEM_PROMPTS = {
 
 **Aufgabe**: Analysiere zunächst jeden Textabschnitt ausführlich im Hinblick auf seine Relevanz für den user retrieval Query. Führe eine differenzierte Argumentation durch, bevor du eine Bewertung abgibst.
 
+{"Vorgehen und Forschungsinteresse spezifizieren"}
+
 **Vorgehen**:
 1. **Argumentation**: Begründe ausführlich, inwiefern der Text relevant ist oder nicht. Berücksichtige historische Bedeutung, zeitgenössische Perspektive und Quellenwert.
 2. **Bewertung**: Vergib anschließend einen Score auf einer Skala von 0-10, basierend auf deiner Argumentation.

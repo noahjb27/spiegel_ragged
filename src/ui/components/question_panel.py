@@ -108,8 +108,7 @@ def create_question_panel() -> Dict[str, Any]:
     # Event handlers for system prompt template management
     def load_system_prompt_template(template_name: str) -> str:
         """Load the selected template into the text area."""
-        return settings.SYSTEM_PROMPTS.get(template_name, settings.SYSTEM_PROMPTS["default"])
-    
+        return settings.SYSTEM_PROMPTS.get(template_name, settings.SYSTEM_PROMPTS["default"])    
     def reset_to_template(template_name: str) -> str:
         """Reset the text area to the selected template."""
         return settings.SYSTEM_PROMPTS.get(template_name, settings.SYSTEM_PROMPTS["default"])
@@ -117,6 +116,7 @@ def create_question_panel() -> Dict[str, Any]:
     def update_transferred_chunks_display(transferred_chunks: list) -> tuple:
         """
         FIXED: Update the display of transferred chunks with proper dark theme CSS.
+        Also returns the transferred chunks state for the analysis function.
         """
         if not transferred_chunks:
             return (
@@ -124,7 +124,8 @@ def create_question_panel() -> Dict[str, Any]:
                 <p><em>Noch keine Quellen übertragen. Führen Sie zuerst eine Heuristik durch und übertragen Sie Quellen.</em></p>
                 </div>""",
                 "**Keine Quellen übertragen**",
-                gr.update(visible=False)  # Hide analyze button
+                gr.update(visible=False),  # Hide analyze button
+                []  # Empty transferred chunks state
             )
         
         # FIXED: Create HTML display with proper dark theme CSS
@@ -200,12 +201,12 @@ def create_question_panel() -> Dict[str, Any]:
         html_content += "</div>"
         
         # Create summary
-        summary_text = f"**Übertragene Quellen**: {len(transferred_chunks)} Texte bereit für die Analyse"
-        
+        summary_text = f"**Übertragene Quellen**: {len(transferred_chunks)} Texte bereit für die Analyse"        
         return (
             html_content,
             summary_text,
-            gr.update(visible=True)  # Show analyze button
+            gr.update(visible=True),  # Show analyze button
+            transferred_chunks  # Return the transferred chunks state
         )
     
     # Connect event handlers

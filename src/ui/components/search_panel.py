@@ -301,7 +301,7 @@ def create_search_panel(
                 label="System-Prompt für Bewertung (bearbeitbar)",
                 value=settings.LLM_ASSISTED_SYSTEM_PROMPTS["standard_evaluation"],
                 lines=8,
-                info="Bearbeiten Sie den System-Prompt für die Quellenbewertung nach Ihren Bedürfnissen, nutzen Sie die Verbindung von LLM als ."
+                info="Bearbeiten Sie den System-Prompt für die Quellenbewertung, nach Ihren Bedürfnissen, spezifizieren Sie (in den Eckigen-Klammern) unbedingt die Forschungsfrage nach der Selektiert werden sollte."
             )
         
         llm_assisted_search_btn = gr.Button("LLM-Unterstützte Auswahl starten", variant="primary")
