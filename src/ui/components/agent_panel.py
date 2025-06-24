@@ -27,7 +27,7 @@ def create_llm_assisted_panel(
         
         Diese Funktion kombiniert Retrieval und Analyse in einem mehrstufigen Prozess:
         
-        1. Zunächst werden mehr Quellen abgerufen als bei der Standard-Suche (z.B. 50 pro Zeit-Intervall)
+        1. Zunächst werden mehr Quellen abgerufen als bei der Standard-Suche (z.B. 50 pro Zeitintervall)
         2. Das Sprachmodell bewertet dann die Relevanz jedes Textabschnitts für Ihre Query
         3. In mehreren Filterstufen werden die relevantesten Texte identifiziert
         4. Schließlich wird eine fundierte Antwort auf Basis der besten Texte generiert
@@ -36,7 +36,7 @@ def create_llm_assisted_panel(
         - Tiefere Analyse und bessere Auswahl relevanter Quellen
         - Transparente Bewertung der Relevanz jedes Textabschnitts
         - Kombination von Vektorsimilarität und semantischer Bewertung
-        - Gleichmäßige zeitliche Verteilung durch Zeit-Interval-Suche
+        - Gleichmäßige zeitliche Verteilung durch Zeitintervall-Suche
         
         **Hinweis:** Diese Methode ist aufgrund der mehrstufigen Analyse langsamer als die Standard-Suche.
         """)
@@ -105,7 +105,7 @@ def create_llm_assisted_panel(
         # LLM-assisted settings - UPDATED terminology
         with gr.Accordion("LLM-Unterstützte Auswahl Einstellungen", open=True):
             gr.Markdown("""
-            ### Zeit-Interval-Einstellungen
+            ### Zeitintervall-Einstellungen
             
             Konfigurieren Sie, wie das LLM Texte über verschiedene Zeit-Intervalle hinweg filtert und bewertet.
             """)
@@ -133,7 +133,7 @@ def create_llm_assisted_panel(
                     value=settings.LLM_ASSISTED_DEFAULT_CHUNKS_PER_WINDOW_INITIAL,
                     step=10,
                     label="Initial pro Intervall",
-                    info="Anzahl der Texte, die zunächst pro Zeit-Intervall abgerufen werden."
+                    info="Anzahl der Texte, die zunächst pro Zeitintervall abgerufen werden."
                 )
             
             with gr.Row():
@@ -198,12 +198,12 @@ def create_llm_assisted_panel(
                 llm_assisted_system_prompt_template = gr.Dropdown(
                     choices=list(settings.LLM_ASSISTED_SYSTEM_PROMPTS.keys()),
                     value="standard_evaluation",
-                    label="System Prompt Vorlage"
+                    label="System-Prompt Vorlage"
                 )
             
             with gr.Row():
                 llm_assisted_custom_system_prompt = gr.Textbox(
-                    label="Eigener System Prompt",
+                    label="Eigener System-Prompt",
                     placeholder="Anpassen des System Prompts für spezifische Anweisungen an das LLM...",
                     value="",
                     lines=5,

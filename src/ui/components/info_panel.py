@@ -4,7 +4,7 @@ Updated info panel component with new terminology:
 - Heuristik (instead of Quellen abrufen)
 - Analyse (instead of Quellen analysieren)  
 - LLM-Unterstützte Auswahl (instead of Agenten-Suche)
-- Zeit-Interval-Suche (instead of Zeitfenster-Suche)
+- Zeitintervall-Suche (instead of Zeitfenster-Suche)
 """
 import gradio as gr
 
@@ -36,15 +36,15 @@ def create_info_panel():
     - **Vektorsimilarität**: Findet Inhalte basierend auf semantischer Ähnlichkeit
     - **Schlagwort-Filterung**: Boolesche Operatoren für präzise Filterung (immer aktiv)
     - **Semantische Erweiterung**: Automatische Berücksichtigung ähnlicher Begriffe mit Korpus-Häufigkeiten
-    - **Zeit-Interval-Suche**: Gleichmäßige zeitliche Verteilung für diakrone Narrative
+    - **Zeitintervall-Suche**: Gleichmäßige zeitliche Verteilung für diakrone Narrative
     - **Geschwindigkeit**: Schnelle Ergebnisse für direkte Informationssuche
     
     #### LLM-Unterstützte Auswahl (KI-gestützte Bewertung)
-    - **Intelligente Vorauswahl**: Zunächst mehr Quellen abrufen (z.B. 50 pro Zeit-Intervall)
+    - **Intelligente Vorauswahl**: Zunächst mehr Quellen abrufen (z.B. 50 pro Zeitintervall)
     - **KI-Bewertung**: Sprachmodell bewertet jeden Text hinsichtlich der Relevanz
-    - **Selektive Filterung**: Nur die besten Texte werden ausgewählt (z.B. 20 pro Zeit-Intervall)
+    - **Selektive Filterung**: Nur die besten Texte werden ausgewählt (z.B. 20 pro Zeitintervall)
     - **Transparente Begründungen**: Nachvollziehbare Erklärungen für jede Auswahl
-    - **Zeit-Interval-Integration**: Gleichmäßige Verteilung über verschiedene Perioden
+    - **Zeitintervall-Integration**: Gleichmäßige Verteilung über verschiedene Perioden
     - **Anpassbare Bewertungskriterien**: Verschiedene Prompt-Vorlagen für unterschiedliche Analysezwecke
     - **Temperatur-Kontrolle**: Determinismus der KI-Bewertung konfigurierbar
     
@@ -83,7 +83,7 @@ def create_info_panel():
     ## Hauptfunktionen
     
     - **Retrieval-Query-Optimierung**: Semantische Suche mit wenigen Phrasen und vielen Begriffen
-    - **Zeit-Interval-Analyse**: Gleichmäßige Abdeckung verschiedener historischer Perioden
+    - **Zeitintervall-Analyse**: Gleichmäßige Abdeckung verschiedener historischer Perioden
     - **Flexible Chunking-Größen**: Optimieren Sie die Suche mit verschiedenen Chunk-Größen (500, 2000, 3000 Zeichen)
     - **Vier leistungsstarke LLM-Optionen**: HU-LLM, DeepSeek R1, OpenAI GPT-4o, Google Gemini 2.5 Pro
     - **Umfassende Downloads**: JSON/CSV-Export mit Metadaten und KI-Bewertungen, TXT-Export für Analysen
@@ -103,10 +103,10 @@ def create_info_panel():
     - Wählen Sie die **Chunking-Größe** (500/2000/3000 Zeichen)
     
     **Für Standard-Suche zusätzlich:**
-    - **Anzahl Ergebnisse** festlegen (1-50 gesamt oder pro Zeit-Intervall)
+    - **Anzahl Ergebnisse** festlegen (1-50 gesamt oder pro Zeitintervall)
     - Optional: **Schlagwort-Filterung** mit booleschen Ausdrücken (immer strikte Filterung)
     - Optional: **Semantische Erweiterung** für ähnliche Begriffe mit Häufigkeitsanalyse
-    - Optional: **Zeit-Interval-Suche** für ausgewogene zeitliche Abdeckung
+    - Optional: **Zeitintervall-Suche** für ausgewogene zeitliche Abdeckung
     
     **Für LLM-Unterstützte Auswahl zusätzlich:**
     - **Zeit-Intervalle** konfigurieren (standardmäßig aktiviert)
@@ -116,7 +116,7 @@ def create_info_panel():
     
     **Schritt 3: Heuristik starten**
     - Bei Standard-Suche: Sofortige Ergebnisse
-    - Bei LLM-Unterstützter Auswahl: Fortschrittsanzeige mit Zeit-Interval-Updates
+    - Bei LLM-Unterstützter Auswahl: Fortschrittsanzeige mit Zeitintervall-Updates
     
     ### 2. Quellenauswahl treffen
     
@@ -154,7 +154,7 @@ def create_info_panel():
     1. **Wenige Phrasen, viele Begriffe**: "Berliner Mauer Grenze DDR" statt "Wie wurde die Berliner Mauer dargestellt?"
     2. **Zeitgenössische Sprache**: Nutzen Sie Begriffe aus der Zeit für bessere Retrieval-Qualität
     3. **Semantische Erweiterung**: Aktivieren Sie diese für breitere Begriffsabdeckung
-    4. **Zeit-Interval-Suche**: Für diakrone Narrative und ausgewogene zeitliche Abdeckung
+    4. **Zeitintervall-Suche**: Für diakrone Narrative und ausgewogene zeitliche Abdeckung
     
     ### Analyse-Optimierung:
     1. **Chunking-Größe**: 3000 für Kontext, 2000 für Balance, 500 für Präzision
@@ -185,7 +185,7 @@ def create_info_panel():
     - **Heuristik**: Systematische Quellensuche und -bewertung
     - **Retrieval-Query**: Suchanfrage zur Quellenidentifikation
     - **Chunking-Größe**: Länge der Textabschnitte für die Verarbeitung
-    - **Zeit-Interval-Suche**: Zeitlich ausgewogene Quellenauswahl
+    - **Zeitintervall-Suche**: Zeitlich ausgewogene Quellenauswahl
     - **LLM-Unterstützte Auswahl**: KI-gestützte Quellenbewertung
     - **User-Prompt**: Konkrete Forschungsfrage an die Quellen
     - **System-Prompt**: Methodische Anweisungen an das KI-System

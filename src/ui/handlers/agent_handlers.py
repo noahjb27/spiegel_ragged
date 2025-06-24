@@ -241,7 +241,7 @@ def perform_llm_assisted_search_threaded(
     llm_assisted_temperature: float,  
     llm_assisted_system_prompt_template: str, 
     llm_assisted_system_prompt_text: str  
-) -> Tuple[str, Dict[str, Any], str, gr.update, gr.update, gr.update, gr.update, gr.update, gr.update]:
+) -> Tuple[str, Dict[str, Any], str, gr.update, gr.update, gr.update, gr.update, gr.update]:
     """
     Perform LLM-assisted search in a thread with UI updates and enhanced system prompt support.
     """
@@ -296,14 +296,13 @@ def perform_llm_assisted_search_threaded(
         # Final UI updates
         final_progress = gr.update(visible=False)
         final_cancel_btn = gr.update(visible=False)
-        final_search_btn = gr.update(interactive=True)
-        
+        final_search_btn = gr.update(interactive=True)        
         # Clear thread reference
         search_thread = None
         
         return (
-            search_status, retrieved_chunks, formatted_chunks,
-            gr.update(),  # search_mode (no change)
+            search_status, retrieved_chunks, 
+            'llm_assisted',  # search_mode radio value
             final_search_btn, final_cancel_btn, final_progress,
             retrieved_texts_state, question_state
         )
@@ -315,13 +314,13 @@ def perform_llm_assisted_search_threaded(
         error_status = f"Error: {str(e)}"
         final_progress = gr.update(visible=False)
         final_cancel_btn = gr.update(visible=False)
-        final_search_btn = gr.update(interactive=True)
-        
+        final_search_btn = gr.update(interactive=True)        
         search_thread = None
         
         return (
-            error_status, None, "Fehler bei der LLM-Unterstützten Auswahl.",  # UPDATED
-            gr.update(), final_search_btn, final_cancel_btn, final_progress,
+            error_status, None,  # search_status, retrieved_chunks_state
+            'llm_assisted',  # search_mode radio value
+            final_search_btn, final_cancel_btn, final_progress,
             gr.update(open=False), gr.update(open=False)
         )
 
@@ -373,7 +372,7 @@ def format_llm_assisted_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]
     # Display chunks with both scores
     for interval in sorted(chunks_by_interval.keys()):  
         if use_time_intervals:
-            formatted_text += f"## Zeit-Intervall {interval}\n\n"  # UPDATED terminology
+            formatted_text += f"## Zeitintervall {interval}\n\n"  # UPDATED terminology
         
         interval_chunks = chunks_by_interval[interval]  # UPDATED variable names
         

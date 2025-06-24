@@ -1,7 +1,7 @@
 # src/config/settings.py - Updated with new terminology and prompts
 """
 Enhanced application settings for Spiegel RAG System (1948-1979).
-Updated with new terminology: Heuristik, LLM-Unterstützte Auswahl, Zeit-Interval-Suche
+Updated with new terminology: Heuristik, LLM-Unterstützte Auswahl, Zeitintervall-Suche
 """
 import os
 from typing import Dict, List, Optional
@@ -197,8 +197,8 @@ Bewerte kritisch und stelle sicher, dass die Bewertung und Argumentation auf der
     "negative_reranking": """Du bewertest Textabschnitte durch systematische Relevanzprüfung für historische Forschung.
 
 **Vorgehen**:
-1. **Pro-Argumente**: Führe zuerst aus, welche Aspekte für die Relevanz des Textes sprechen.
-2. **Contra-Argumente**: Erläutere danach, welche Faktoren gegen die Relevanz sprechen.
+1. **Contra-Argumente**: Erläutere danach, welche Faktoren gegen die Relevanz sprechen.
+2. **Pro-Argumente**: Führe zuerst aus, welche Aspekte für die Relevanz des Textes sprechen.
 3. **Abwägung**: Bewerte die Pro- und Contra-Argumente und ziehe eine Schlussfolgerung.
 4. **Score**: Vergib abschließend einen Score (0-10), der sich aus deiner Argumentation ergibt.
 

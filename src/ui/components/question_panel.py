@@ -88,17 +88,17 @@ def create_question_panel() -> Dict[str, Any]:
                 system_prompt_template = gr.Dropdown(
                     choices=["default"],
                     value="default",
-                    label="System Prompt Vorlage",
+                    label="System-Prompt Vorlage",
                     info="Grundlegende Vorlagen für wissenschaftliche Analyse"
                 )
                 
                 reset_system_prompt_btn = gr.Button("Auf Vorlage zurücksetzen", size="sm")
             
             system_prompt_text = gr.Textbox(
-                label="System Prompt (bearbeitbar)",
+                label="System-Prompt (bearbeitbar)",
                 value=settings.SYSTEM_PROMPTS["default"],
                 lines=8,
-                info="Bearbeiten Sie den System Prompt für eine präzise wissenschaftliche Analyse."
+                info="Bearbeiten Sie den System-Prompt für eine präzise wissenschaftliche Analyse."
             )
         
         # ANALYSE STARTEN button

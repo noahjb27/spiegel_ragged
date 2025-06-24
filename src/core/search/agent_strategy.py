@@ -28,7 +28,7 @@ class AgentSearchConfig:
     agent_system_prompt: str = ""
     evaluation_batch_size: int = 8
     min_retrieval_relevance_score: float = 0.25  # NEW: Minimum retrieval score
-
+    evaluation_temperature: float = 0.0
 
 class TimeWindowedAgentStrategy(SearchStrategy):
     """
@@ -379,7 +379,7 @@ class TimeWindowedAgentStrategy(SearchStrategy):
                 context="",
                 model=self.agent_config.agent_model,
                 system_prompt=system_prompt,
-                temperature=0.2
+                temperature=self.agent_config.evaluation_temperature
                 )
             
             response_text = response.get('text', '')

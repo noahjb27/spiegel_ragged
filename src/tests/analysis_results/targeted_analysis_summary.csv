@@ -1,0 +1,4 @@
+Collection Name,Total Chunks,Total Tokens,Unique Articles
+recursive_chunks_3000_300_TH_cosine_nomic-embed-text,247639,158324804,78485
+recursive_chunks_2000_400_TH_cosine_nomic-embed-text,365378,171259477,78485
+recursive_chunks_500_100_TH_cosine_nomic-embed-text,291662,32257822,16282

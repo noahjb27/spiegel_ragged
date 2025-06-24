@@ -21,7 +21,7 @@ The SPIEGEL RAG (Retrieval-Augmented Generation) System is a sophisticated resea
 
 * **Heuristik (Heuristics)** : Separated retrieval and analysis phases
 * **LLM-Unterstützte Auswahl** : AI-assisted source evaluation with customizable prompts
-* **Zeit-Intervall-Suche** : Time-windowed search for balanced temporal coverage
+* **Zeitintervall-Suche** : Time-windowed search for balanced temporal coverage
 * **Interactive Source Selection** : Checkbox-based source selection with transfer functionality
 * **Multi-LLM Support** : HU-LLM, DeepSeek R1, OpenAI GPT-4o, Google Gemini 2.5 Pro
 * **Semantic Expansion** : FastText-based keyword expansion with corpus frequencies
@@ -222,7 +222,7 @@ class TimeWindowedAgentStrategy:
 * **Transferred Sources Display** : Review selected sources
 * **User Prompt Configuration** : Research question formulation
 * **LLM Selection** : Model and parameter configuration
-* **System Prompt Management** : Template-based prompt customization
+* **System-Prompt Management** : Template-based prompt customization
 
 #### 3. Info Tab
 
@@ -456,7 +456,7 @@ UI Display → Chunk Selection → Transfer to Analysis
 ```
 Transferred Chunks → Document Conversion → Context Assembly
      ↓
-User Prompt + System Prompt + Context → LLM Service
+User Prompt + System-Prompt + Context → LLM Service
      ↓
 Model Selection → Provider Routing → Response Generation
      ↓

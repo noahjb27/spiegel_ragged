@@ -2,7 +2,7 @@
 """
 Updated handler functions for search operations with new terminology:
 - Retrieval-Query (instead of content_description)
-- Zeit-Interval-Suche (instead of Zeitfenster-Suche)
+- Zeitintervall-Suche (instead of Zeitfenster-Suche)
 - LLM-Unterstützte Auswahl (instead of Agent search)
 - Enhanced chunk selection functionality
 """
@@ -53,7 +53,7 @@ def perform_retrieval(
     chunks_per_interval: int = 5  # UPDATED: from chunks_per_window
 ) -> Tuple[str, Dict[str, Any]]:
     """
-    Perform source retrieval using the updated strategy-based approach with Zeit-Interval-Suche.
+    Perform source retrieval using the updated strategy-based approach with Zeitintervall-Suche.
     """
     try:
         if not rag_engine:
@@ -69,7 +69,7 @@ def perform_retrieval(
         keywords_cleaned = keywords.strip() if keywords else None
         search_fields = search_in if search_in else ["Text"]
         
-        logger.info(f"Starting retrieval with Zeit-Interval-Suche: {use_time_intervals}")
+        logger.info(f"Starting retrieval with Zeitintervall-Suche: {use_time_intervals}")
         logger.info(f"Retrieval-Query: '{retrieval_query}', Keywords: '{keywords_cleaned}'")
         
         # Determine effective top_k based on time interval usage
@@ -96,7 +96,7 @@ def perform_retrieval(
         
         # Choose strategy based on user selection
         if use_time_intervals:
-            logger.info(f"Using Zeit-Interval-SearchStrategy with interval size: {time_interval_size}")
+            logger.info(f"Using Zeitintervall-SearchStrategy with interval size: {time_interval_size}")
             # Create custom strategy with chunks per interval logic
             strategy = EnhancedTimeIntervalSearchStrategy(
                 interval_size=time_interval_size,
@@ -146,7 +146,7 @@ def perform_retrieval(
         logger.info(f"Retrieval completed: {num_chunks} chunks in {retrieval_time:.2f}s")
         
         # Create info message with updated terminology
-        method_name = "Zeit-Interval-Suche" if use_time_intervals else "Standard-Suche"
+        method_name = "Zeitintervall-Suche" if use_time_intervals else "Standard-Suche"
         info_text = f"""
         ### Quellen erfolgreich abgerufen ({method_name})
         
@@ -279,7 +279,7 @@ def perform_analysis(
         - **Temperatur**: {temperature} (Determinismus-Grad)
         {chunk_selection_info}
 
-        ## System Prompt (verwendet)
+        ## System-Prompt (verwendet)
         ```
         {system_prompt[:500]}{'...' if len(system_prompt) > 500 else ''}
         ```
@@ -495,13 +495,13 @@ def format_chunks(
     
     chunks_text = selection_info
     
-    # Display chunks grouped by time interval if using Zeit-Interval-Suche
+    # Display chunks grouped by time interval if using Zeitintervall-Suche
     if use_time_intervals:
         chunks_text += "# Ergebnisse nach Zeit-Intervallen\n\n"
         
         # Show chunks per interval info
         if chunks_per_interval:
-            chunks_text += f"**Konfiguration**: {chunks_per_interval} Chunks pro Zeit-Intervall\n\n"
+            chunks_text += f"**Konfiguration**: {chunks_per_interval} Chunks pro Zeitintervall\n\n"
         
         # Create time intervals
         time_intervals = []
@@ -511,7 +511,7 @@ def format_chunks(
         
         # Group years into their respective time intervals
         for interval_start, interval_end in time_intervals:
-            interval_label = f"## Zeit-Intervall {interval_start}-{interval_end}\n\n"
+            interval_label = f"## Zeitintervall {interval_start}-{interval_end}\n\n"
             interval_chunks = []
             
             # Collect chunks from years in this interval
@@ -561,9 +561,9 @@ def format_chunks(
                 chunks_text += "\n"
             else:
                 chunks_text += interval_label
-                chunks_text += "Keine Texte gefunden in diesem Zeit-Intervall.\n\n"
+                chunks_text += "Keine Texte gefunden in diesem Zeitintervall.\n\n"
     else:
-        # Regular display by year when not using Zeit-Interval-Suche
+        # Regular display by year when not using Zeitintervall-Suche
         chunks_text += f"# Gefundene Texte ({len(chunks)})\n\n"
         
         for year in sorted(chunks_by_year.keys()):
@@ -588,14 +588,14 @@ def format_chunks(
 
 # UPDATED: Custom time interval strategy with new terminology
 class EnhancedTimeIntervalSearchStrategy:
-    """Enhanced Zeit-Interval search strategy with chunks per interval control."""
+    """Enhanced Zeitintervall search strategy with chunks per interval control."""
     
     def __init__(self, interval_size: int = 5, chunks_per_interval: int = 5):
         self.interval_size = interval_size
         self.chunks_per_interval = chunks_per_interval
     
     def search(self, config, vector_store, progress_callback=None):
-        """Execute Zeit-Interval search with controlled chunks per interval."""
+        """Execute Zeitintervall search with controlled chunks per interval."""
         from src.core.search.strategies import SearchResult
         
         start_time = time.time()
@@ -607,7 +607,7 @@ class EnhancedTimeIntervalSearchStrategy:
             interval_end = min(interval_start + self.interval_size - 1, end_year)
             intervals.append((interval_start, interval_end))
         
-        logger.info(f"Enhanced Zeit-Interval search: {len(intervals)} intervals, {self.chunks_per_interval} chunks per interval")
+        logger.info(f"Enhanced Zeitintervall search: {len(intervals)} intervals, {self.chunks_per_interval} chunks per interval")
         
         all_chunks = []
         interval_counts = {}

@@ -286,7 +286,7 @@ class ChromaDBInterface:
             if self._document_matches_keywords(texts_to_search, parsed_query):
                 filtered_results.append((doc, score))
                 # Early exit if we have enough results
-                if len(filtered_results) >= 50:  # Reasonable limit
+                if len(filtered_results) >= 150:  # Reasonable limit
                     break
         
         logger.info(f"Keyword filtering kept {len(filtered_results)} out of {len(results)} results")

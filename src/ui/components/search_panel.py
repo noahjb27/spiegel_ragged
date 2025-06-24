@@ -81,7 +81,7 @@ def create_search_panel(
             # Total chunks (shown when time intervals are disabled)
             top_k = gr.Slider(
                 minimum=1,
-                maximum=50,
+                maximum=150,
                 value=10,
                 step=1,
                 label="Anzahl Ergebnisse (gesamt)",
@@ -95,8 +95,8 @@ def create_search_panel(
                 maximum=20,
                 value=5,
                 step=1,
-                label="Ergebnisse pro Zeit-Intervall",
-                info="Anzahl der Texte pro Zeit-Intervall.",
+                label="Ergebnisse pro Zeitintervall",
+                info="Anzahl der Texte pro Zeitintervall.",
                 visible=False
             )
         
@@ -153,19 +153,19 @@ def create_search_panel(
                 # UPDATED: Show frequency and similarity
                 expansion_output = gr.Markdown(label="Ähnliche Wörter mit Häufigkeiten")
             
-            # UPDATED: Zeit-Interval-Suche (formerly Zeitfenster-Suche)
-            with gr.Accordion("Zeit-Interval-Suche", open=False):
+            # UPDATED: Zeitintervall-Suche (formerly Zeitfenster-Suche)
+            with gr.Accordion("Zeitintervall-Suche", open=False):
                 gr.Markdown("""
-                ### Zeit-Interval-Suche
+                ### Zeitintervall-Suche
                 
-                Die Zeit-Interval-Suche unterteilt den Suchzeitraum in kleinere Abschnitte und sorgt für 
+                Die Zeitintervall-Suche unterteilt den Suchzeitraum in kleinere Abschnitte und sorgt für 
                 eine gleichmäßige Verteilung der Ergebnisse über verschiedene Zeitperioden. Dies ermöglicht
                 ein diakrones Narrativ durch ausgewogene zeitliche Abdeckung.
                 """)
                 
                 # UPDATED: Moved window size under the checkbox
                 use_time_intervals = gr.Checkbox(
-                    label="Zeit-Interval-Suche aktivieren",
+                    label="Zeitintervall-Suche aktivieren",
                     value=False,
                     info="Sucht in definierten Zeit-Intervallen für gleichmäßige zeitliche Verteilung"
                 )
@@ -222,7 +222,7 @@ def create_search_panel(
                 value=settings.LLM_ASSISTED_DEFAULT_CHUNKS_PER_WINDOW_INITIAL,
                 step=5,
                 label="Initial pro Intervall",
-                info="Anzahl der Texte, die zunächst pro Zeit-Intervall abgerufen werden"
+                info="Anzahl der Texte, die zunächst pro Zeitintervall abgerufen werden"
             )
             
             chunks_per_interval_final = gr.Slider(
@@ -231,7 +231,7 @@ def create_search_panel(
                 value=settings.LLM_ASSISTED_DEFAULT_CHUNKS_PER_WINDOW_FINAL,
                 step=5,
                 label="Final pro Intervall",
-                info="Anzahl der Texte, die nach KI-Bewertung pro Zeit-Intervall behalten werden"
+                info="Anzahl der Texte, die nach KI-Bewertung pro Zeitintervall behalten werden"
             )
         
         # LLM-assisted minimum retrieval relevance score
@@ -280,9 +280,9 @@ def create_search_panel(
             
             # UPDATED: System prompt template selection and editing
             gr.Markdown("""
-            ### System Prompt für Quellenbewertung
+            ### System-Prompt für Quellenbewertung
             
-            Wählen Sie eine Vorlage und bearbeiten Sie sie nach Ihren Bedürfnissen. Der System Prompt steuert, 
+            Wählen Sie eine Vorlage und bearbeiten Sie sie nach Ihren Bedürfnissen. Der System-Prompt steuert, 
             wie das LLM die Relevanz der Quellen bewertet.
             """)
             
@@ -298,10 +298,10 @@ def create_search_panel(
             
             # Editable system prompt text area
             llm_assisted_system_prompt_text = gr.Textbox(
-                label="System Prompt für Bewertung (bearbeitbar)",
+                label="System-Prompt für Bewertung (bearbeitbar)",
                 value=settings.LLM_ASSISTED_SYSTEM_PROMPTS["standard_evaluation"],
                 lines=8,
-                info="Bearbeiten Sie den System Prompt für die Quellenbewertung nach Ihren Bedürfnissen."
+                info="Bearbeiten Sie den System-Prompt für die Quellenbewertung nach Ihren Bedürfnissen, nutzen Sie die Verbindung von LLM als ."
             )
         
         llm_assisted_search_btn = gr.Button("LLM-Unterstützte Auswahl starten", variant="primary")

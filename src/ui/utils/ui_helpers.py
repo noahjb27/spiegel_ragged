@@ -148,6 +148,6 @@ def format_analysis_metadata(
         prompt_display = system_prompt
         if len(prompt_display) > 300:
             prompt_display = prompt_display[:297] + "..."
-        metadata_text += f"\n## System Prompt\n```\n{prompt_display}\n```"
+        metadata_text += f"\n## System-Prompt\n```\n{prompt_display}\n```"
     
     return metadata_text

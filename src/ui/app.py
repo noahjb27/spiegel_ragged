@@ -913,7 +913,7 @@ UTILITY CLASSES
         
         - **Heuristik**: Getrennte Retrieval- und Analyse-Phasen für bessere Kontrolle
         - **LLM-Unterstützte Auswahl**: KI-gestützte Quellenbewertung mit anpassbaren Prompts
-        - **Zeit-Interval-Suche**: Gleichmäßige zeitliche Verteilung der Quellen
+        - **Zeitintervall-Suche**: Gleichmäßige zeitliche Verteilung der Quellen
         - **Quellenauswahl**: Interaktive Auswahl der zu analysierenden Texte
         """)
         
@@ -1028,9 +1028,7 @@ UTILITY CLASSES
                     chunks_display_components["current_page_state"],
                     chunks_display_components["chunks_per_page_state"]
                 ]
-            )
-
-        # LLM-assisted search - update chunks display
+            )        # LLM-assisted search - update chunks display
         search_components["llm_assisted_search_btn"].click(
             perform_llm_assisted_search_threaded,
             inputs=[
@@ -1045,8 +1043,8 @@ UTILITY CLASSES
                 search_components["llm_assisted_min_retrieval_score"],  
                 search_components["llm_assisted_keywords"],  
                 search_components["llm_assisted_search_in"],  
-                gr.State(True),
                 search_components["llm_assisted_model"], 
+                search_components["llm_assisted_temperature"],  
                 search_components["llm_assisted_system_prompt_template"], 
                 search_components["llm_assisted_system_prompt_text"] 
             ],
