@@ -378,15 +378,20 @@ def format_llm_assisted_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]
         
         for i, chunk in enumerate(interval_chunks, 1):
             metadata_chunk = chunk['metadata']
-            formatted_text += f"### {i}. {metadata_chunk.get('Artikeltitel', 'Kein Titel')}\n\n"
+            # Calculate overall ranking (position across all intervals)
+            overall_rank = sum(len(chunks_by_interval[intv]) for intv in sorted(chunks_by_interval.keys()) if intv < interval) + i
             
-            # Show both evaluation scores
+            formatted_text += f"### {overall_rank}. {metadata_chunk.get('Artikeltitel', 'Kein Titel')}\n\n"
+            
+            # Show metadata - only LLM score (remove redundant Vector score)
             llm_score = chunk.get('llm_evaluation_score', 0.0)
             vector_score = chunk.get('vector_similarity_score', 0.0)
+            year = metadata_chunk.get('Jahr', metadata_chunk.get('Jahrgang', 'Unbekannt'))
             
             formatted_text += f"**Datum**: {metadata_chunk.get('Datum', 'Unbekannt')} | "
-            formatted_text += f"**LLM-Score**: {llm_score:.3f} | "
-            formatted_text += f"**Vector-Score**: {vector_score:.3f}"
+            formatted_text += f"**Jahr**: {year} | "
+            formatted_text += f"**LLM**: {llm_score:.3f} | "
+            formatted_text += f"**Vector**: {vector_score:.3f}"
             
             # Add evaluation text if available
             eval_text = metadata_chunk.get('evaluation_text', '')
@@ -400,10 +405,25 @@ def format_llm_assisted_chunks_with_dual_scores(retrieved_chunks: Dict[str, Any]
             
             formatted_text += "\n\n"
             
-            # Show evaluation reasoning if available
-            if eval_text and '-' in eval_text:
-                reasoning = eval_text.split('-', 1)[1].strip()
-                formatted_text += f"**KI-Begründung**: {reasoning}\n\n"
+            # Show evaluation reasoning (Begründung) if available
+            if eval_text and eval_text.strip():
+                reasoning = ""
+                # Try different patterns to extract reasoning
+                if '**Argumentation:**' in eval_text:
+                    # Extract text after "Argumentation:" 
+                    reasoning = eval_text.split('**Argumentation:**', 1)[1].strip()
+                    # Remove any score information at the end
+                    if 'Score:' in reasoning:
+                        reasoning = reasoning.split('Score:')[0].strip()
+                elif '-' in eval_text:
+                    # Original dash separator format
+                    reasoning = eval_text.split('-', 1)[1].strip()
+                else:
+                    # Use full evaluation text as fallback
+                    reasoning = eval_text.strip()
+                
+                if reasoning and reasoning != "Automatisch extrahiert":
+                    formatted_text += f"**Begründung**: {reasoning}\n\n"
             
             formatted_text += f"**Text**:\n{chunk['content']}\n\n"
             formatted_text += "---\n\n"
@@ -465,9 +485,10 @@ def create_llm_assisted_download_comprehensive(retrieved_chunks: Optional[Dict[s
             "all_evaluations": evaluations
         }
         
-        # Add selected chunks with dual scores
-        for chunk in retrieved_chunks.get('chunks', []):
+        # Add selected chunks with dual scores and ranking
+        for rank, chunk in enumerate(retrieved_chunks.get('chunks', []), 1):
             chunk_data = {
+                "rank": rank,  # Add ranking information
                 "content": chunk.get('content', ''),
                 "relevance_score": chunk.get('relevance_score', 0.0),  # Primary UI score (LLM)
                 "vector_similarity_score": chunk.get('vector_similarity_score', 0.0),  # Vector score
@@ -475,7 +496,9 @@ def create_llm_assisted_download_comprehensive(retrieved_chunks: Optional[Dict[s
                 "metadata": chunk.get('metadata', {}),
                 "zeit_interval": chunk.get('metadata', {}).get('time_window', 'Unknown'),  # UPDATED terminology
                 "evaluation_text": chunk.get('metadata', {}).get('evaluation_text', ''),
+                "evaluation_reasoning": "",  # Extract reasoning separately
                 "score_details": {  # Detailed score breakdown
+                    "rank": rank,  # Include ranking in score details too
                     "vector_similarity": chunk.get('vector_similarity_score', 0.0),
                     "llm_evaluation": chunk.get('llm_evaluation_score', 0.0),
                     "primary_display_score": chunk.get('relevance_score', 0.0),
@@ -484,6 +507,30 @@ def create_llm_assisted_download_comprehensive(retrieved_chunks: Optional[Dict[s
                     "evaluation_temperature": metadata.get('evaluation_temperature', 'not specified')  # NEW
                 }
             }
+            
+            # Extract reasoning from evaluation text using improved parsing
+            eval_text = chunk.get('metadata', {}).get('evaluation_text', '')
+            reasoning = ""
+            if eval_text:
+                if '**Argumentation:**' in eval_text:
+                    # Extract text after "Argumentation:" 
+                    reasoning = eval_text.split('**Argumentation:**', 1)[1].strip()
+                    # Remove any score information at the end
+                    if 'Score:' in reasoning:
+                        reasoning = reasoning.split('Score:')[0].strip()
+                elif '-' in eval_text:
+                    # Original dash separator format
+                    reasoning = eval_text.split('-', 1)[1].strip()
+                else:
+                    # Use full evaluation text as fallback, but clean it up
+                    reasoning = eval_text.strip()
+                    # Remove common prefixes that aren't part of reasoning
+                    if reasoning.startswith('Text ') and ':' in reasoning:
+                        reasoning = reasoning.split(':', 1)[1].strip()
+            
+            chunk_data["evaluation_reasoning"] = reasoning
+            chunk_data["score_details"]["evaluation_reasoning"] = reasoning
+            
             export_data["selected_chunks"].append(chunk_data)
         
         # Create temporary file

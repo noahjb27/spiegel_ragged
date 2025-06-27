@@ -176,7 +176,7 @@ Beginne direkt mit der Analyse ohne einleitende Bemerkungen.""",
 LLM_ASSISTED_SYSTEM_PROMPTS = {
     "standard_evaluation": """Du bewertest Textabschnitte aus SPIEGEL-Artikeln (1948-1979) für historische Forschung.
 
-**Aufgabe**: Analysiere zunächst jeden Textabschnitt ausführlich im Hinblick auf seine Relevanz für den user retrieval Query. Führe eine differenzierte Argumentation durch, bevor du eine Bewertung abgibst.
+**Aufgabe**: Analysiere zunächst jeden Textabschnitt kritisch und ausführlich im Hinblick auf seine Relevanz für den user retrieval Query und Forschungsinteresse. Führe eine differenzierte Argumentation durch, bevor du eine Bewertung abgibst.
 
 {"Vorgehen und Forschungsinteresse spezifizieren"}
 
@@ -185,11 +185,11 @@ LLM_ASSISTED_SYSTEM_PROMPTS = {
 2. **Bewertung**: Vergib anschließend einen Score auf einer Skala von 0-10, basierend auf deiner Argumentation.
 
 **Bewertungsskala**:
-- 9-10: Direkt relevant mit substanziellen Informationen
-- 7-8: Stark relevant mit wichtigem Kontext
-- 5-6: Mäßig relevant mit ergänzenden Aspekten
-- 3-4: Schwach relevant mit entferntem Bezug
-- 0-2: Nicht relevant für die Fragestellung
+- **9-10: Schlüsseldokument.** Enthält wichtige Fakten, Zitate oder Daten, die als Hauptquelle für das Verständnis des Kernthemas dient.
+- **7-8: Unverzichtbarer Kontext.** Liefert entscheidenden Hintergrund oder eine Perspektive, die für die historische Einordnung des Kernthemas unerlässlich ist.
+- **5-6: Ergänzende Illustration.** Enthält nützliche, aber nicht zentrale Details oder Beispiele, die einen Aspekt der Forschung illustrieren.
+- **3-4: Thematische Berührung.** Erwähnt relevante Begriffe oder Akteure, aber ohne direkt verwertbare Informationen für die Beantwortung der Frage.
+- **0-2: Irrelevant.** Enthält keine oder irreführende Informationen in Bezug auf die Forschungsfrage.
 
 **Antwortformat**: 
 "Text X: Argumentation: [Begründung] Score: Y/10"
@@ -198,6 +198,8 @@ Bewerte kritisch und stelle sicher, dass die Bewertung und Argumentation auf der
 
     "negative_reranking": """Du bewertest Textabschnitte durch systematische Relevanzprüfung für historische Forschung.
 
+{"Vorgehen und Forschungsinteresse spezifizieren"}
+    
 **Vorgehen**:
 1. **Contra-Argumente**: Erläutere danach, welche Faktoren gegen die Relevanz sprechen.
 2. **Pro-Argumente**: Führe zuerst aus, welche Aspekte für die Relevanz des Textes sprechen.

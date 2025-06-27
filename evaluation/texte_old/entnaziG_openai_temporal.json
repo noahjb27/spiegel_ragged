@@ -1,62 +1,34 @@
 {
   "export_info": {
-    "timestamp": "2025-06-24T23:14:56.516769",
+    "timestamp": "2025-06-24T19:09:09.038979",
     "format": "json",
     "source": "SPIEGEL RAG System - Heuristik",
-    "total_chunks": 102,
+    "total_chunks": 100,
     "has_dual_scores": false,
     "supports_chunk_selection": true,
-    "search_method": "zeit_interval"
+    "search_method": "standard"
   },
   "heuristik_metadata": {
-    "search_time": 19.49522066116333,
-    "strategy": "enhanced_time_interval",
+    "search_time": 5.267899990081787,
+    "strategy": "standard",
     "chunk_size": 3000,
     "year_range": [
       1950,
       1979
     ],
     "keywords": null,
-    "retrieval_method": "zeit_interval",
-    "chunks_per_interval": 17,
-    "effective_top_k": 102,
-    "interval_size": 5,
-    "intervals": [
-      [
+    "retrieval_method": "standard",
+    "chunks_per_interval": null,
+    "effective_top_k": 100,
+    "config": {
+      "year_range": [
         1950,
-        1954
-      ],
-      [
-        1955,
-        1959
-      ],
-      [
-        1960,
-        1964
-      ],
-      [
-        1965,
-        1969
-      ],
-      [
-        1970,
-        1974
-      ],
-      [
-        1975,
         1979
-      ]
-    ],
-    "interval_counts": {
-      "1950-1954": 17,
-      "1955-1959": 17,
-      "1960-1964": 17,
-      "1965-1969": 17,
-      "1970-1974": 17,
-      "1975-1979": 17
+      ],
+      "chunk_size": 3000,
+      "keywords": null
     },
-    "total_chunks_found": 102,
-    "total_chunks": 102
+    "total_chunks": 100
   },
   "chunks": [
     {
@@ -733,27 +705,6 @@
     },
     {
       "chunk_id": 33,
-      "relevance_score": 0.7438928484916687,
-      "content": "Aus Stalins Befehl Nr. 55 vom 23. Februar 1942: In der ausländischen Presse wird manchmal darüber geschwätzt, daß die Rote Armee das Ziel habe, das deutsche Volk auszurotten und den deutschen Staat zu vernichten. Das ist natürlich ein dummes Gefasel Solche idiotischen Ziele hat die Rote Armee nicht. Es wäre lächerlich, die Hitlerclique mit dem deutschen Volk. mit dem deutschen Staat gleichzusetzen. Die Erfahrungen der Geschichte besagen, daß die Hitler kommen und gehen, aber das deutsche Volk. der deutsche Staat bleibt ... Daß die Sowjetmenschen die Deutschen eben als Deutsche haßten, ist natürlich ebenfalls eine dumme Lüge. Aus Stalins Rede am 6. November 1942: Eine solche Aufgabe wie die Vernichtung Deutschlands haben wir nicht, denn es ist unmöglich, Deutschland zu vernichten. so wie es unmöglich ist, Rußland zu vernichten. Der Kannibale Hitler (erklärt): »Wir werden den Krieg so lange fortsetzen, bis in Rußland keine organisierte militärische Kraft übrigbleibt.« Das ist, wie es scheint, deutlich, wenn auch erzdumm. Eine solche Aufgabe wie die Vernichtung jeder organisierten militärischen Kraft in Deutschland haben wir nicht, denn jeder einigermaßen Gebildete wird verstehen, daß das in bezug auf Deutschland wie Rußland nicht nur unmöglich, sondern auch vom Standpunkt des Siegers unzweckmäßig ist.",
-      "metadata": {
-        "titel": "»Deutschland bleibt«",
-        "datum": "1975-05-04",
-        "jahrgang": 1975,
-        "ausgabe": 19,
-        "url": "https://www.spiegel.de/politik/deutschland-bleibt-a-1cdb78e6-0002-0001-0000-000041558736?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 34,
       "relevance_score": 0.7437276840209961,
       "content": "»Wenig Köpfe. Probezeichnung ungenügend.« Mit diesem Befund lehnte die Wiener Akademie 1907 die Aufnahme des Prüflings Adolf Hitler in die Kunstanstalt ab. Der Braunauer blieb Amateur. In Wien und München verdiente er sich mit Aquarellen, Federzeichnungen und Plakatentwürfen ein zusätzliches Handgeld. Nach Angaben von Mitbewohnern des Männerheims in Wien, in dem sich Hitler einige Zeit aufhielt, malte er täglich durchschnittlich ein Bild. Später verfertigte er als kaiserlicher Meldegänger im Ersten Weltkrieg Frontkameraden und Dorf-Idylle im Feindesland. Als sich Mitarbeiter des Hauptarchivs der NSDAP in den Jahren 1938/39 bemühten, Bilder von Hitler zusammenzutragen, fanden sie zahlreiche Hitler-Arbeiten, die damals zwischen 2000 und 8000 Mark kosteten. Die hier abgebildeten Hitler-Zeichnungen und -Aquarelle werden im Bundesarchiv (Koblenz) und im Zeitgeschichtlichen Bildarchiv Heinrich Hoffmann (München) verwahrt. Aquarell, 1914: Hohlweg bei Wytschade Zeichnung, um 1920: Entwurf einer Hakenkreuzfahne Aquarell, um 1910: Kirche Maria am Gestade Federzeichnung, um 1902: Römischer Feldherr Zeichnung, um 1915: Soldaten auf dem Marsch (erster v. l. Hitler) Aquarell, um 1915: Haus mit weitem Zaun Federzeichnung, um 1910: Scheich Karikatur, 1903: Professor in Linz",
       "metadata": {
@@ -774,7 +725,7 @@
       }
     },
     {
-      "chunk_id": 35,
+      "chunk_id": 34,
       "relevance_score": 0.7437058687210083,
       "content": "(Nr. 45/1975, Extremisten) Wenn böse Absicht nicht unterstellt werden soll, so muß es an der Auffassungsgabe oder am Gedächtnis Ihres Informanten liegen, daß ich in einem wichtigen Zusammenhang falsch zitiert worden bin. Ich vertrete nämlich nicht die Ansicht, daß bloße Mitgliedschaft in einer extremistischen Partei schon Indiz genug ist, Verfassungsuntreue zu unterstellen und Bewerber vom öffentlichen Dienst auszuschließen. In der fraglichen Diskussion ging es um den logischen Zusammenhang zweier Absätze in einem Papier, die eine Auslegung des Bundesverfassungsgerichtsurteils darstellen. Es geht darum, daß bloße Mitgliedschaft nach diesem Urteil eine Regelvermutung, daß der Bewerber nicht verfassungstreu sei, nicht rechtfertigt. Wenn das so ist, auch wenn diese Mitgliedschaft als Element der Gesamtbeurteilung relevant sein kann, so müssen meines Erachtens für eine Ablehnung des Bewerbers darüber hinausgehende verfassungswidrige Aktivitäten vorliegen. Bonn ANTJE HUBER Bundesminister für Jugend, Familie und Gesundheit",
       "metadata": {
@@ -795,7 +746,7 @@
       }
     },
     {
-      "chunk_id": 36,
+      "chunk_id": 35,
       "relevance_score": 0.743690550327301,
       "content": "In Moskau wurde eine Elitedivision in Marsch gesetzt, die Schukow als Sicherungs- und Ordnungstruppe einsetzte. Erst dann hörten die Ausschreitungen auf. Die Armeeführer waren jedoch vorsichtig genug, ihre Verbände aus den Städten herauszunehmen und in Gettos fern der Bevölkerung zu konzentrieren. Dort leben sie und ihre Nachfolger noch heute, für die Öffentlichkeit nur freigegeben, wenn die DDR ihre Festtage feiert und die Rotarmisten sich des alten Stalin-Spruchs erinnern dürfen, den schon Alexandrow zitierte: »Die Hitler kommen und gehen. aber das deutsche Volk bleibt.«",
       "metadata": {
@@ -816,7 +767,7 @@
       }
     },
     {
-      "chunk_id": 37,
+      "chunk_id": 36,
       "relevance_score": 0.7436896562576294,
       "content": "Mit Farbpinseln hat die Deutsche Botschaft in Tunis die Nazi-Vergangenheit bewältigt. Unbekannte Täter hatten eine fahrbare Röntgenstation, die Tunesien 1961 von der Bundesrepublik geschenkt bekam, die jedoch jetzt von einem tschechischen Arzt bedient wird, mit einem Hakenkreuz bemalt. Als energische Vorstellungen der Botschaft bei der tunesischen Regierung, das Hakenkreuz zu entfernen, nichts fruchteten, ermittelten Botschaftsangestellte den Übernachtungsort des Röntgen-Mobils und übermalten das NS-Symbol in Selbsthilfe.",
       "metadata": {
@@ -837,28 +788,7 @@
       }
     },
     {
-      "chunk_id": 38,
-      "relevance_score": 0.7432074546813965,
-      "content": "Der DDR-Führung müsse die durch Drohgebärden à la Genscher geschürte Angst genommen werden, Bonn stelle immer noch die Existenz des zweiten deutschen Staates in Frage. Ein Kanzler-Berater: »Wir müssen Schmidt dazu bringen, sich dem Genscher in den Weg zu stellen, wenn der die nationale Frage aktualisieren will.« Helmut Schmidt folgte dem Rat. In seine Regierungserklärung soll eine Passage eingearbeitet werden, die der SED-Führung zu verstehen gibt, die innerdeutsche Politik der Bonner Koalition wolle die DDR nicht zur Selbstaufgabe zwingen. Ost-Berlin solle erkennen, daß die endgültige Lösung der deutschen Frage für die Bundesregierung kein aktuelles Problem ist -- sie sei vielmehr »eine historische Perspektive«.",
-      "metadata": {
-        "titel": "Zweite Phase",
-        "datum": "1976-12-12",
-        "jahrgang": 1976,
-        "ausgabe": 51,
-        "url": "https://www.spiegel.de/politik/zweite-phase-a-12c3502c-0002-0001-0000-000041066328?context=issue",
-        "autoren": "",
-        "schlagworte": "['Deutschland-Politik']",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 39,
+      "chunk_id": 37,
       "relevance_score": 0.7427464723587036,
       "content": "(Nr. 30/1955, Entnazifizierung) In Ihrem vortrefflichen Bericht über die Vermögen der Nazigrößen (\"Sie soll alles erben\"), der einmal mehr zeigt, wie uneigennützig diese Bonzen Millionen anhäuften und diese trotz ihres Glaubens an den Endsieg zu tarnen für nötig hielten, erwähnen Sie, daß der Tod Freislers bezweifelt würde. Fabian von Schlabrendorff schreibt hierzu in seinem Buch »Offiziere gegen Hitler« (Europa Verlag) auf Seite 213/214: Als am späten Vormittag des 3. Februar 1945 mein Fall vor dem Volksgerichtshof aufgerufen wurde, erklangen die Alarmsirenen ... Eiligst suchte das ganze Gericht die Kellergewölbe im Gebäude des Volksgerichtshofes auf. Auch ich wurde nach vorsorglicher Fesselung in den Keller gebracht. Ein furchtbares Bombardement begann ... Der Volksgerichtshof selbst war getroffen worden und stand in Flammen .. Ein Teil der Decke stürzte herunter. Ein gewaltiger Balken verlor seinen Halt, löste sich, schlug herunter und traf mit voller Wucht den Präsidenten des Volksgerichtshofes Freisler auf den Kopf, während das entgegengesetzte Ende einem Wachtmeister eine Brustquetschung zufügte. Ein Arzt wurde irgendwoher herbeigerufen. Das Ergebnis seiner kurzen Untersuchung lautete: Doppelseitiger Schädelbruch, tot. Mein Pflichtverteidiger erzählte mir später. Freisler habe noch meine Strafprozeßakten in der Hand gehalten. München ULRICH KEITEL",
       "metadata": {
@@ -879,7 +809,7 @@
       }
     },
     {
-      "chunk_id": 40,
+      "chunk_id": 38,
       "relevance_score": 0.74188232421875,
       "content": "Nach Amerikas Kriegseintritt gab Colonel Behn Anweisung, ITT solle alle Anstrengungen darauf richten, die Sache der Alliierten zu unterstützen. Das Instrumentenlande-System (ILS), Grundlage des Blindlande-Systems der Alliierten, wurde von ITT zum großen Teil aufgrund von Informationen aus ITT-Betrieben in Deutschland entwickelt, wo die ursprünglichen Entwicklungsarbeiten geleistet worden waren. Die Arbeiten der französischen ITT-Wissenschaftler, die Colonel Behn kurz nach dem Zusammenbruch Frankreichs 1940 in die USA gebracht hatte, führten zu technischen Errungenschaften, mit deren Hilfe die U-Boot-Gefahr auf dem Nordatlantik gebannt werden konnte. Zusammenfassend kann gesagt werden, daß Colonel Behn vernünftige Anstrengungen machte, die Interessen der ITT-Aktionäre in Deutschland zu schützen. Hitler und die Politik der Nazis aber hat er nicht unterstützt. Im Frühjahr 1941 versuchte er ein letztes Mal, die Interessen der Aktionäre durch den Verkauf der Hauptniederlassung in Deutschland an eine andere deutsche Firma zu sichern. Er hatte jedoch keinen Erfolg, als die Nazi-Regierung sich weigerte, den Transfer der vereinbarten Gelder aus Deutschland zu genehmigen.",
       "metadata": {
@@ -900,7 +830,7 @@
       }
     },
     {
-      "chunk_id": 41,
+      "chunk_id": 39,
       "relevance_score": 0.7417548894882202,
       "content": "Der Verfasser des 1958 erschienenen Buches »Hitler, der Feldherr« berichtet In seiner »Tragödie der deutschen Wehrmacht« (Untertitel) über die Offiziers-Fronde gegen Hitler in den Jahren 1933 bis 1945, so über den Röhm -Putsch 1934, den Fritsch-Prozeß 1938 und den Aufstandsversuch vom 20. Juli 1944. Überraschenderweise sieht der Historiker den Grund für das Scheitern der Aufstände nicht im Mangel an einer politischen Konzeption, sondern in der Charakterschwäche der Offiziere. Ihnen fehlte laut Buchheit »der notwendige Mut zu einer entschiedenen Kritik und zu persönlichem Einsatz angesichts der Gefahr, die Volk und Vaterland von seiten einer durch die absolute Macht korrumpierten Diktatur drohte«. Die sorgfältig dokumentierte Forschung nach der »politischen Verpflichtung« der rebellierenden Militärs bietet keinerlei neue Vorstellungen darüber, wie die deutsche Innen- und Außenpolitik nach dem Sturze Hitlers aussehen sollte. (G. Grote'sche Verlagsbuchhandlung, Rastatt; 512 Seiten; 24,80 Mark.)",
       "metadata": {
@@ -921,7 +851,7 @@
       }
     },
     {
-      "chunk_id": 42,
+      "chunk_id": 40,
       "relevance_score": 0.7414932250976562,
       "content": "Doch Hitler hatte Glück und gute Beziehungen: Er entging nicht nur den Erschießungskommandos der weißen »Befreier«, sondern wurde schließlich auch einer ihrer Helfer, nachdem Offiziere seines Regiments ein gutes Wort für ihn eingelegt hatten. Schon im Krieg war Hitler-Freund Schmidt aufgefallen: »Jeder Offizier kannte Hitler mit Namen, er wurde zu besonders schwierigen Aufgaben herangezogen.« Sie kommandierten ihn jetzt zur Untersuchungs-Kommission des 2. Infanterie-Regiments und gaben ihm die Order. Soldaten aufzuspüren, die in der Rätezeit auf der anderen Seite gestanden hatten. »Seine Anklageschriften«, so malte sich später der einstige Hitler-Bewunderer Viktor von Koerber die Tätigkeit Hitlers aus, brachten »rücksichtslose Klarheit in die unsagbare Schändlichkeit militärischer Verrätereien der Judendiktatur der Rätezeit Münchens«. Ohne es zu wissen, hatte Adolf Hitler einen entscheidenden Schritt in eine für ihn neue Richtung getan. Ei war in die Politik geraten. Im nächsten Heft: Hitler tritt als V-Mann der Reichswehr in die Deutsche Arbeiterpartei ein -- Er manövriert den Vorstand aus und macht sich zum diktatorischen »Führer« -- Die neuentdeckten Notizen des NS-Propagandisten Hitler",
       "metadata": {
@@ -942,7 +872,7 @@
       }
     },
     {
-      "chunk_id": 43,
+      "chunk_id": 41,
       "relevance_score": 0.7413065433502197,
       "content": "Wie lange der Erfolg allerdings andauern wird, ist unsicher: Potentielle Geiselnehmer stellen sich, wie gerade in der vergangenen Woche erneut deutlich wurde, zunehmend auf die Psycho-Tricks der Polizei ein. Die vier Guerillas der IRA, die in der vergangenen Woche in London ein Ehepaar als Geiseln hielten, warfen ein zum Zweck der Kommunikation mit der Polizei gedachtes Feldtelephon kurzerhand aus dem Fenster -- um sich gar nicht erst in die Gefahr zu begeben, von den Profis der Polizei weichgemacht zu werden. Am vergangenen Freitag gaben sie dennoch auf. Außerdem: Mit einem abrupten Ende der politisch motivierten Geiselnahmen rechnet trotz der gegenwärtigen Erfolgsserie niemand. Offensichtlich sehen radikale Gesinnungstäter einen Vorteil auch dann noch, wenn sie selbst nicht mehr, wie zu Beginn politischer Geiselnahmen vor einigen Jahren, ohne weiteres mit Straffreiheit für sich selbst rechnen können: die politische Verzinsung ihrer Tat, mit der sie ihre Ziele weltweit bekanntmachen können. Wer wußte bis vor zwei Wochen etwas vom Schicksal der Südmolukker? Bobbys vor dem versteck der IRA-Entführer.",
       "metadata": {
@@ -963,28 +893,7 @@
       }
     },
     {
-      "chunk_id": 44,
-      "relevance_score": 0.7410895824432373,
-      "content": "Andere Motive sind uns fremd. SPIEGEL: Der Mensch, sagen Sie, stünde bei Ihnen im Mittelpunkt der Rechtsordnung. Zu den Grundrechten des Menschen gehört aber auch das Recht auf Freizügigkeit. Nach unserer Rechtsordnung macht sich kein DDR-Bürger strafbar, wenn er über die Grenze fluchtet. Er übt damit nur sein Recht auf Freizügigkeit aus -- das in der Uno-Menschenrechtserklärung verankert und in Helsinki noch einmal bekräftigt wurde. Auch die DDR hat die Erklärung von Helsinki unterzeichnet und sich zu den Menschenrechten bekannt, wonach jedermann auch das eigene Land verlassen darf -- weshalb stellt sie die Republikflucht dann noch immer unter Strafe? FOTH: Natürlich gehört das Recht auf Freizügigkeit zu den Grundrechten. Doch jeder Staat regelt das nach seinen Interessen. So steht es im Völkerrecht SPIEGEL: Verstehen wir Sie richtig, daß Sie die Überzeugung vertreten, die DDR gewähre ihren Bürgern jede Freizügigkeit? FOTH: Im selben Maße, in dem die Bundesrepublik sie gewährt -- nämlich innerhalb des Staatsgebietes, so wie es auch bei Ihnen im Grundgesetz steht. SPIEGEL: Würden Sie einräumen, daß da in der Praxis doch ein gewisser Unterschied besteht? PRZYBYLSKI: Das erklärt sich aus den politischen Realitäten, die nicht nur von uns abhängen. Es liegt im Interesse der Menschen, wenn wir zum Beispiel unterbinden, daß Institutionen der Bundesrepublik ganz gezielt Fachkräfte, also Wissenschaftler, Angehörige der technischen Intelligenz. Ärzte und so weiter abwerben. Es liegt im Interesse der Bürger der DDR, wenn wir die Ausschleusung eines Arztes verhindern. Anderenfalls verlieren 600 Patienten ihren ärztlichen Betreuer, und wir benötigen zehn Jahre, um ihn voll zu ersetzen. SPIEGEL: Die Bundesrepublik hat doch gar keine Möglichkeit, Fachkräfte aus der DDR abzuwerben. Dafür sorgen schon die Grenztruppen der DDR. DDR-müde Bürger wollen vielmehr von sich aus ihr Land verlassen. FOTH: Aufgehetzt von bestimmten Massenmedien, ähnlich wie in der Nazi-Zeit. PRZYBYLSKI: Behörden der BRD beteiligen sich an der Ausschleusung, indem sie DDR-Bürgern im Ausland westdeutsche Pässe ausstellen. SPIEGEL: Das hängt mit der unterschiedlichen Auffassung über eine deutsche Staatsbürgerschaft zusammen. Doch zurück zum Fall Weinhold. Auf den Tatortphotos, die Sie unserer Justiz zur Verfügung gestellt haben, waren nicht einmal die Leichen der beiden Grenzsoldaten abgebildet. »Ein so massiv veränderter Tatort«, befand das Essener Schwurgericht, »ist für jeden Tatrichter immer eine Quelle des Mißtrauens.«",
-      "metadata": {
-        "titel": "»Für uns ist das Recht ein Mittel der Macht«",
-        "datum": "1976-12-12",
-        "jahrgang": 1976,
-        "ausgabe": 51,
-        "url": "https://www.spiegel.de/politik/fuer-uns-ist-das-recht-ein-mittel-der-macht-a-3a288b17-0002-0001-0000-000041066345?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 45,
+      "chunk_id": 42,
       "relevance_score": 0.7410179376602173,
       "content": "Die westdeutschen Sicherheitsbehörden registrieren seit einigen Monaten eine verstärkte Flucht von Ärzten aus der DDR. Die Mediziner setzen sich meist nach Kongreß -Besuchen in West-Staaten oder mit Unterstützung von Fluchthelfer-Organisationen über andere Länder vor allem Österreich und CSSR -- in die BRD ab. Seit Sommer vergangenen Jahres haben auf diesen Wegen etwa 50 Ärzte die DDR verlassen. Mutmaßliche Flucht- Motive: Erschwerte Arbeits- und Verdienstmöglichkeiten, besonders günstige Fluchtchancen sowie Kenntnis vom Ärztemangel und dem teilweise hohen Einkommen der Ärzte in der BRD.",
       "metadata": {
@@ -1005,7 +914,7 @@
       }
     },
     {
-      "chunk_id": 46,
+      "chunk_id": 43,
       "relevance_score": 0.7409460544586182,
       "content": "Die eigentliche Tat aber, die dem Maurer Garbe zu einem Platz in den höchsten Rängen der DDR-Aktivistenprominenz verhalf: war sein Unternehmen, Schäden an den Brennöfen, in deren Kammern Temperaturen bis zu 1000 Grad Celsius erzeugt werden, zu beheben, ohne daß in den Ofen das Feuer gelöscht werden mußte. Diese Tat des Maurer-Aktivisten Garbe war schon vor Jahren von dem Ostzonen -Schriftsteller, Nationalpreisträger und gelernten Maurer Eduard Claudius beschrieben worden. Sogar Bertolt Brecht hatte Vorstudien zu einem Bühnenstück betrieben, dessen Held der Ostberliner Aktivist werden sollte. Während aber Bertolt Brecht die Fabel bis 1953 reichen lassen wollte, wobei sein Aktivistenheld zwar Normerhöhungen in den Jahren des ersten wirtschaftlichen Aufbaus für notwendig und erfüllbar hielt, nicht aber die administrativ verfügten Normen, die dann der Anlaß zu den Ereignissen des 17. Juni 1953 wurden, war dem Heiner Müller diese dramaturgische Konstellation zu heikel. Nichtsdestoweniger skizzierte er in den 22 Kurzszenen seines Stückes vom »Lohndrücker« eine breite Skala politisch-ideologischer Abweichungen. Die überwiegende Mehrheit der beteiligten Personen steht dem SED-Regime scharf ablehnend gegenüber. »Früher hielt man sich an Termine, aber die Kirche blieb im Dorf. Es kam Geld ein. Das Ausland interessierte sich für uns, und der Arbeiter wurde satt. Das war die Ausbeutung. Davon sind wir ja nun befreit«, äußert sich zum Beispiel der Betriebsbuchhalter. Der Betriebsdirektor stellt fest: »Der Arbeiter hat kein Vertrauen zur Partei.« Den Grund dafür sucht er allerdings nicht bei der Partei: »Der Faschismus steckt ihnen (den. Arbeitern) in den Knochen. Granaten haben sie gedreht mit allen vieren, jetzt schreien sie 'Akkord ist Mord'.« Anders der Held des Stückes, Maurer -Aktivist Garbe, der in Müllers Stück Balke heißt. Balke hat die innere Wandlung zum »neuen Bewußtsein« bereits so weit vollzogen, daß er statt der geforderten Norm eine Überleistung von 400 Prozent erreicht. Dazu befähigt ihn nicht der Einsatz roher Körperkräfte, sondern kühle Gedankenübung im Dienste des Sozialismus. Autor Müller scheut keine Mühe, dem Publikum Balkes neue Maurertechnik auf der Bühne vorzuführen. Von Schamotte, Steinen, Mörtel und Kalkkästen umgeben, mauert Ideal-Aktivist Balke dem Publikum etwas vor. Neben ihm hantiert nach altem Stil sein Kollege Lerka »sehr schnell und schwitzend« mit der Maurerkelle. Maurer Lerka nämlich mauert nach der Alternative »Tempo oder Qualität. Alles können sie nicht haben.« Das von ihm im Schnellverfahren erstellte Mauerwerk aber erweist sich als unbrauchbar, so daß Lerka für acht Jahre ins Zuchthaus muß, wegen Sabotage. »So ist das also. Da schindet man sich krumm, ins Kreuz getreten 30 Jahre, fressen wie ein Hund und im Trab wie ein Gaul. Und jetzt heißt es: ein Saboteur«, macht Lerka seinem Herzen Luft. »Das ist also euer Arbeiterstaat. Ihr seid nicht besser als die Nazi.«",
       "metadata": {
@@ -1026,7 +935,7 @@
       }
     },
     {
-      "chunk_id": 47,
+      "chunk_id": 44,
       "relevance_score": 0.7406965494155884,
       "content": "Habe ich also wirklich nichts gewußt? Ja und nein. Jeder von uns kannte Dachau, Dachau stand für Eingesperrtsein und Nazi-Brutalität, für Konzentrationslager schlechthin. Ich kam aus dem östlichen Krieg nach Hause und wußte nichts von Gaskammern, nichts von der systematischen Ausmordung. Der Krieg hatte mich stumpf gemacht, mir wurde plötzlich bewußt, daß ich mich alt die Zeit nur um mein eigenes Schicksal und das meiner Familie gekümmert hatte. Das Los der Juden war aus meinem Blickfeld herausgetreten. Die ersten Bilder von Skelett-Halden machten mir Grausen, aber kein schlechtes Gewissen. Sie waren nur der Anfang und kamen aus dem britisch besetzten Bergen-Belsen, wo nicht vergast worden war. Als Reporter wurde ich von den Briten eingeteilt für den ersten KZ-Prozeß.",
       "metadata": {
@@ -1047,7 +956,7 @@
       }
     },
     {
-      "chunk_id": 48,
+      "chunk_id": 45,
       "relevance_score": 0.7404165267944336,
       "content": "Mit der Schere zensierte Adolf Hitler Aufnahmen, die er nicht mochte: Er schnitt eine Ecke ab (rechts); für das deutsche Volk bestimmte Führer-Bilder ließ er durch seinen Adjutanten Albert Bormann, einem Bruder des Reichsleiters Martin Bormann, freigeben. Eine Reihe der im Dritten Reich geheimgehaltenen Aufnahmen, die Hitlers Leibphotograph Heinrich Hoffmann in der »Kampfzeit«, nach der Machtübernahme und während des Krieges anfertigte, sind in dem Band »Hitlers Tischgespräche im Bild« (von Henry Picker und Heinrich Hoffmann) enthalten, der jetzt im Oldenburger Stalling Verlag erschien (224 Seiten, 28 Mark). Sie zeigen den NS-Propagandisten mit seiner Geliebten Geh Raubal in bürgerlicher Idylle und den deutschen Reichskanzler an seinem 54. Geburtstag mit den Kindern einiger seiner Getreuen, den siegreichen Feldherrn nach dem Blitzkrieg gegen Frankreich an der Stätte, wo der Gefreite des Ersten Weltkrieges gekämpft hatte, und den geschlagenen Kriegsherrn mit seiner Schäferhündin »Blondi« im Führerhauptquartier »Wolfsschanze«.",
       "metadata": {
@@ -1068,28 +977,7 @@
       }
     },
     {
-      "chunk_id": 49,
-      "relevance_score": 0.7402586340904236,
-      "content": "(Nr. 22/1979, Register) Warum bezweifeln Sie den Nutzen der Verleihung des Konrad-Adenauerpreises an Nico Hübner? Bezweifeln Sie damit gleichzeitig den Nutzen des Protestes der Weltöffentlichkeit gegen die Unterdrückung der Menschenrechte in allen Diktaturen? Meine Erfahrungen mit vielen Häftlingen beweisen das Gegenteil -- auch wenn die Bundesregierung dies »im Dienste der Entspannung« immer abstreiten wird. Bonn HANS WERNER SCHMÖLE MdB / CDU Mitglied des innerdeutschen Ausschusses Nico Hübners Wehrdienstverweigerung verdient Anerkennung. Daß aber ausgerechnet die CDU-nahe Deutschlandstiftung diesen Pazifisten ehrt, weil er ich »in mutiger Weise gegen die Methoden des DDR-Regimes aufgelehnt Lind sich als Bewohner Ost-Berlins unier Berufung auf das Vier-Mächte-Abkommen geweigert hat, seiner Einberufung zur Volksarmee zu folgen«, stinkt »um Himmel, solange die CDU, allen voran Manfred Wörner, westdeutsche Kriegsdienstverweigerer zwingt. sich in mutiger Weise den fragwürdigen Metoden eines Prüfungsausschusses zu stellen, wenn sie sieh als Bewohner der BRD unter Berufung auf das Grundgesetz weigern, der Einberufung zur Bundeswehr zu folgen. Trier (Rhld.-Pf.) BERNHARt ZELLBECK Kriegsdienstverweigerer",
-      "metadata": {
-        "titel": "Briefe",
-        "datum": "1979-06-10",
-        "jahrgang": 1979,
-        "ausgabe": 24,
-        "url": "https://www.spiegel.de/politik/fragwuerdige-methode-a-fdc106c8-0002-0001-0000-000040349922?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 50,
+      "chunk_id": 46,
       "relevance_score": 0.740225076675415,
       "content": "In London hatte ich energisch auf die Ermordung Hitlers gedrängt. Meine Wohnung in Berlin lag kaum hundert Meter von der Tribüne für alle großen Führerparaden entfernt. Nötig waren nur ein guter Schütze und ein Schnellfeuergewehr mit Zielfernrohr und Schalldämpfer. Es hätte durch das offene Fenster meines Badezimmers abgefeuert werden können, von einer Stelle auf dem Treppenabsatz, die etwa neun Meter von dem Fenster entfernt war. Der Lärm der Militär-Kapellen und der Jubel der Mengen hätte den Knall übertönt. Der ganze Plan war detailliert ausgearbeitet, aber verständlicherweise nicht zu Papier gebracht worden. Hitlers Tod hätte in diesem Augenblick zum Sturz des Nationalsozialismus führen können. Millionen Menschenleben hätten gerettet werden können. Hitler hatte schon mehr als genug auf sich geladen, um den Tod zu verdienen. In demokratischen Staaten besteht jedoch grundsätzlich ein begreiflicher, wenn auch unpraktischer Widerwille gegen Morde.",
       "metadata": {
@@ -1110,7 +998,7 @@
       }
     },
     {
-      "chunk_id": 51,
+      "chunk_id": 47,
       "relevance_score": 0.7401965856552124,
       "content": "Während Blomberg nach seiner standeswidrigen Heirat im Jahre 1938 eilends den Laufpaß erhielt, starb Reichenau 1942 an den Folgen eines Schlaganfalls, nach Meinung einiger Biographen aus Enttäuschung darüber, daß Hitler ihn nicht anstelle des verabschiedeten Feldmarschalls von Brauchitsch zum Oberbefehlshaber des Heeres ernannt hatte. * »Die nationalsozialistische Machtergreifung« Studien zur Errichtung des totalitären Herrschaftssystems in Deutschland 1933/34, von Karl Dietrich Bracher, Wolfgang Sauer, Gerhard Schulz; Schriften des Instituts für Politische Wissenschaft, Band 14. Westdeutscher Verlag Köln und Opladen; 1036 Seiten; 59 Mark. ** Hitler proklamierte in der Potsdamer Garnisonkirche die angebliche Versöhnung zwischen dem Nationalsozialismus und der preußischen Tradition. * Reichsminister vom 4. Juni 1932 bis 30. Januar 1933 und Reichskanzler vom 3. Dezember 1932 bis 30. Januar 1933. Hitler-Freund von Reichenau Morsches muß durch Terror fallen General von Schleicher: Innenpolitik mit der Armee Hitler-Feind von Hammerstein Vor dem Hakenkreuz ... ... Gewehr bei Fuß: Hitler-Förderer von Blomberg; Adjutant",
       "metadata": {
@@ -1131,28 +1019,7 @@
       }
     },
     {
-      "chunk_id": 52,
-      "relevance_score": 0.7399446964263916,
-      "content": "Vermutungen waren eine ganze Anzahl. Soweit eine Vermutung zu bestätigen ist - das war ja sehr vorsichtig abgefaßt -, wird man das am Schluß der Ermittlungen herausfinden.« Süffisant erklärte dagegen ein Abgesandter von Bundesinnenminister Gerhard Schröder, Dr. Gehrhardt, auf derselben Pressekonferenz in Anwesenheit Eckardts: »Die Prüfung des vorliegenden Materials hat das (die Hintermanns-Theorie) noch nicht ergeben.« Die Chancen, 26 bis zur Hintermänner -Verlautbarung gezählte antisemitische Ausschreitungen (davon acht in Nordrhein-Westfalen) dem mit Recht skeptischen Ausland nun mit einer zackigen Kehrtwendung als das hinzustellen, was sie tatsächlich sind - Armutszeugnisse geistig und geschichtlich Zurückgebliebener, denen ein Denkzettel gebührt -, sind durch die gleichzeitig aufgeblasene und geplatzte Hintermann-Theorie nicht besser geworden. Daily Mail, London »Masern!«",
-      "metadata": {
-        "titel": "Hintermänner",
-        "datum": "1960-01-12",
-        "jahrgang": 1960,
-        "ausgabe": 3,
-        "url": "https://www.spiegel.de/politik/hintermaenner-a-046fdb7c-0002-0001-0000-000043062975?context=issue",
-        "autoren": "",
-        "schlagworte": "['Antisemitismus']",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 53,
+      "chunk_id": 48,
       "relevance_score": 0.7398427724838257,
       "content": "Sonst käme man zu dem für das Rückerstattungsgesetz und seinen Geist völlig unannehmbaren Ergebnis, daß eine juristische Person, deren Mitglieder zu 100 Prozent der NSDAP angehörten, gleichwohl einen Wiedergutmachungsanspruch haben kann.« Des weiteren bemerkte das Münchner Gericht, es sei zu berücksichtigen und könne im vorliegenden Fall von Bedeutung sein, daß die Mitglieder der früheren Aktivitas der Thuringia, die der NSDAP, SA oder SS angehört hätten, nunmehr als Mitglieder dem Rechtsnachfolger des »Hausvereins« angehörten, nämlich dem auf Rückerstattung klagenden Altherren-Verband Thuringia. Jedoch die Revisionsinstanz, das Oberste Rückerstattungsgericht, entschied: »Selbst wenn Fälle denkbar sein mögen, wo sich aus einem derartigen Sachverhalt ein Einwand gegen den Rückerstattungsanspruch herleiten läßt, so liegt doch ein solcher Fall bei der Wiedergründung eines vom Reichsführer SS aufgelösten katholischen Altherren-Verbandes nicht vor.« Das Urteil ist rechtskräftig, die Thuringia hat ihr Haus wieder. Brauner CV-Bursche Forschbach Für des Führers Gefolgschaft ... ... eine Belohnung: Thuringia-Heim in Würzburg",
       "metadata": {
@@ -1173,7 +1040,7 @@
       }
     },
     {
-      "chunk_id": 54,
+      "chunk_id": 49,
       "relevance_score": 0.7394002676010132,
       "content": "(Nr. 41/51, Deutschland) Wenn durch die nationalistischen Bedenken der Alliierten heute und in naher Zukunft keine militärische Formation in Deutschland entstehen kann, die dem Ansturm der Sowjets gemeinsam mit den übrigen europäischen Heeren gewachsen ist, so kann der Innenminister niemals einen Ausweg in der Aufstellung von Grenzschutzformationen sehen. Sonst erreicht er nichts als Zwitter: Beamte, die Soldat spielen, die sich recht modern gebärden, nach ihrer Ausbildung und Mentalität aber zum Schluß weder die Ruhe im Innern erhalten noch, wozu ihr Name sie eigentlich verpflichtet, die Grenze schützen können. Man sollte die Versuche, in dem Grenzschutz einen demokratischen Soldatentyp gebären zu wollen, also einstellen. Polizei bleibe Polizei, und Wehrmacht bleibe unter allen Umständen Wehrmacht. An dieser können sich weder die Alliierten noch der Innenminister vorbeimogeln. Ahrensburg b. Hamburg Beck-Broichsitter",
       "metadata": {
@@ -1194,7 +1061,7 @@
       }
     },
     {
-      "chunk_id": 55,
+      "chunk_id": 50,
       "relevance_score": 0.7390623688697815,
       "content": "In der Kabinettsorder des Verteidigungsministers heißt es nämlich, daß alle betroffenen Soldaten ihren Wehrdienst »in den französischen Überseegebieten ableisten müssen«. Zu den französischen Überseegebieten aber zählt nicht Algerien, dessen Departements nach dem Gesetz zum französischen Mutterland gehören. Nachkommen von Résistance-Opfern der deutschen Wehrmacht brauchen sich also in Zukunft nicht mehr den Gefahren des blutigen Algerien-Krieges auszusetzen. Sie verdanken dieses Vorrecht dem Nato -General Hans Speidel, der auf diese Weise ungewollt und unverhofft einen Beitrag zur Wiedergutmachung jenes Unrechts leistet, das deutsche Besatzungstruppen während des letzten Krieges zahlreichen französischen Familien zugefügt haben. Wehrmacht-Oberst Speidel: Spott in Frankreich",
       "metadata": {
@@ -1215,7 +1082,7 @@
       }
     },
     {
-      "chunk_id": 56,
+      "chunk_id": 51,
       "relevance_score": 0.738627552986145,
       "content": "Wehner wußte auch schon, wer dieser Mann sein könne: der damalige Vizepräsident des Bundesamtes für Verfassungsschutz (BfV), Dr. Günther Nollau. Ehmke aber hatte eine andere Lösung im Sinn: Er wollte zunächst die Chefstellen der vier Abteilungen (Beschaffung, Technik, Auswertung und Zentrale Aufgaben) neu besetzen und nur den Posten des Vizepräsidenten an einen Sozialdemokraten vergeben. An Wessel aber hielt er fest. Der General schien ihm der einzige Mann zu sein, der die geplante Reform verwirklichen und zugleich die Kontinuität des Geheimdienstes wahren konnte. Der Kanzleramts-Minister setzte sich gegen Wehner durch und beließ Wessel als »unpolitische, einigermaßen anpassungswillige, wenngleich konservative Galionsfigur im Amt« -- so die »Süddeutsche Zeitung«. Schwieriger dagegen war es, einen geeigneten Vizepräsidenten zu finden. Bei der Suche nach einem Wessel-Stellvertreter mußte Ehmke zwischen Alternativvorschlägen entscheiden. Denkbar war, * einen zivilen Nachrichten-Experten dem vorwiegend in militärischen Kategorien denkenden Wessel als Betriebsleiter zur Seite zu geben, zumal der Präsident mit der Repräsentanz des BND im Kanzleramt und bei befreundeten Diensten im Ausland ausgelastet ist; * Links: SPD-Geschäftsführer Wischnewski. einen Manager aus Wirtschaft, Industrie oder Presse zum Vizepräsidenten zu bestellen, der die wuchernde Bürokratie des BND abbauen und den Aufklärungsdienst modernisieren müßte; * einen politischen Funktionär in die BND-Spitze zu setzen, der nicht nur ein begrenztes Fachwissen in Spionage oder Organisation besitzt, sondern in erster Linie »für den Bundesnachrichtendienst das Vertrauen derjenigen Bereiche unserer Gesellschaft gewinnt, die dieser Institution noch zurückhaltend gegenüberstehen oder ihr gar, sei es zu Recht oder zu Unrecht, Mißtrauen entgegenbringen« (Ehmke). Langjährig dienende BND-Beamte indes empfahlen, dem Chef Wessel als Stellvertreter einen Verwaltungsjuristen beizugeben -- ein Vorschlag mit Hintersinn. Der Verwalter hätte legalisieren sollen, was im BND von jeher kultiviert worden ist: den Regierenden den Blick hinter die Pullacher Gettomauern zu verschleiern. Eine Klarsicht aber strebte Ehmke gerade mit seiner »politischen Lösung« an. Doch die Fahndung nach dem zweiten Mann wucherte im Pullacher Apparat unversehens zum Stellungskrieg um den ersten aus -- um BND-Chef Wessel. Denn: Geheimdienstliche Altvordere wähnten ihren Präsidenten auf der Abschußliste des Aufsichtsministers. Genährt wurde solcher Verdacht durch das Gerücht, der Kanzleramts-Chef springe mit dem dünnhäutigen Wessel recht rauh um, der Geheimdienst-Chef aber habe nicht den Mut, Ehmkes BND-Kritik zurückzuweisen. In einem solchen Klima konnte dann auch die Version entstehen, Ehmke habe seinen Geheimdienst-Chef abgekanzelt wie einst Hitler seine Generale.",
       "metadata": {
@@ -1236,7 +1103,7 @@
       }
     },
     {
-      "chunk_id": 57,
+      "chunk_id": 52,
       "relevance_score": 0.7384637594223022,
       "content": "Als Mandate nicht mehr zu erringen waren, benutzte die Partei der Unzufriedenen und der Unverbesserlichen »Bubi« von Thadden während aller ihrer braunen Verwandlungen als Aushängeschild und Aushilfs-Ideologen; bis er sie Ende 1965 schließlich auflöste, auf daß sie der wahren nationalen Erweckung - diesmal in Gestalt der NPD - nicht länger im Wege sei. Hier aber, in den jahrelangen Spaltereien und Zellteilungen auf der radikalen Rechten, hat er seine Begabung, die alten Nazis um der »guten Deutschen« willen in Kauf zu nehmen, zu solcher Perfektion entwickelt, daß er am Ende nun überhaupt keine alten Nazis mehr erkennen kann, sondern bloß noch »gute Deutsche«. Zu verwundern wäre das freilich nur dann, wenn es den Unterschied zwischen den alten Nazis und den »guten Deutschen«, so wie Adolf von Thadden ihn nun einmal versteht, auch wirklich gäbe. Nationaldemokrat von Thadden »Spiel dich doch nicht so auf, Bubi«",
       "metadata": {
@@ -1257,7 +1124,7 @@
       }
     },
     {
-      "chunk_id": 58,
+      "chunk_id": 53,
       "relevance_score": 0.7384222149848938,
       "content": "Wenige Stunden noch dem Reichstagsbrand am Abend des 27. Februar 1933 gibt die NS-Führung die Parole aus die Kommunisten seien für den Brand verantwortlich, und läßt alle erreichbaren KPD-Funktionäre verhaften. Die Kommunisten organisieren daraufhin von Paris aus einen Gegenfeldzug. Unter Anleitung des Agitprop-Chefs Münzenberg stellen sie zwei sogenannte Braunbücher zusammen, in denen sie mit Hilfe gefälschter Dokumente und falscher Zeugenaussagen die Schuld der Nazis am Reichstagsbrand »nachweisen«, dem gleichen Zweck dient auch ein »Reichstagsbrandgegenprozeß« in London. Der Brandstifter van der Lubbe indes bleibt bei der Behauptung, den Reichstag ohne Wissen anderer angesteckt zu haben. Obwohl sich alle Angaben Lubbes bestätigen, beginnt die Suche nach dem großen Unbekannten, der die Drähte gezogen haben soll 2. Fortsetzung Die Kriminalkommissare Heisig und Dr. Zirpins, die mit der ersten Vernehmung van der Lubbes beauftragt waren, haben sich nie von ihrer Überzeugung abbringen lassen, daß der Holländer den Reichstag allein und ohne fremde Hilfe angesteckt hat. Zwar wies Zirpins in seinem Abschlußbericht über die Vernehmung auf die Möglichkeit hin, daß van der Lubbe von dritter Seite angestiftet worden sei, blieb aber dabei, keinen Anhaltspunkt für irgendwelche Helfer bei der Tat selbst gefunden zu haben - obwohl er wußte, daß seine höchsten Vorgesetzten anderer Meinung waren und von der Kriminalpolizei andere Ergebnisse erwarteten. Der Untersuchungsrichter Vogt und die Leipziger Richter haben sich um dieses Ergebnis der Kriminalpolizei wenig geschert. Ihrer Meinung nach vermochte ein einziger den Reichstag gar nicht in Brand zu setzen; van der Lubbe mußte also Helfershelfer gehabt haben. Die gleiche These vertraten auch die Pariser Braunbuch-Autoren, und sogar der Bulgare Dimitroff erklärte in trauter Übereinstimmung mit Göring und Goebbels am 12. Oktober 1933 in einem Schreiben an den Senatspräsidenten des Leipziger Gerichts: »Ich bin fest überzeugt, daß van der Lubbe in diesem Prozeß sozusagen nur ein Reichstagsbrand-Faust ist, hinter ihm stand zweifellos ein Reichstagsbrand-Mephisto. Der klägliche 'Faust' steht nun vor den Schranken des Reichsgerichts, aber der 'Mephisto' ist verschwunden.« Mit unverhohlenem Stolz auf seine Kenntnisse in deutscher Literatur verwandte Dimitroff diesen Vergleich in der Folgezeit immer wieder und verfocht leidenschaftlich die gleiche These wie die Nazis: Lubbe sei nur ein Werkzeug gewesen. Gegen diesen Punkt anzukämpfen, hielt er für töricht. Er wollte die Nazis vielmehr in ihrer eigenen Falle fangen, nämlich: den Nachweis führen, daß van der Lubbe Mittäter hatte und dann die eigene, die kommunistische Unschuld beweisen. Das aber konnte seiner Meinung nach nicht schwerfallen, da zumindest er und seine Landsleute Popoff und Taneff ja nur durch Zufall in den Kriminalfall verwickelt worden waren. Dimitroff handelte als Kommunist; es ging ihm weniger darum, die eigene Haut zu retten, als die Nazis zu entlarven.",
       "metadata": {
@@ -1278,7 +1145,7 @@
       }
     },
     {
-      "chunk_id": 59,
+      "chunk_id": 54,
       "relevance_score": 0.7382920980453491,
       "content": "(Nr. 42/51, Deutschland) Redlhammer hat schon 1946 eine »Wiedergutmachung« mit falschen Angaben zu erschleichen versucht. Wäre dies schon damals bekannt geworden, so hätte er nicht länger im Amt bleiben können! R. war also von 1946-1951 zu Unrecht Oberbürgermeister und muß daher - seinen eigenen Rechenkunststücken zufolge - sein Geld für diese Zeit zurückzahlen. Köln-Ehrenfeld Dr. E. Krauss Die Wiedergutmachung scheint für manche Bürger der Bundesrepublik ein nettes Fressen zu sein. Die Haare stehen zu Berge, wenn man diese Ansprüche hört, die der simple Bürger mit Normalgehalt bezahlen soll. Ich möchte auch gerne eine Wiedergutmachung beantragen, da ich ohne Hitler nie Soldat geworden wäre und meiner Veranlagung nach heute »mindestens meine Familie sorgenlos ernähren könnte.« Rastatt/Baden Ernst Reinhold Springer",
       "metadata": {
@@ -1299,28 +1166,7 @@
       }
     },
     {
-      "chunk_id": 60,
-      "relevance_score": 0.7380500435829163,
-      "content": "Wassertrüdingen (Bayern) ROBERT HUBER Endlich einmal haben Staatsanwälte, Polizeichefs und Schreibtischkriminalisten jene Verantwortung, die bislang immer der kleine Frontkriminalist zu tragen hatte. Seib (Bayern) SEPP BERANEK Kriminalkommissar i. R. Für künftige Fälle schlage ich vor: Abriegeln des betreffenden Häuserblocks, Aufbau von Zuschauertribünen (Eintrittspreise 10 bis 50 Mark), Vergabe der Fernsehrechte für Live-Obertragung per Satellit an ausländische Fernsehanstalten. Vor dem Bankeingang bis eine Stunde vor Ablauf des Ultimatums buntes Unterhaltungsprogramm (zum Beispiel Heintje, die Lester Wilson Dancers, Rudolf Schock; mit Quizeinlagen unter Leitung D. Schönherrs). Auslieferung des Lösegeldes in feuersicherem Behälter. Bei Erscheinen des ersten Erpressers: Massiertes Granatwerferfeuer, zusätzlich Unterstützung durch Nato-Luftwaffenverbände (Napalm) und -Landstreitkräfte (taktische Nukleargranaten). Anschließend Bergen des unversehrten Lösegeldes, feierliche Übergabe desselben durch Stadt- und Länderhonoratioren an Herrn Abs. Am Folgetag Bekanntgabe des Untersuchungsergebnisses: Obduktion der Geiseln ergab, daß sie von den Erpressern mit Benzin übergossen und in Brand gesetzt worden sind. Wiesbaden HELMUT ELSNER",
-      "metadata": {
-        "titel": "Briefe",
-        "datum": "1971-08-15",
-        "jahrgang": 1971,
-        "ausgabe": 34,
-        "url": "https://www.spiegel.de/politik/kein-schutz-a-9a7a5d79-0002-0001-0000-000043143999?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 61,
+      "chunk_id": 55,
       "relevance_score": 0.7377068996429443,
       "content": "Durch letzte Vorgänge tief bestürzt bitten dringend verhindert weitere für das Ansehen von Justiz und Staat unerträgliche Schritte gegenüber höchstem deutschen Gericht. Zutt, Schüle, Kleine, Duden, Schilling und Rowedder.« Angesichts dieses Telegrammwechsels klangen Konrad Adenauers Versicherungen vor dem NWDR-Mikrophon etwas spärlich: »Das Bundesverfassungsgericht ist für mich wie für jedermann die höchste verfassungsgerichtliche Instanz der Bundesrepublik... Es ist nicht meine Absicht, mit dem Bundesverfassungsgericht zu rechten.«",
       "metadata": {
@@ -1341,28 +1187,7 @@
       }
     },
     {
-      "chunk_id": 62,
-      "relevance_score": 0.7375322580337524,
-      "content": "(Nr. 12/51, Deutschland) Abwegig ist es, die Einheitsschule als eine Angelegenheit der SPD zu bezeichnen. Wer die Einheitsschule, wenn man so sagen darf erfunden hat, der hat etwas geschaffen, was sonst von selbst gekommen wäre, und die heutigen Verfechter sind durchaus nicht immer Sozialdemokraten. Daß die Schulsysteme sich nicht decken, ist bedauerlich, brauchte aber nicht unabänderlich zu sein. Was ist viel gefährlicher? Die Verschiedenheit der Bildungs-Ideale! In mehreren Ländern wird Büchners Lustspiel »Leonce und Lena« durch den Schulfunk gesendet und auch für Laien - d. h. für Schul-Aufführungen - in mehreren Verlagen gedruckt, während in anderen Ländern den schon recht mannbar gewordenen pädagogischen Studenten von der Lektüre Büchners aufs eindringlichste abgeraten wird Was in einem Lande Schullektüre oder Bildungsgut ist, gilt in anderen durchaus als »zersetzend«, denn auch dieses den Nazis so teure Wort ist längst wieder da. Ludwigshafen Dr. Robert Petry",
-      "metadata": {
-        "titel": "Briefe",
-        "datum": "1951-04-17",
-        "jahrgang": 1951,
-        "ausgabe": 16,
-        "url": "https://www.spiegel.de/politik/schulen-a-b11e1474-0002-0001-0000-000029193741?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 63,
+      "chunk_id": 56,
       "relevance_score": 0.7374429702758789,
       "content": "Deutschland-West (BRD): Der Bundesnachrichtendienst betreibt keinen Waffenhandel auf eigene Rechnung, natürlich nicht. Aber er liess in der Vergangenheit mit Waffen handeln, und natürlich war der für den BND zuständige Staatssekretär unterrichtet. Professor Karl Carstens, Staatssekretär im Bundesverteidigungsministerium 1966/1987 und im Kanzleramt 1968/1969, Bundestagspräsident und Kandidat für das Amt des Bundespräsidenten, hat bestritten, zu seiner Amtszeit über die Beteiligung des BND an illegalen Waffengeschäften informiert gewesen zu sein. Von ihm unterzeichnete oder mit seiner Paraphe abgezeichnete Dokumente zur Sache in diesem Heft auf Seite 21. Deutschland-Ost (DDR): Erich Mielke, Leiter des Ministeriums für Staatssicherheit, hielt vor SED-Propagandisten seines Amtes eine Rede, aus der nur einige Phrasen im »Neuen Deutschland« zitiert wurden. Den ungekürzten Wortlaut mit Hinweisen auf die kritische Einstellung der DDR-Bürger gegenüber der staatstragenden Partei verschickte er an den ausgesuchten Kreis der »Leiter der Diensteinheiten« des Ministeriums: »In der gesamten Auswertung ist dem hohen Vertraulichkeitsgrad meiner Ausführungen, insbesondere auch der Aussagen zu ökonomischen Problemen, strengstens Rechnung zu tragen. Die Rücksendung des Referats hat bis zum 1. März 1979 ... zu erfolgen.« Aus dem Originaltext: Seite 30.",
       "metadata": {
@@ -1383,7 +1208,7 @@
       }
     },
     {
-      "chunk_id": 64,
+      "chunk_id": 57,
       "relevance_score": 0.7374054789543152,
       "content": "Wenn ja, wähle ich doch lieber wieder sozialdemokratisch, da bin ich vor diesem Sozialismus sicher. München KLAUS BUDZINSKI Von den Abgeordneten der Adenauer-Koalition im ersten Deutschen Bundestag von 1949 waren mehr als ein Viertel, nämlich 53, ehemalige Mitglieder der NSDAP. Einige Abgeordnete der Koalition hatten bereits als Reichstagsabgeordnete bürgerlicher Parteien im März 1933 für Hitlers Ermächtigungsgesetz gestimmt. Bekanntlich waren damals die Abgeordneten der SPD die einzigen, die gegen dieses Gesetz gestimmt haben. (Die Abgeordneten der KPD waren zu diesem Zeitpunkt bereits verhaftet.) Die Mehrheit der Widerstandskämpfer und Verfolgten unter den Abgeordneten des ersten Bundestages war in den Reihen der damaligen Opposition zu finden: 69 Abgeordnete, die den Nazi-Terror überlebt hatten. Für wie dumm halten die Geschichtsverfälscher die Bürger, von denen sie gewählt werden wollen? Bad Oldesloe (Schlesw.-Holst.) FRED EPSTEIN NS-Verfolgter/SPD-Funktionär",
       "metadata": {
@@ -1404,7 +1229,28 @@
       }
     },
     {
-      "chunk_id": 65,
+      "chunk_id": 58,
+      "relevance_score": 0.7369658350944519,
+      "content": "Ursachen erkennt Rücken in schlechter Gesundheit und der zu erwartenden psychischen Belastung der Überlebenden. Daß gelegentlich zu der alten auch noch neue Psycho-Beschwernis kommt. zeigte sich unlängst in dem NS-Verfahren in Aschaffenburg. Ein jüdischer Zeuge machte an zwei aufeinanderfolgenden Tagen widersprüchliche Angaben: Am ersten Tag belastete er einen der Angeklagten. am zweiten Tag nahm er seine Mitteilungen zurück. Erst nach seiner Heimkehr, vor der israelischen Polizei, gab der Zeuge seine Erfahrungen zu Protokoll: Nach seiner ersten, wahrheitsgemäßen, Aussage habe er um sein Leben fürchten müssen; während einer Verhandlungspause am zweiten Tag habe er einen Kreislauf- und Nervenzusammenbruch erlitten. Der Grund: Ihm seien unablässig zwei Männer gefolgt, die ihn auch außerhalb des Gerichts beschattet hätten. Und in seinem Hotelzimmer seien ihm telephonisch Anweisungen für seinen zweiten Aussagetag erteilt worden. Andernfalls, habe der Anrufer dem einstigen KZ-Häftling gedroht. ergebe es ihm »schlimmer als in Auschwitz«. ·",
+      "metadata": {
+        "titel": "Fragen nach Gräben",
+        "datum": "1978-12-24",
+        "jahrgang": 1978,
+        "ausgabe": 52,
+        "url": "https://www.spiegel.de/politik/fragen-nach-graeben-a-b7ada259-0002-0001-0000-000040348465?context=issue",
+        "autoren": "",
+        "schlagworte": "['Kriegsverbrechen']",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 59,
       "relevance_score": 0.7365370988845825,
       "content": "(Nr. 38/1969, Zeitgeschichte) Bei Ihrer eindrucksvollen Bebilderung des Speer-Kapitels über Hitlers übergeschnappte Baupläne für die Reichshauptstadt haben Sie sich in einem Punkte geirrt. Richtig ist, daß Hitler die Bunker-Skizze 1938 entworfen hat. Richtig ist auch, daß dieser Bunker später am Atlantikwall gebaut wurde. aber natürlich hat Hitler bei dieser Zeichnung damals eher an den Westwall gedacht, der ja gerade gebaut wurde, als an den Atlantikwall, den selbst der seherische Führer um diese Zeit noch nicht vorausahnen konnte. Stuttgart HANS WITT Ihre Hilfestellung zum Aufwärmen des Mythos vom Glanz des 1000jährigen Reiches ist recht beachtlich. Der Zeitpunkt so kurz vor der Wahl wurde vom SPIEGEL recht geschickt gewählt. Es wird dem Leser einmal mehr nahegelegt, daß die Nazis doch gar nicht so schlimm waren. Die Vorsehung hat es gewollt, daß vor den Wahlen noch eine Nummer des SPIEGEL erscheinen kann, in der sich der Nutzen der Autobahnen aufzeigen läßt, die wir ja auch dem Adolf verdanken. Vergleichende Statistiken über Kriminalität von 1933 bis 1945 und 1957 bis 1969 könnten das objektive Bild über Nationalsozialismus und Bonner Demokratie abrunden helfen. München DR. MICHAEL Rupp",
       "metadata": {
@@ -1425,15 +1271,15 @@
       }
     },
     {
-      "chunk_id": 66,
-      "relevance_score": 0.7360715866088867,
-      "content": "Unermüdlich war sein Eifer, wenn es galt, neue sexuelle Querverbindungen unter den Häftlingen aufzudecken. Diese Erotisierung des Rote-Kapelle-Falles verfolgte einen ganz bestimmten Zweck. Mit der dramatischen Hervorkehrung der in der Tat recht freien Umgangsformen von Schulze-Boysens Freunden wollte Roeder den Eindruck erwecken, Anarchismus und Triebhaftigkeit hätten die meist jungen Widerständler zu dem Agentenchef gedrängt. »Hörigkeit« hieß denn auch eine weitere Vokabel. mit der sich Roeder eine genauere Erörterung der Widerstands-Motive ersparte. Die Buchhändlerin Eva-Maria Buch war dem KP-Mann Guddorf »restlos hörig«, der Romanistik-Professor Krauss hatte durch »das Erlebnis mit der Ursula Goetze« zum Schu-Boy-Kreis gefunden, und auch bei Männern fand der Ankläger so etwas wie psychische Abhängigkeit: Heilmann hatte Schulze-Boysen »in voller Hörigkeit« gedient. So war Roeder der Notwendigkeit enthoben, die politischen Antriebe der Häftlinge untersuchen und akzeptieren zu müssen. Erotik, Anarchismus, Geldgier, kommunistischer Funktionärseifer -- jedes Motiv war ihm lieb, das die entscheidenden, für das Regime entlarvenden Beweggründe außer acht ließ. Der Oberstkriegsgerichtsrat hatte rasch seine Anklage parat. Am 16. November 1942 begann er eiligst, die Anklageschriften zu formulieren; in einem Monat setzten er und Gehilfe Falkenberg 800 Seiten Anklagetext ab. Schier pausenlos diktierten sie ihren zwei Sekretärinnen und schliefen nachts allenfalls drei Stunden auf ihren im Büro aufgestellten Feldbetten. Hitler und Gestapo drängten: Der Diktator forderte, bis Weihnachten müsse der Hauptprozeß beendet sein, während Gestapo-Müller mäkelte, er verstehe nicht diese »unnütze Zeitvergeudung bei so klarem Sachverhalt«. Angesichts solcher Prozedur konnte weder der Inhalt der Anklageschrift noch der Ausgang der Hauptverhandlung ungewiß sein. Schulze-Boysen und seine engeren Freunde hatten Spionage für den Feind getrieben, und darauf stand im Dritten Reich (wie auch in anderen kriegführenden Staaten) die Todesstrafe. Fraglich war nur, wie man Schu-Boys politische Anhänger ohne Spionageauftrag und seine unfreiwilligen militärischen Mitläufer einstufen würde. Aber auch diese beiden Gruppen konnten sich wenig erhoffen, da das Regime mit härtesten Bestimmungen jede Form der politischen Opposition und des militärischen Ungehorsams als »Feindbegünstigung« bestrafte.",
+      "chunk_id": 60,
+      "relevance_score": 0.7363631725311279,
+      "content": "Toleranz! Demokratische Routine! Wenigstens ein gewisses Gefühl für moralische Proportionen! Wir hatten 1950, fünf Jahre nach der Katastrophe. die Mitläufer des Nazismus integriert. Wieso dulden wir heute, zehn Jahre nach der Studentenrevolte, immer noch Prozeduren, die von den Betroffenen wie eine subtile Rache des Bürgertums an der Apo empfunden werden müssen? Wenn wir nicht zur Besinnung kommen, werden die nachrückenden Generationen mit größerer Bitterkeit und Giftigkeit aufeinander losgehen als die Generation von Adenauer und Schumacher. Für die einen wird das Grundgesetz nichts anderes sein als eine verächtlich ausgespuckte »fdgo« und für die anderen ein handliches Schlaginstrument, nutzbar gegen alles, was irgendwie »links« sein könnte.",
       "metadata": {
-        "titel": "ptx ruft moskau",
-        "datum": "1968-07-07",
-        "jahrgang": 1968,
-        "ausgabe": 28,
-        "url": "https://www.spiegel.de/politik/ptx-ruft-moskau-a-2d01226d-0002-0001-0000-000045997502?context=issue",
+        "titel": "»Radikalenbeschluß - unser größter Fehler«",
+        "datum": "1978-10-22",
+        "jahrgang": 1978,
+        "ausgabe": 43,
+        "url": "https://www.spiegel.de/politik/radikalenbeschluss-unser-groesster-fehler-a-e4595d98-0002-0001-0000-000040606179?context=issue",
         "autoren": "",
         "schlagworte": "",
         "untertitel": "",
@@ -1446,7 +1292,28 @@
       }
     },
     {
-      "chunk_id": 67,
+      "chunk_id": 61,
+      "relevance_score": 0.7358564734458923,
+      "content": "Und zwar deshalb nicht, weil er ein ehemaliger Nazi ist. Daneben ist alles andere zweitrangig! Tübingen ECKHARD WURM-STEFFEN Ich vermisse die preußische Sauberkeit und den guten alten Ehrbegriff. Das Geschehen kotzt mich an. Am 23. Mai werde ich einen Trauerflor anlegen, von Nichtbeteiligung an Wahlen ganz zu schweigen. Münster HARTMUT-HERMANN MANGELSDORF So, wie die Zeichen derzeit stehen, werden wir also einen Bundespräsidenten zu ertragen haben, der mit seinem Pferd »Opportunismus« die Hürden des Anstands, der Verpflichtung zu wahrheitsentsprechenden Aussagen zudem, topfit (scheinbar) meistert. Carstens, seine Schildträger, seine Prätorianer, sind eine demokratische Herausforderung. Köln FRIEDRICH VEITHEN",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1979-03-25",
+        "jahrgang": 1979,
+        "ausgabe": 13,
+        "url": "https://www.spiegel.de/politik/verdammt-schlechte-figur-a-893fb5bc-0002-0001-0000-000040351883?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 62,
       "relevance_score": 0.7358404397964478,
       "content": "Einsichten: Der Anarchisten-Trupp sei in mehrere kleine Grüppchen zerbröckelt; zueinander und zur Kerngruppe gebe es kaum noch und nur losen Kontakt; die Hamburger Polizisten-Mörder seien nicht mit der Baader-Meinhof-Gruppe zu identifizieren. Einen Tag später sicherten Hamburger Polizisten im Poppenbüttler Apartment B 412 Fingerabdrücke von Klaus Holger Meins. Zeugen identifizierten auf vorgelegten Fahndungsphotos die flüchtige Germanistik-Studentin Gudrun Ensslin, 31, die im Oktober 1968 wegen der Frankfurter Kaufhaus-Brandstiftung zu drei Jahren Freiheitsstrafe verurteilt worden war und seitdem unter anderem wegen Bankraubs gesucht wird. Holger Meins und Gudrun Ensslin gehören zum Kern der Baader-Meinhof-Gruppe. Meins kann besonders gut mit Waffen umgehen; die Pfarrerstochter verwaltet die Gruppen-Kasse. Und der Hamburger Polizeirat Günter Schilasky weiß sogar von Hinweisen, daß der Gruppen-Chef selbst hin und wieder im Poppenbüttler Apartment B 412 auf- und untergetaucht ist: Andreas Baader.",
       "metadata": {
@@ -1467,7 +1334,7 @@
       }
     },
     {
-      "chunk_id": 68,
+      "chunk_id": 63,
       "relevance_score": 0.7357183694839478,
       "content": "(Nr. 53/1973, Justizobersekretär Boe) Eulenspiegel dürfte der wohlverdiente repräsentative und durchaus ehrenvolle Titel für den Hamburger Justizobersekretär Boe sein. Die Streiche gegenüber der Justiz sind originell und treffsicher. Sie richteten keinen Sach- oder Personenschaden an, abgesehen davon, daß die Gegenseite immer wieder schlecht aussah, manchmal geradezu hilflos wirkte. Diese Blamagen verdankt die Justiz weitgehend ihren durchweg recht ungeschickten Reaktionen. Sie rochen manchmal stark nach der primitiven Rache des Hilflosen. Ein Beispiel: Den drastischen Nachweis der Unzulänglichkeit der Waffenkontrolle als »Groben Unfug« anzuklagen, dürfte",
       "metadata": {
@@ -1488,7 +1355,7 @@
       }
     },
     {
-      "chunk_id": 69,
+      "chunk_id": 64,
       "relevance_score": 0.7354468703269958,
       "content": "In der Ausgabe Nr. 15 schreiben Sie unter »Nazismus« von den Rundfragen eines gewissen Herrn Wight. Es heißt da: »Halten Sie den Nationalsozialismus für eine schlechte Sache oder für eine gute Idee, die nur schlecht ausgeführt wurde?« Vielleicht wird Sie hierzu folgendes interessieren: Als wir im Jahre 1946 als Kriegsgefangene von Amerika nach England kamen, wurden uns schon in den ersten Tagen kleine Zettel mit folgenden Fragen gegeben: 1. War der Nationalsozialismus eine gute Idee? 2. War der Nationalsozialismus eine gute Idee und ist sie nur schlecht ausgeführt? 3. Ist das ganze deutsche Volk schuld am Kriege? 4. Ist der Nürnberger Kriegsverbrecherprozeß gerechtfertigt? Truppweise wurden wir in eine Baracke geführt. Hier mußten die Fragen mit ja oder nein beantwortet werden. Die Zettel mußten einzeln abgegeben werden mit Unterschrift und Nummer versehen. Auf Grund der Auswertung erfolgte die politische Einstufung nach den Gruppen A, B und C. Bordesholm FERDINAND KÖNEMANN",
       "metadata": {
@@ -1509,7 +1376,49 @@
       }
     },
     {
-      "chunk_id": 70,
+      "chunk_id": 65,
+      "relevance_score": 0.7354239225387573,
+      "content": "(Nr. 14/1978, Antisemitismus: Judenverfolgung in Oberammergau?) Mir scheint, man versucht das chronische schlechte Gewissen der Deutschen durch die bequeme Abstempelung des Passionsspiels mit der nationalsozialistischen Erbsünde zu aktivieren, um Neuerungen den Weg zu bahnen. Das blasierte Theaterpublikum unserer Großstädte rümpft die Nase über so viel unintellektuelle Einfalt. Sie findet die Unterstützung der (nach München orientierten) Oberammergauer Oberschicht, die nichts mehr befürchtet, als nach dem heimatlichen Kuhstall zu riechen. Es geht nicht um Antisemitismus. Die fragwürdigen Stellen sind schon größtenteils gestrichen worden. Die Frage lautet: für distanziertes, gefühlskaltes, allegorisches Gebildetentheater mit entsprechender moderner Musik? Oder soll man versuchen, gefühlsbetonte, figurative Volkskunst mit »schönen« Bildern und »schöner« Musik zu erhalten? Bonn DR. JEAN-PAUL PICAPER Deutschland-Korrespondent von »Le Figaro«",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1978-04-16",
+        "jahrgang": 1978,
+        "ausgabe": 16,
+        "url": "https://www.spiegel.de/politik/kuhstallgeruch-befuerchtet-a-6b277649-0002-0001-0000-000040615652?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 66,
+      "relevance_score": 0.7353141903877258,
+      "content": "(Nr. 28/1975, Serie: Die Jagd nach Adolf Eichmann) Zwar finde ich das Verhalten des israelischen Geheimdienstes menschlich verständlich. Die Maßnahme ist und bleibt indessen eine Verletzung der Souveränität Argentiniens und ein strafbarer Menschenraub. Eine Regel des Völkerrechts, die etwas derartiges unter den gegebenen Umständen erlaubt, ist mir nicht bekannt. Daß ein deutscher Generalstaatsanwalt an der Aktion durch Weiterleitung von Informationen in beschränktem Umfange mitgewirkt haben soll, kann ich demgemäß nur bedauern. Trotzdem dürfte die Tatsache, daß Adolf Eichmann dadurch seiner verdienten Bestrafung zugeführt worden ist dem Recht insgesamt genutzt haben. Karlsruhe DR. KLAUS REICH Richter am Oberlandesgericht Die Redaktion des SPIEGEL behält sich vor, Leserbriefe gekürzt zu veröffentlichen",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1975-08-03",
+        "jahrgang": 1975,
+        "ausgabe": 32,
+        "url": "https://www.spiegel.de/politik/verdiente-bestrafung-a-95bf518b-0002-0001-0000-000041458317?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 67,
       "relevance_score": 0.7351551055908203,
       "content": "(Nr. 11/51, Deutschland.) Fünf Jahre lang hat mir die Besatzungsbürokratie durch die Wegnahme meines einzigen Spezialwagens für den Transport hochwertiger Pferde meinen Betrieb zerstört und ließ ihn durch deutsche Stellen so entschädigen, daß ich mir davon gerade einen Reifen hätte kaufen können. Das Fahrzeug ist heute über elf Jahre alt, steht seit Jahren im Freien, wird höchstens ein- bis zweimal im Monat gebraucht und verkommt. Nun hat die Besatzungsbürokratie die Stirn zu behaupten, der Wagen würde unbedingt benötigt und sei in einwandfreiem Zustand. Nach deutschem Recht bin ich nach wie vor Besitzer des Fahrzeugs, weil der Kraftfahrzeugbrief nicht umgeschrieben wurde und in meinen Händen ist. Keine deutsche Stelle hat sich aber bisher zu meiner Verteidigung aufgerafft. Das Verkehrsministerium Nordrhein-Westfalen erklärte mir, daß man noch nicht einmal feststellen könnte, mit welcher englischen Stelle darüber zu verhandeln sei. Ich bin bereit, das Fahrzeug zurückzukaufen, da ich den Neukauf eines solchen Wagens nicht mehr finanzieren kann, obwohl die Hintergründe dieser Beschlagnahme eines Nutzfahrzeuges sehr zweideutig sind. Zu strategischen Zwecken ist das Fahrzeug unbrauchbar, da es schon von der deutschen Wehrmacht ausgemustert wurde. Düsseldorf Dr. Artur Laufkötter",
       "metadata": {
@@ -1530,28 +1439,7 @@
       }
     },
     {
-      "chunk_id": 71,
-      "relevance_score": 0.7351490259170532,
-      "content": "Eine der Existenzfragen Deutschlands ist die Frage: Soll eine Remilitarisierung durchgeführt werden oder nicht? Hierüber entscheiden maßgeblich nicht nur die westlichen Alliierten, sondern auch die Bundesregierung. Wenn der Herr Bundeskanzler in einer Rundfunkansprache die Ansicht vertrat, daß das Gesetz für einen solchen Fall keine Volksbefragung vorsehe, so kann man dem nur erwidern: Wir haben eine schlechte Verfassung. Darüber hinaus aber sollte es sich der Herr Bundeskanzler zur Ehre anrechnen, der Repräsentant eines Volkswillens zu sein, und auch wenn eine weise Bürokratie dafür vielleicht keine Vorkehrungen getroffen hat. Gegen eine starke Polizeitruppe wird niemand etwas einwenden. Wenn es jedoch um eine Wiedererweckung des alten Militärs und eine Inauguration der schon sehnsüchtig darauf wartenden Generale geht, dann wollen wir gehört werden. Diese Forderung soll hier in der Oeffentlichkeit und mit aller Klarheit gestellt werden. Königslutter JOACHIM LORENZ",
-      "metadata": {
-        "titel": "Briefe",
-        "datum": "1950-10-31",
-        "jahrgang": 1950,
-        "ausgabe": 44,
-        "url": "https://www.spiegel.de/politik/wollen-gehoert-werden-a-8f585a37-0002-0001-0000-000044450755?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 72,
+      "chunk_id": 68,
       "relevance_score": 0.7350919246673584,
       "content": "BeiRschew ging der blutige Kampf umlängst wertlos gewordenen Bodenbesitzunverändert weiter. Zwischen den beidenMännern aber, die sich wie Feuerund Wasser unterschieden, war der endgültigeBruch nicht mehr aufzuhalten.« Generaloberst Franz Halder, der seit1. September 1938 Chef des Generalstabsdes Heeres war, wurde einen Monatnach dieser Szene, am 24. September1942, von Hitler entlassen und am23. Juli 1944 von der Gestapo verhaftet;bis Kriegsende blieb er in Haft. * Franz Halder diente von 1914 bis 1918 alsGeneralstabsoffizier, zuletzt in der HeeresgruppeKronprinz Rupprecht. Hitler, Halder (r.): »Die braven Musketiere fallen zu Tausenden«",
       "metadata": {
@@ -1572,49 +1460,7 @@
       }
     },
     {
-      "chunk_id": 73,
-      "relevance_score": 0.7350314855575562,
-      "content": "Bundeskanzler Dr. Adenauer bekam einen Beschwerdebrief. »Wir sind nicht gewillt, uns den Methoden eines allzu bekannten Straßenterrors zu beugen,« warnte Dr. Franz Richter, Führer der Sozialistischen Reichspartei. Ihm waren zwei große Versammlungen in Niedersachsen torpediert worden. In Braunschweig hatte SPD-Polizeipräsident Bärensprung ihm das Auftreten verboten, weil »der Polizeiverwaltung Braunschweig so zahlreiche Protestschreiben aller Art zugingen, daß nicht nur mit Demonstrationen, sondern auch mit Gewalttätigkeiten zu rechnen ist«. In Hildesheim hatten hundert kräftige Männer die Reichsparteiliche Tribüne gestürmt. Unter ihren Stoßtruppführern will Richter ebenfalls SPD-Parteifunktionäre erkannt haben. An der Spitze den stellvertretenden Arbeitsamtsleiter Wolff. Wenn »bestellte Massenschreiben« und Gewaltaktionen gegnerischer Parteien weiter solche Folgen haben, wollen die Reichsparteiler zurückschlagen.",
-      "metadata": {
-        "titel": "Rückschlag",
-        "datum": "1950-02-15",
-        "jahrgang": 1950,
-        "ausgabe": 7,
-        "url": "https://www.spiegel.de/politik/rueckschlag-a-9a2559b6-0002-0001-0000-000044447381?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 74,
-      "relevance_score": 0.7348134517669678,
-      "content": "Da er wahrscheinlich den Herren drüben so recht nach Herzenslust gegen die Demokratie in der BRD das Wort sprach, war er ihnen auch willkommen, und man gab ihm die Möglichkeit, dort zu studieren. Er war also als Pendler durch seine politische Aktivität im Sinne des DDR-Regimes geduldet. Da die BRD als 150prozentiger demokratischer Staat keine Bedenken gegen solche Pendler hat, durfte er also auch hier wieder weiter studieren und eine Prüfung als Lehramtsanwärter ablegen. Seine überdurchschnittliche Intelligenz spielt dabei gar keine Rolle. Sein politisches Engagement und damit seine Unzuverlässigkeit zum bestehenden Staatswesen hat ihn abqualifiziert. Alfdorf (Bad.-Württ.) JOHANNES GÜNTHER",
-      "metadata": {
-        "titel": "Briefe",
-        "datum": "1970-02-15",
-        "jahrgang": 1970,
-        "ausgabe": 8,
-        "url": "https://www.spiegel.de/politik/lehrermangel-a-8d70d499-0002-0001-0000-000045202514?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 75,
+      "chunk_id": 69,
       "relevance_score": 0.7347810864448547,
       "content": "(Nr. 17/52, Deutschland) Das beiliegende Bild zeigt Ihnen Dr. Otto Strasser so, wie er heute ist, nicht so jungstrahlend wie auf dem von Ihnen veröffentlichten Bild. Im übrigen sind mehrere Berliner Kameraden mit mir der Meinung, daß es ein Skandal und nur der Hitler-Stalin würdig ist, einen so wertvollen Sprecher eines deutschen Volksteils zu verbannen, ihm den Heimweg zu verwehren. Neukölln Alfred Raeschke",
       "metadata": {
@@ -1635,7 +1481,7 @@
       }
     },
     {
-      "chunk_id": 76,
+      "chunk_id": 70,
       "relevance_score": 0.7345423698425293,
       "content": "In Form eines Briefes an eine jüdische Jugendfreundin gibt die heute 45jährige Romanautorin (\"Die Aschenspur\"), ehemals BDM-Pressereferentin und Arbeitsdienst-Führerin, Rechenschaft über ihre inzwischen bewältigte Nazi-Vergangenheit. Sie fragt sich, wie sie vom Nationalsozialismus bis zur intellektuellen und ethischen Blindheit und bis zu Anwandlungen von Unmenschlichkeit fasziniert werden konnte, und findet Teilantworten einerseits in den durch das bourgeoise Elternhaus vermittelten nationalsozialistischen Ressentiments, andererseits in ihrem jugendlich-romantischen Affekt gegenüber der »Bürgerlichkeit« eben jenes Elternhauses. Nicht das ganze Ausmaß der Verblendung kann auf diese Weise erklärt werden. Dennoch hat Melita Maschmanns aufrichtiges »Fazit« (Untertitel: »Kein Rechtfertigungsversuch\") als Studie der politischen Verführbarkeit jugendlichen Diensteifers ihren Wert. (Deutsche Verlags-Anstalt, Stuttgart; 224 Seiten; 7,80 Mark.)",
       "metadata": {
@@ -1656,7 +1502,7 @@
       }
     },
     {
-      "chunk_id": 77,
+      "chunk_id": 71,
       "relevance_score": 0.734491229057312,
       "content": "Es wäre nicht nur verdienstvoll, sondern äußerst interessant, wenn Sie Ihre geschätzte Aufmerksamkeit einmal der Schilderung der Methoden widmen würden, mit denen die Aktionszentren des Ostens gerade jene Persönlichkeiten der Bundesrepublik zu treffen verstehen, die ihre Arbeitsweise durchschaut und entsprechende Gegenmittel vorgeschlagen haben... München DR. WALTER BECHER Herr Dr. Becher erklärt, daß nicht er, sondern der Verlagsdirektor des NSGauorgans »Die Zeit«, Hugo Bachmann, für ihn ein Gesuch um Aufnahme in die NSDAP an die Gauleitung Sudetenland gerichtet habe. Nach dem Organisationsstatut der NSDAP war es nicht möglich, daß jemand für einen anderen ein Gesuch um Aufnahme in die Partei einbringen konnte. Das mußte jeder selbst tun. Es ist aber durchaus möglich, daß der damalige Verlagsdirektor Bachmann das Aufnahmegesuch Bechers befürwortet hat. Becher war für die Zeitung ein sehr brauchbarer Mann. So hörte nach seinem unfreiwilligen Ausscheiden aus der Redaktion des NS-Gauorgans auf der von ihm geleiteten Seite »Kultur und Wissen« die antijüdische Hetze fast gänzlich auf. München 23 HANS MAIER Münchener Vertriebenen Echo MdL Becher (Konterfei und Vexierbild)",
       "metadata": {
@@ -1677,28 +1523,7 @@
       }
     },
     {
-      "chunk_id": 78,
-      "relevance_score": 0.7342560291290283,
-      "content": "Die erste Frage war, wer von den bisherigen Professoren wieder in sein Amt eingesetzt werden sollte, wer nicht. Aus dem Dreizehnerausschuß wurde ein Unterausschuß gewählt zur Ausarbeitung von Gutachten über die einzelnen Dozenten. Er behandelte nur die drei geisteswissenschaftlichen Fakultäten. Ich erinnere mich, daß Regenbogen und Fritz Ernst, Radbruch und Dibelius dabei waren. Wir hatten folgendes Prinzip: Vorerst sollten über die einwandfreien Kollegen die positiven Gutachten erstellt werden; negative Gutachten wollten wir zunächst überhaupt nicht machen; die Fragwürdigen schoben wir daher hinaus. Diese Arbeit war im Grunde vergeblich. Ein kleiner Kreis von Dozenten wurde von den Amerikanern im Sommer 1945 bestimmt, zumeist auf Grund mündlicher Erkundigungen. Von diesem Kreis wurde der erste Rektor gewählt. Unsere Gutachten verloren sich in den Aktenmassen der Amerikaner. Die Amerikaner waren wohlwollend. Wir bewunderten die Freiheit und Ehrlichkeit ihres Denkens. Man konnte ihnen Vertrauen schenken. Der Universitätsoffizier half uns gegen die CIC, natürlich stillschweigend. Aber wir verhehlten uns nicht die Züge von Naivität, die wir antraten, den manchmal schnellen Wechsel ihrer Anordnungen, das Vorwiegen ihrer Sorge, es könnten in der Bevölkerung Unruhen ausbrechen, vor allen anderen Fragen. Wir sahen die Menge ihrer Gesetze, die sie selber nicht mehr kannten und gegen die sie selber, wenn die Folgen unsinnig waren, sich mit Geschicklichkeit und gesundem Menschenverstand wehrten. Sie hatten keine Idee vom Aufbau der deutschen Universität. Es geschah hier im Kleinen, was später im Großen geschah. Erst kam die Entnazifizierung, bei der die höchsten Maßstäbe angelegt und wirklich harmlose Leute schwer belastet wurden, dann aber die Freilassung der großen, verderblichen Nazis zu öffentlicher Wirksamkeit. Alles in allem herrschte eine geistige Verwirrung. Die meisten sorgten für sich, in der Unordnung einen Platz zu behaupten. Einer der Unsrigen bemühte sich ständig bei den Amerikanern um die nazistischen Kollegen, interessierte sich kaum für allgemeine Universitätsfragen. Sprach ich mit ihm, so war er gelangweilt und kam bald auf andere Dinge. Diese Kollegialität war die zünftige »Solidarität« nicht korporative Verantwortlichkeit. Urteile wurden gefällt, die mir Schrecken einjagten; etwa von einem Senatsmitglied nach Erscheinen des damals sehr verdienstlichen, offenbarenden Buches von Mitscherlich über das Diktat der Menschenverachtung, in dem dokumentarisch die Vorgänge bei den Experimenten mit Menschen und die Tötungen von Menschen konkret und mit Namen der Beteiligten mitgeteilt wurden. Der Senator, ein Mediziner, sagte empört, das hätte Mitscherlich nicht veröffentlichen dürfen, es diskreditiere unseren Stand (dieser Senator war niemals Nazi gewesen). Die Universitätsreform blieb äußerlich, der Aufbau rein materiell.",
-      "metadata": {
-        "titel": "ERFAHRUNG DES AUSGESTOSSENSEINS",
-        "datum": "1967-10-01",
-        "jahrgang": 1967,
-        "ausgabe": 41,
-        "url": "https://www.spiegel.de/politik/erfahrung-des-ausgestossenseins-a-cc976e03-0002-0001-0000-000046289913?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 79,
+      "chunk_id": 72,
       "relevance_score": 0.7341699600219727,
       "content": "Weiter erzählten Kriegsgefangene über Kriegserlebnisse, negative natürlich, und machten, wenn man es so nennen will, »Friedenspropaganda«. Alles war im Grunde, im Vergleich zum Soldatensender Calais, sehr harmlos. Die Gefangenen wurden zu diesen Sendungen täglich mit einem Bus nach London gefahren. Ich war im Lager mit Eduard von Schnitzler befreundet. Es bildeten sich unter den Kriegsgefangenen so ab Anfang 1945 natürlich politische Gruppen, die innerhalb des Lagers zusammenzogen; so nannte man eine Nissenhütte z. B. den Kreml« (dort wohnte natürlich E. v. Sch.) und eine andere den »Vatikan«. Hamburg R. JENTSCH",
       "metadata": {
@@ -1719,7 +1544,28 @@
       }
     },
     {
-      "chunk_id": 80,
+      "chunk_id": 73,
+      "relevance_score": 0.7341675758361816,
+      "content": "Erst nachdem er als Ausgleich für den kritisierten Auschwitz-Vergleich familiäre Negativ-Erfahrungen aus der Nazi-Zeit (\"Mein Vater war schließlich sieben Jahre im KZ\") aufgeboten hatte, wurde er mit 64 von 113 Stimmen knapp bestätigt. Doch schon kommt neues Unheil auf den Heilkundigen zu: Nachbarn bestreiten in offenen Briefen, daß Vater Holzgartner, ein Gemischtwarenhändler, je »mit einem KZ in Berührung gekommen« ist.",
+      "metadata": {
+        "titel": "Clifford Rose, Edward Kennedy, Hans Karl Filbinger, Otto Waalkes, Anna Bergman, Hans-Jürgen Wischnewski, Elizabeth II., Uri Avnery, Franz Josef Strauß, Hartwig Holzgartner",
+        "datum": "1979-12-16",
+        "jahrgang": 1979,
+        "ausgabe": 51,
+        "url": "https://www.spiegel.de/politik/clifford-rose-edward-kennedy-hans-karl-filbinger-otto-waalkes-anna-bergman-hans-juergen-wischnewski-elizabeth-ii-uri-avnery-franz-josef-strauss-hartwig-holzgartner-a-3078e939-0002-0001-0000-000039685964?context=issue",
+        "autoren": "",
+        "schlagworte": "['Personalien']",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 74,
       "relevance_score": 0.7341188192367554,
       "content": "Diejenigen, die an den Schreibtischen des Reichssicherheitshauptamtes und anderer oberster Reichsbehörden saßen und tausendfach Mord dekretierten. warten auf ihren Prozeß wegen Beihilfe zum Mord. Sie berufen sich durchweg auf den Willen der NS-Staatsführung und leugnen die niedrigen Beweggründe. Oberstaatsanwalt Adalbert Rücken, Leiter der Ludwigsburger Zentralstelle für die Verfolgung von NS-Verbrechen: »Die Kleinen, die geschossen haben, kriegt man über Heimtücke oder Grausamkeit wohl auch weiter ran. Aber die Grollen, die die Morde ja nicht eigenhändig begangen haben, sind nur zu belangen wegen Beihilfe zum Mord aus niedrigen Beweggründen. Da man ihnen diese Beweggründe selbst aber heute kaum nachweisen kann, sind sie es, die jetzt am besten dran sind.«",
       "metadata": {
@@ -1740,7 +1586,28 @@
       }
     },
     {
-      "chunk_id": 81,
+      "chunk_id": 75,
+      "relevance_score": 0.7340525388717651,
+      "content": "Wer ist es denn, der naziähnliche Diktatoren in aller Welt seit eh und je hofiert und goutiert? Ist er nicht selbst das jahrzehntelange Symptom (oder Syndrom) für diese handfeste, weißgelbe und klebrige Essener Eskalation? Bruckmühl Gegen F. 1. Strauß wurden Eier und Tomaten verwandt, ich wurde 1969 mit Steinen beworfen und mit Krampen und Kugellager-Kugeln aus Zwillen beschossen. Stefanie Roussel war auf dem nämlichen Platz in Essen dabei. Die CDU wird sich noch wundem, denn mit Eiern und Tomaten fing es damals auch nur an. Hannover ADOLF VON THADDEN Wenn nach allem, was FJS sich geleistet hat, seine Kanzlerkandidatur doch noch möglich ist, so hat die Demokratie versagt. Dann ist man ohnmächtig, dann wirft man Eier für die Freiheit. Man wirft mit wütenden Tränen über dieses Land in den Augen, und hofft, daß das Ei sein Ziel findet. Irgendwann wird Franz Josef Strauß ja wohl mal nach Hamburg kommen und eine Wahlrede halten wollen. Aber er soll viele Regenschirme und Ohropax mitbringen, denn Norddeutschlands Hühnereier werden sich darum reißen, in seine Nähe zu gelangen. Hamburg MANFRED THURAU Mir wäre ein Ei zu viel für so einen Menschen. Dem gehört nur Verachtung! Darmstadt WILHELM SELLMANN",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1979-09-23",
+        "jahrgang": 1979,
+        "ausgabe": 39,
+        "url": "https://www.spiegel.de/politik/essener-vollblut-a-af8921f7-0002-0001-0000-000039868862?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 76,
       "relevance_score": 0.7339714169502258,
       "content": "Die Entstehung des Dritten Reiches beobachtete er als entschiedener Nationalist und ehemaliger Frontkämpfer mit Wohlwollen. Andererseits mußte er, seinem »Gentleman«-Ideal zuliebe, darauf bestehen, den Nationalsozialisten gegenüber gewisse Vorbehalte zu bewahren. Er trat nicht in die Nationalsozialistische Deutsche Arbeiterpartei (NSDAP) ein und hatte in der Juden-Frage seine eigene, humanere Meinung, wie er etwa auch die Interpunktion konsequent nach eigenen, schwer durchschaubaren Regeln handhabte. In welche Schwierigkeiten Binding während seiner letzten Lebensjahre - er starb 1938 - mit dieser seiner vorbehaltvollen Billigung des NS-Regimes geraten mußte, ist an einigen Briefen abzulesen, die in dem Briefband zum ersten Male veröffentlicht werden. Sie sind zum Teil symptomatisch für die damalige Gefühlslage der deutsch-national und völkisch gesonnenen Autoren, die von einer Erneuerung der Reichs- und Staatsidee durch Hitler träumten, dabei aber trotz größter Anstrengung die Intoleranz und die Verbrechen der Nationalsozialisten nicht ignorieren konnten. »Unwichtig und kaum verwertbar« Für Binding selbst war zunächst das Unrecht augenfällig, von dem er sich persönlich getroffen fühlte. Drei »Tatbestände«, die er »schon aus Standesbewußtsein nicht ruhen« und auf sich sitzenlassen konnte, veranlaßten ihn, im Juli 1936 eine flammende Beschwerde an die Reichsschrifttumskammer zu richten.",
       "metadata": {
@@ -1761,7 +1628,7 @@
       }
     },
     {
-      "chunk_id": 82,
+      "chunk_id": 77,
       "relevance_score": 0.7339054346084595,
       "content": "Folgerung: Mithin habe die Bundesrepublik auch die Schulden des Deutschen Reiches übernommen. Dem Argument der Bundesregierung, die Forderungen der Umsiedler seien durch die Lastenausgleichs-Gesetzgebung geregelt, die Umsiedler könnten also keine höheren Entschädigungen beanspruchen als die Flüchtlinge, begegnet Kühne mit dem Hinweis, daß im Gegensatz zum zurückgelassenen Flüchtlingsvermögen das Deutsche Reich aus dem Umsiedler-Eigentum beträchtlichen Nutzen gezogen habe. Lastenausgleichs-Zahlungen, wie sie die Vertriebenen aus den Gebieten jenseits von Oder und Neiße erhalten, habe die Bundesregierung mit der skurrilen Begründung abgelehnt, die Baltendeutschen seien - weil schon 1939 vertrieben - besser gestellt als die meisten Flüchtlinge. »Niemand«, so klagt Balten-Anwalt Kühne den Verfassungsrichtern sein Leid, »will uns arme und vielfach verzweifelte Menschen hören und sehen.« Baltendeutsche Umsiedler in Danzig (1940): Ohne Heim ins Reich Balten-Anwalt Kühne* 200 Millionen im Schornstein * Mit FDP-Chef Erich Mende.",
       "metadata": {
@@ -1782,78 +1649,15 @@
       }
     },
     {
-      "chunk_id": 83,
-      "relevance_score": 0.7338433265686035,
-      "content": "Ein Tanzabend der Bundeswehr zugunsten der Kriegsgräberfürsorge, den das Unteroffizierskorps der Münchner Akademie des Sanitäts- und Gesundheitswesens im Großen Saal des Bürgerbraukellers veranstaltete, führte nicht zu dem erhofften Erfolg. Mitglieder des Verbandes der Kriegsdienstverweigerer protestierten vor dem Gebäude mit Transparenten und schwarzen Holzkreuzen gegen den traurigen Zweck des Tanzvergnügens. Stahlhelme, Landsermützen und Soldatenmantel hatten sich die Demonstranten von der Bavaria-Filmgesellschaft beschafft. Der Tanzsaal blieb halb leer. Von Bundeswehrangehörigen wurde erklärt, es habe sich um einen ersten Versuch gehandelt, in größerem Umfang mit der Bevölkerung Kontakt zu finden, nachdem der Wehrbeauftragte Heye von einer Gefahr der Isolierung der Bundeswehr gesprochen habe.",
-      "metadata": {
-        "titel": "Ein Tanzabend der Bundeswehr ...",
-        "datum": "1964-10-13",
-        "jahrgang": 1964,
-        "ausgabe": 42,
-        "url": "https://www.spiegel.de/politik/ein-tanzabend-der-bundeswehr-a-20bcced3-0002-0001-0000-000046176471?context=issue",
-        "autoren": "",
-        "schlagworte": "['Deutschland']",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 84,
-      "relevance_score": 0.7338202595710754,
-      "content": "Daneben amtierte er zeitweilig als Kreiswirtschaftsberater der Kreisleitung Solingen der NSDAP. * Im Artikel 48 des Grundgesetzes heißt es: (2) Niemand darf gehindert werden, das Amt eines Abgeordneten zu übernehmen und auszuüben. Eine Kündigung oder Entlassung aus diesem Grunde ist unzulässig. Fabrikant Burckardt Schadenersatz für Parlaments-Arbeit",
-      "metadata": {
-        "titel": "Diäten für die Firma",
-        "datum": "1964-01-07",
-        "jahrgang": 1964,
-        "ausgabe": 1,
-        "url": "https://www.spiegel.de/politik/diaeten-fuer-die-firma-a-ba17f799-0002-0001-0000-000046162641?context=issue",
-        "autoren": "",
-        "schlagworte": "['Abgeordnete']",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 85,
-      "relevance_score": 0.7336472868919373,
-      "content": "Unbestritten ist die Eröffnungsszene der Spionage-Schmiere. Als im Herbst 1969 die Sozialliberalen an die Regierung gekommen waren, empfahl der neue Chef der Abteilung Wirtschaftspolitik im Kanzleramt, Herbert Ehrenberg, seinem Dienstvorgesetzten Ehmke einen fähigen Mitarbeiter zur Anstellung. Er präsentierte einen alten Freund und Genossen aus seiner Frankfurter Zeit bei der Gewerkschaft Bau-Steine-Erden, den zuverlässigen Sozialdemokraten Günter Guillaume. Gewichtigster Fürsprecher Guillaumes: der damalige Verkehrsminister und jetzige Verteidigungsminister Georg Leber, dessen Frankfurter Wahlkampf Guillaume als Wahlkreis-Geschäftsführer gemanagt hatte. Obwohl das »kalte Wiesel« (Ehmke) dem Kanzleramts-Chef vom ersten Tag an unsympathisch war und obwohl der Nichtakademiker Guillaume auf Bedenken des Personalrates gestoßen war, mochte Ehmke in seiner Personalnot auf einen zuverlässigen, stets dienstbereiten Geist im Amt nicht verzichten. Da Guillaume sich als DDR-Flüchtling aus dem Jahre 1956 vorgestellt hatte, bat der für die Überprüfung der Beamten im Kanzleramt zuständige Sicherheits-Beauftragte, Ministerialdirigent Franz Schlichter, zunächst die dem Kanzleramt unterstellte BND-Zentrale in München-.Pullach nachzuprüfen, ob gegen Guillaume etwas vorliege. Es lag etwas vor. In einem Brief an Ehmke präsentierte BND-Chef Gerhard Wessel ein Dossier. Inhalt: Guillaume stehe wegen früherer »Agententätigkeit« und »Infiltrationstätigkeit« für den Ost-Berliner Verlag »Volk und Wissen«, der bei Abwehrleuten in den fünfziger Jahren als gelegentliche Residentur für DDR-Agenten galt, unter Verdacht. Doch schon über die Herkunft der Meldung können sich die Beteiligten heute nicht mehr einigen: Nollaus Verfassungsschützer behaupten, der BND habe allein aus der unzuverlässigen Quelle des damals in West-Berlin ansässigen »Untersuchungsausschusses Freiheitlicher Juristen«, einer spionageähnlichen Kampforganisation gegen die DDR, geschöpft. Unions-Vertreter im Vertrauensmänner-Gremium des Bundestags, vom BND gefüttert, setzen dagegen, Wessel habe sich noch auf eine zweite, als zuverlässig eingestufte Quelle berufen können. Tatsächlich jedoch hatte Wessel sowohl in seinem Brief an Ehmke als auch in einem späteren persönlichen Gespräch mit dem Kanzleramts-Chef eingeräumt, der Inhalt seiner Information reiche nicht aus, den Bewerber abzuweisen. Er empfehle, weiter zu ermitteln, in jedem Fall aber Guillaume den Informationen zu konfrontieren. Sicherheitsmann Schlichter meldete auf Weisung Ehmkes den Fund an das seinerzeit von dem CDU-Sympathisanten Hubert Schrübbers geführte Bundesamt für Verfassungsschutz und bat um Amtshilfe. Die Kölner Abwehr-Spezialisten wandten sieh an ihre Kollegen vom Berliner Verfassungsschutzamt und erhielten das gleiche Dossier, das auch schon der BND ausgegraben hatte. Quelle: die freiheitlichen Juristen.",
-      "metadata": {
-        "titel": "Suche nach dem Schuldigen",
-        "datum": "1974-05-05",
-        "jahrgang": 1974,
-        "ausgabe": 19,
-        "url": "https://www.spiegel.de/politik/affaere-guillaume-suche-nach-dem-schuldigen-a-8c6c56b6-0002-0001-0000-000041739134?context=issue",
-        "autoren": "",
-        "schlagworte": "['Affäre Guillaume']",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 86,
-      "relevance_score": 0.733106255531311,
-      "content": "(Nr. 42/52, Deutschland) Ihr Bericht »Partisanen - Alles für Deutschland« enthielt eine Darstellung, die nach sorgfältiger Prüfung des vorliegenden Materials nicht aufrechterhalten werden kann. So ist es unrichtig, daß im Bundesamt für Verfassungsschutz ein Bundestagsabgeordneter vorstellig geworden sei und daß man ihm dort die Tatsache eines Fememordes bestätigt habe. Unrichtig ist ferner, daß man dem Bundestagsabgeordneten erklärt habe, die seinerzeit wegen des Fememordes eingeleiteten Untersuchungen hätten auf Befehl der Amerikaner eingestellt werden müssen. Ebensowenig sind einem bayrischen Journalisten die Vorgänge um den Fememord seitens eines Angehörigen des Bundesamtes für Verfassungsschutz bestätigt worden, noch hat das Amt diesen oder einen anderen Journalisten »beschworen«, bezüglich eines Fememordes nichts an die Öffentlichkeit zu bringen. Damit entfallen alle Schlußfolgerungen und Kombinationen, die seinerzeit an die entsprechenden Ausführungen geknüpft worden sind. Köln Bundesamt für Verfassungsschutz Der SPIEGEL ist auf Grund eigener Nachprüfung zu einer Bestätigung dieser Angaben gelangt. - Red.",
+      "chunk_id": 78,
+      "relevance_score": 0.7334451675415039,
+      "content": "Am 15. März 1967 fand wieder eine NPD-Versammlung am Ort statt. Dabei wurden Exemplare der »Deutschen Wochen-Zeitung« aus Hannover verteilt, die zumindest durch Veröffentlichung sämtlich; NPD-Veranstaltungen beweist, wie nahe sie dieser Partei steht. Die Ausgabe, welche mir am Tage danach in die Hände kam, trägt das Datum vom 10. März 1967. Dort aber finde ich dann unter der Überschrift: »Die Schande von Flensburg« einen Artikel eines Erich Kern, in dem Landesvorsitzender der NPD Hamburg. es unter anderem heißt: »... die hoch- und leider nicht zu einem geringen Teil auch Landesverräter des 20. Juli als Traditionsleitbilder der Bundeswehr Wenn man nun folgert, daß Gutmann richtig liegt mit seiner Aussage über von Thaddens Vergangenheil, bleibt nur der Schluß, daß man doch keineswegs eine Partei wählen kann, deren Spitzenfunktionär 1. Klasse sich rühmen läßt als Angehöriger von »Hoch- und Landesverrätern«. Ludwigshafen LOTHAR P. MENDE Wenn man als sehr junger Mensch und Idealist unmittelbar Zeuge der Geschehnisse des 13. August 1961 wurde und man zähneknirschend und mit geballter Faust in der Tasche mitansehen mußte, wie auch unsere Demokratie total versagte, und angesichts dieser Lage nichts Besseres wußte, als sich in jämmerlichen und weinerlichen Trauergesängen in allen erdenklichen Variationen zu ergehen, dann sollte es schon aus diesem Grunde allein für jeden allen und jungen Deutschen, der noch das Herz auf dem richtigen Fleck hat und kein armseliger »Lahmarsch« ist, nur eine wählbare Partei geben, nämlich die NPD. Berlin GERWIN GRUSE Da die alten Nazis schon längst wieder in allen Ämtern sitzen und zumeist führende Stellungen innehaben, kann die NPD mit deren Hilfe leicht und schmerzlos eine neue Machtergreifung durchführen. Kiel FRANZ DENNER",
       "metadata": {
         "titel": "Briefe",
-        "datum": "1953-02-03",
-        "jahrgang": 1953,
-        "ausgabe": 6,
-        "url": "https://www.spiegel.de/politik/partisanen-a-5718ffcb-0002-0001-0000-000025655763?context=issue",
+        "datum": "1967-04-16",
+        "jahrgang": 1967,
+        "ausgabe": 17,
+        "url": "https://www.spiegel.de/politik/echte-deutsche-a-6398805b-0002-0001-0000-000045302771?context=issue",
         "autoren": "",
         "schlagworte": "",
         "untertitel": "",
@@ -1866,7 +1670,70 @@
       }
     },
     {
-      "chunk_id": 87,
+      "chunk_id": 79,
+      "relevance_score": 0.7334320545196533,
+      "content": "Globke war daher kein Betriebsunfall, sondern Vorsatz. Bonn ULRICH KALBITZER Als Bürger unseres Landes fühlt man sich doch allmählich verhöhnt. Da werden berühmte, wichtigste Denker und Lenker unseres Staates plötzlich zu erinnerungslosen, senilen Greisen. Coesfeld (Nrdrh.-Westf.) THOMAS SCHRÖER Ohne Antrag auf Mitgliedschaft, also als Anwärter, wurde keiner Mitglied der NSDAP! Gießen WALTER BÖHME Es ist merkwürdig, daß gerade Politiker wie Carstens, denen selbst aus ihrer NSDAP-Mitgliedschaft kein Nachteil erwuchs, heute zu den stärksten Befürwortern eines »Radikalenerlasses« gehören. Bonn JAN MOOS Wenn derzeit in Deutschland Daten über hunderttausend junger Menschen gesammelt und überprüft werden, braucht man sich nicht zu wundern, wenn aus dem Geiste »einmal radikal -- immer radikal« plötzlich nach dem Motto »einmal Nazi -- immer Nazi« Jahrzehnte alte Aktenordner gewälzt werden. Radolfzell (Bad.-Württ.) PETER ARG",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1978-11-26",
+        "jahrgang": 1978,
+        "ausgabe": 48,
+        "url": "https://www.spiegel.de/politik/19-31-14-26-15-27-a-7ae921fa-0002-0001-0000-000040605837?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 80,
+      "relevance_score": 0.7334069013595581,
+      "content": "Humanisierung, das war keine Maxime, die im NS-Staat Bedeutung hätte haben können. »Schönheit der nationalen Arbeit« nach Ausschaltung der Gewerkschaften, »Urlaub und Erholung in organisierter Form« mit »Kraft durch Freude«, Ernährung, Unterhaltung, Zufriedenheit der Massen, die sich endlich wieder versorgt sahen, fern von den Entscheidungen, die Abenteuer für Abenteuer das Ganze aufs Spiel setzten -- das war der Anteil, der der »Volksgemeinschaft« zugedacht wurde, die die Vorgänge teilweise zwar ahnte, aber nicht mehr durchschaute. Bis sich das bittere Ende einstellte. Nein. Von »Sozialismus« kann bei Adolf Hitler und seiner Partei, obgleich der Ausdruck in ihren Erklärungen gelegentlich vorkommt, vernünftigerweise keine Rede sein. Die wirklichen Sozialisten aller Varianten waren ja auch die unter der NS-Herrschaft am meisten Verfolgten und die, die am markantesten, soweit es möglich war, Widerstand geleistet haben.",
+      "metadata": {
+        "titel": "»Haut nur drein ...«",
+        "datum": "1979-10-14",
+        "jahrgang": 1979,
+        "ausgabe": 42,
+        "url": "https://www.spiegel.de/politik/haut-nur-drein-a-3005380b-0002-0001-0000-000039867105?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 81,
+      "relevance_score": 0.7333778142929077,
+      "content": "Sich da mit Ahnungslosigkeit herauszureden, hilft nichts: schon seit 1935 hatte die NS-Kulturgemeinde gegen Mendelssohns Musik einen massiven Propaganda-Feldzug unternommen, was jedermann bekannt war. Dies nur zu Herrn Kellers Gedächtnisstütze. Abgesehen von alldem geht es im Orff-Streit weniger darum, ob der Meister mit den Nazis sympathisierte, sondern vor allem darum, daß die musikalische Idiomatik dieses dürftigsten aller Strawinsky-Epigonen selber eine Inkarnation von Faschismus ist, eine Art »Bild«-Zeitung in C-Dur -- bloß demagogisch eingehämmerte Forderung eines Zuruck-zu-den-Urbrunnen der Natürlichkeit. Diese Musik in der Bundesrepublik zu installieren, hat übrigens Herr Keller nach Kräften mitgewirkt. Angesichts der Misere des deutschen Musiklebens ist diesem eines zu wünschen: Myriaden von Dutschkes. Wer, wie Herr Keller, selbst im Glashaus sitzt, soll nicht mit Nazis werfen, Amsterdam DR. KONRAD BOSHMER Komponist",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1968-04-28",
+        "jahrgang": 1968,
+        "ausgabe": 18,
+        "url": "https://www.spiegel.de/politik/leicht-gemacht-a-ddb900ec-0002-0001-0000-000046050087?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 82,
       "relevance_score": 0.733092188835144,
       "content": "Beide Organisationen werden durch eine Verwaltungsbürokratie, ein Juristenmonopol, Diplom-Landwirte, Generaldirektoren, Direktoren und Präsidenten beherrscht. Eine Gruppe wirft der anderen die Bälle zu, und die Stellenbesetzung wird durch Beziehungen geregelt. Damit die ländliche Bevölkerung dann etwas von der Arbeit ihrer Vertreter hört, wird geschimpft und gestöhnt oder werden Fensterreden gehalten, aber davon kann kein Berufsstand gesunden. Essen ALOIS ECKLOFF ... Übrigens, wenn Bauern bullern, so müssen sie nicht immer im Unrecht - oder gar Nazis - sein. Sie haben eben nicht gelernt, das präzise auszudrücken, was sie klar erkennen. Bonn DR. LUDWIG DIECK",
       "metadata": {
@@ -1887,17 +1754,17 @@
       }
     },
     {
-      "chunk_id": 88,
-      "relevance_score": 0.7327175140380859,
-      "content": "»Ich weiß nicht, wie das Gericht entscheiden wird. Ich weiß aus langjähriger Bekanntschaft mit Rudolf Augstein und Conrad Ahlers, daß sie beide Patrioten sind, die mutig - und wie wir sehen - unter Einsatz ihrer bürgerlichen Existenz ihre Meinung vom besten Weg für Deutschland verfechten.« (Der Hamburger Zweite Bürgermeister Engelhard zur SPIEGEL-Affäre.)",
+      "chunk_id": 83,
+      "relevance_score": 0.7324935793876648,
+      "content": "Schon 1920 trat er dem »Verband gegen Überhebung des Judentums« bei, dann schloß er sich jenen rechtsextremistischen Jungdeutschen an, die der Freikorpsführer Gerhard Roßbach zu Marodeuren gegen den Staat von Weimar ausbildete. Die mecklenburgische Roßbach-Filiale, in der Bormann diente, beschloß nach einem Trinkgelage im Mai 1923, einen gewissen Kadow umzulegen, den man für den Verräter des von den Franzosen hingerichteten Freiheitshelden Schlageter hielt. Kadow wurde von den Roßbachern unter Führung des späteren Auschwitz -Kommandanten Höß totgeschlagen; Höß erhielt vom Reichsgericht zehn Jahre Zuchthaus, Eleve Bormann kam als Gehilfe mit einem Jahr Gefängnis davon. Das Sitzen lohnte sich jedoch. Bormann selbst bestätigte in einem von Wulf aufgefundenen Schreiben vom 31. Dezember 1938, daß er für sein Martyrium in Sachen Kadow mit dem Blutorden dekoriert wurde. Bormann: »Auf Grund der neuen Bestimmungen hat mir der Führer ... den Blutorden verliehen, weil ich ... 12 Monate im Gefängnis gesessen habe.« Der NSDAP trat Bormann, der inzwischen Gutsinspektor des Herrn von Treuenfels auf Herzberg bei Parchim in Mecklenburg gewesen war, formell erst 1927 bei; er mußte sich mit der Parteinummer 60 508 zufriedengeben. Mit dieser Nummer war kein Staat zu machen. Den Boden für seine Karriere legte Bormann, indem er Hochzeit machte. Die Braut hieß Gerda Buch und war die Tochter des Majors Walter Buch, der zu der Münchner Keimzelle der NSDAP gehörte, schon 1923 SA -Führer von Franken war, 1928 Reichstagsabgeordneter und schließlich oberster Parteirichter der NSDAP wurde. Die Mitgift, die Frau Gerda ihrem Mann in die Ehe brachte, bestand zunächst in einer beträchtlichen Portion NS-Gedankengut, mit dem Altkämpfer Buch seine Tochter gefüttert hatte. Aus Gefälligkeit nicht gegen Bormann, sondern gegen Schwiegervater Buch ließ sich Hitler herbei, Trauzeuge zu sein. Die Hochzeit der Tochter des berühmten Buch mit dem an der Kadow -Feme beteiligten Bormann wurde von der Parteiprominenz als besonderes Ereignis gefeiert, von dessen Schimmer auch der Bräutigam profitierte. Schon ein knappes Jahr nach der Hochzeit wurde dem im Wirtschaften erfahrenen Gutsverwalter die Hilfskasse der NSDAP anvertraut. Drei Jahre lang leitete Bormann den Transfer von zunächst nicht allzu riesigen Parteigeldern und wußte sich durch geschicktes Austeilen damals schon Freunde zu verschaffen. Die Stellung des Kassierers änderte sich radikal mit der Machtergreifung. Da die deutsche Industrie sich gegen die finanziell erschöpften neuen Herren generös erwies, flossen nunmehr die erheblich fetteren Beträge der von Krupp angeregten »Hitlerspende« durch Bormanns Hände. Es war nur folgerichtig, daß der Verwalter dieser Goldgrube auch im Parteirang aufstieg: Er wurde noch 1933 Stabsleiter beim Stellvertreter des Führers, eine Position, die für Bormann von unschätzbarem Wert war.",
       "metadata": {
-        "titel": "Zitat.",
-        "datum": "1963-01-15",
-        "jahrgang": 1963,
-        "ausgabe": 3,
-        "url": "https://www.spiegel.de/politik/zitat-a-9b7a2ac0-0002-0001-0000-000045141919?context=issue",
+        "titel": "Pferd ohne Sonntag",
+        "datum": "1962-02-27",
+        "jahrgang": 1962,
+        "ausgabe": 9,
+        "url": "https://www.spiegel.de/politik/pferd-ohne-sonntag-a-b4a72801-0002-0001-0000-000045139179?context=issue",
         "autoren": "",
-        "schlagworte": "['Deutschland']",
+        "schlagworte": "['Bormann']",
         "untertitel": "",
         "nr_in_issue": null
       },
@@ -1908,7 +1775,7 @@
       }
     },
     {
-      "chunk_id": 89,
+      "chunk_id": 84,
       "relevance_score": 0.7323994040489197,
       "content": "Junkersdorf HANNS GROSSPETER Der Kanzler bemerkte in einer Rede, daß er nicht daran denke, eine Abstimmung über Westdeutschlands Remilitarisierung durchführen zu lassen. In der wirklichen Demokratie Schweiz würde diese Stellungnahme eines Staatsmannes dazu führen, daß sich dieser in der Politik für lange Zeit unmöglich gemacht hätte. Der Oppositionsführer Schumacher machte die Bemerkung, daß eine Abstimmung deshalb nicht in Erwägung zu ziehen sei, »weil die Fragestellung zu schwierig« sei. Hitler hat Abstimmungen durchgeführt, deren Fragestellung so lautete, daß ein guter Deutscher wohl oder übel mit »Ja« stimmen mußte. Er hat dann das Ergebnis als Zustimmung zu seiner Politik ausgelegt. Aehnlich möchte es wohl auch Herr Schumacher halten. Reutlingen-Betzingen RUDOLF HEILRATH",
       "metadata": {
@@ -1929,7 +1796,70 @@
       }
     },
     {
-      "chunk_id": 90,
+      "chunk_id": 85,
+      "relevance_score": 0.7322792410850525,
+      "content": "Wer behauptet, Filbinger sei womöglich noch über das Kriegsende hinaus -- Nazi gewesen, tut ihm unrecht. Filbinger war nie ein Nazi, sondern ein Mann, für den Ordnung, die des Staates -- den damaligen NS-Staat miteinbegriffen - des Militärs, der Kirche, der etablierten Mächte überhaupt nicht nur sein muß, sondern »über alles« geht. Damit war und ist Filbinger für alle hohen und höchsten Staatsstellungen absolut qualifiziert, denn seine Mentalität entspricht nicht nur der des Großteiles der bundesdeutschen Bevölkerung, sondern auch vor allem derjenigen von Filbingers engeren Standes- und Berufskollegen, den die Schlüsselstellungen in fast allen Institutionen besetzenden Juristen. Zum Ordnungsdenken paßt der »Krähenkomment«, jene von Juristen geprägte Abbreviatur für das, was mit dem Sprichwort, daß eine Krähe der anderen kein Auge aushackt, gemeint ist. Ordnungsfetischismus und Krähenspruch charakterisieren den vorliegenden Fall in allen seinen Details. Gerade im Hinblick auf das Schicksal des einfachen Marinesoldaten Gröger kann ich für diesen Staat in seiner gegenwärtigen Verfassung keinen geeigneteren höchsten Repräsentanten vorstellen als den Herrn Filbinger. Giessen (Hessen) PROF. DR. MED. RUDOLF RÜHL CDU-Mitglied",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1978-05-28",
+        "jahrgang": 1978,
+        "ausgabe": 22,
+        "url": "https://www.spiegel.de/politik/ordnungsfetischismus-und-kraehenspruch-a-0a38edc6-0002-0001-0000-000040617839?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 86,
+      "relevance_score": 0.73216712474823,
+      "content": "Darüber möchte man gern mehr hören: zum Beispiel, ab wann er dem Vatikanischen Secret Service angehört hat? Ob schon zu Beginn des Krieges oder erst nach Stalingrad, als es mit dem Dritten Reich abwärts ging? Tübingen DR. ADOLF RIETH Man ist ja inzwischen in Deutschland an vieles gewöhnt und hält fast nichts mehr für unmöglich, aber wenn der amtierende Bundeskanzler als ehemaliger Geheimagent einer ausländischen Macht bezeichnet wird und daraufhin nichts geschieht, noch nicht einmal ein kurzes Dementi erfolgt, so ist das wohl sogar für nachkriegsdeutsche Verhältnisse ein einmaliger Fall, besonders, wenn man sich an den Ausspruch eines Geheimdienst-Fachmannes während des Falles Otto John erinnert: »Einmal Spitzel, immer Spitzel«. Berlin PAUL MÜLLER",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1969-10-19",
+        "jahrgang": 1969,
+        "ausgabe": 43,
+        "url": "https://www.spiegel.de/politik/bis-zuletzt-a-7f971d82-0002-0001-0000-000045520561?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 87,
+      "relevance_score": 0.7320514917373657,
+      "content": "Zwei handgeschriebene Tagebücher des NSMinisters für die einst besetzten Ostgebiete, Alfred Rosenberg, will das sowjetische Außenministerium im kommenden Frühjahr veröffentlichen. Die Aufzeichnungen enthalten neben persönlichen Notizen auch Äußerungen von Hitler, Goebbels und Himmler über die Neuordnung der Sowjet-Union nach einem deutschen Sieg.",
+      "metadata": {
+        "titel": "Rosenberg-Tagebücher.",
+        "datum": "1963-01-29",
+        "jahrgang": 1963,
+        "ausgabe": 5,
+        "url": "https://www.spiegel.de/politik/rosenberg-tagebuecher-a-7462c81a-0002-0001-0000-000045142152?context=issue",
+        "autoren": "",
+        "schlagworte": "['Deutschland']",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 88,
       "relevance_score": 0.7320502996444702,
       "content": "Mit demselben Eifer, den der Student und SPIEGEL-Leser Ziller darauf verwendet, in dem Wettbewerb mit dem Abgeordneten Erler möglichst viele Gesetze aus der Nazizeit als fortgeltendes Recht nachzuweisen, hat die deutsche Rechtsprechung in der Tat nach 1945 die anfangs häufig gebrauchte Generalklausel, wonach typisch nationalsozialistischen Gesetzen die weitere Anwendung zu versagen ist, zu einem praktisch fast wertlosen Schmuckstück der Rechtsordnung des neuen westdeutschen Rechtsstaates gemacht. Auch das von einigen obersten Gerichten mehrfach ausgesprochene Bekenntnis zum Naturrecht, welches unter Umständen Maßnahmen der nationalsozialistischen Machthaber als Nichtrecht (Unrecht in Gesetzesform) verstehen läßt, ist im allgemeinen ein Lippenbekenntnis geblieben. Ihm wird von sehr maßgeblichen Stellen ein Bekenntnis zu dem »allgemeinen Rechtsgrundsatz (!) von der rechtsgestaltenden Kraft des Faktischen« gegenübergestellt, um Rechtsqualität und Fortgeltung aller Akte des früheren Regimes zu beweisen. Wie man gleichzeitig die Nichtanerkennung der DDR als eines Unrechtsstaates begründen will, bleibt ein ungelöstes Rätsel ... Berlin-Zehlendorf PROF. DR. DR. WILHELM WENGLER",
       "metadata": {
@@ -1950,7 +1880,91 @@
       }
     },
     {
+      "chunk_id": 89,
+      "relevance_score": 0.7318705916404724,
+      "content": "(Nr. 25/51, Deutschland) Nach dem Grundgesetz und dem StGB können weder die Bestimmungsmensuren noch die sogenannten schlagenden Verbindungen verboten werden, sofern ihre Satzungen - und ihre Taten! - nicht gegen die freiheitliche demokratische Grundordnung verstoßen. Da wäre es von Interesse, zu erfahren, wie die farbentragenden schlagenden Verbindungen heute zur Rassenfrage stehen. Der Kösener S. C. z. B. hat immer eine sehr eindeutige antisemitische Stellung bezogen und auch in seinen Satzungen einen entsprechenden Paragraphen formuliert. Sollten die Alten Herren aus Dritten-Reich- und Weltkrieg-II-Erlebnissen inzwischen gelernt haben? Hannover Hermann Roth Peinlich, sehr peinlich für die Rektoren wie die Studenten, wenn schlagende Korporationen aus der Schweiz in echter europäischer Solidarität ihren deutschen Freunden sagen: »Wenn Ihr fechten wollt, dann kommt doch zu uns herüber, denn wir leben in einer freien Demokratie.« Von der wahren demokratischen Freiheit sind wir noch weit entfernt. Anstatt die studierende Jugend noch mehr für sich zu gewinnen, stößt man sie ganz unnütz vor den Kopf. Können wir Deutschen uns denn gar nicht einmal zu einer wirklichen Duldsamkeit durchringen? In diesem Falle wäre es keine Strapazierung, denn - : dem deutschen Volk ist alles ganz und gar wurscht. Köln-Birkendorf Dr. W. Franz",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1951-07-24",
+        "jahrgang": 1951,
+        "ausgabe": 30,
+        "url": "https://www.spiegel.de/politik/mensur-fechten-a-5988a202-0002-0001-0000-000029194440?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 90,
+      "relevance_score": 0.7318518161773682,
+      "content": "Befürchtet die SED, eine Häufung des Sterbejahres 1937 im Register könnte peinliche Fragen provozieren? Diese Beispiele beweisen, daß trotz aller Fortschritte in der Abkehr von stalinistischen Prinzipien und Methoden die »Parteilichkeit« einer objektiven Darstellung noch immer im Wege steht. Die umfassende und objektive Geschichte der deutschen Arbeiterbewegung bleibt auch nach diesem 5000 -Seiten-Werk noch zu schreiben. Weber Herausgegeben vom »Institut für Marxismus -Leninismus beim ZK der SED« Dietz Verlag Ost-Berlin 5082 Seiten 88 Mark KPD-Funktionär Ulbricht (stehend)*: Mit Nazis gegen die SPD * Als Diskussionsredner in einer NS-Versammlung 1931 in Berlin. Vorn links: Goebbels.",
+      "metadata": {
+        "titel": "VON 1937 KEIN STERBENSWORT",
+        "datum": "1966-07-24",
+        "jahrgang": 1966,
+        "ausgabe": 31,
+        "url": "https://www.spiegel.de/kultur/von-1937-kein-sterbenswort-a-6de952d7-0002-0001-0000-000046408258?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
       "chunk_id": 91,
+      "relevance_score": 0.7317483425140381,
+      "content": "Im Bundestag zeichnet sich eine Mehrheit für die generelle Aufhebung der Verjährungsfrist bei Mord ab. Eine Sonderregelung allein für Nazi-Morde, die nach derzeitiger Rechtslage Ende 1979 verjähren, scheint dagegen nicht mehrheitsfähig. Vorläufiger Stand der Stimmenschätzung: Die SPD-Fraktion wird mit Ausnahme von sechs oder sieben Abgeordneten für die Aufhebung der Verjährung stimmen. Bei der FDP, die aus rechtsprinzipiellen Überlegungen an der Verjährung festhält, rechnen Insider mit fünf bis sieben Stimmen für die Aufhebung. Und bei der Opposition, die das Thema letzte Woche fast vier Stunden lang debattierte, glaubt der Vorkämpfer gegen die Verjährung, der Hamburger CDU-Abgeordnete Erik Blumenfeld, bereits »weit mehr als zwanzig« Parlamentarier fest auf seiner Seite zu haben. 20 Unionschristen brächten nach dieser Zählung die Befürworter der Aufhebung bis auf 15 oder 16 Stimmen an die erforderliche 249-Stimmen-Mehrheit heran. Sie setzen ihre Hoffnung nicht zuletzt auf die Kollegen aus dem Europa-Parlament, die den außenpolitischen Schaden der Verjährung in düsteren Farben malen. Blumenfeld ist sicher: »Das werden noch mehr.«",
+      "metadata": {
+        "titel": "Verjährungs-Wende?",
+        "datum": "1978-12-10",
+        "jahrgang": 1978,
+        "ausgabe": 50,
+        "url": "https://www.spiegel.de/politik/verjaehrungs-wende-a-1e1351a9-0002-0001-0000-000040606363?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 92,
+      "relevance_score": 0.7317452430725098,
+      "content": "(Nr. 22/51, Deutschland) Ich wurde 1943 aus der Wehrmacht mit einer Fußamputation entlassen. Im Juni 1945 wurde eine Nachamputation notwendig. Weder der Leipziger Verein Barmenia, bei dem ich krankenversichert war noch das Versorgungsamt wollten die Kosten übernehmen. Seither hat sich mein durch den Krieg zugezogenes Leiden immer weiter verschlimmert und immer wieder habe ich die größten Schwierigkeiten wegen der Bezahlung der Krankenhauskosten. Die AOK Wolfenbüttel z. B. macht die Kostenübernahme unter Berufung auf § 105 des Bundesversorgungsgesetzes von einer amtlich bestätigten Einkommenserklärung abhängig. Dies allen zur Kenntnis, die neue Kriegskrüppel schaffen wollen, und allen denen, die Krüppel werden wollen, zur Warnung. Broistedt Fritz Weirich",
+      "metadata": {
+        "titel": "Briefe",
+        "datum": "1951-07-10",
+        "jahrgang": 1951,
+        "ausgabe": 28,
+        "url": "https://www.spiegel.de/politik/bundeshaushalt-a-c2a32124-0002-0001-0000-000029194347?context=issue",
+        "autoren": "",
+        "schlagworte": "",
+        "untertitel": "",
+        "nr_in_issue": null
+      },
+      "search_context": {
+        "zeit_interval": null,
+        "interval_start": null,
+        "interval_end": null
+      }
+    },
+    {
+      "chunk_id": 93,
       "relevance_score": 0.7317039966583252,
       "content": "Ulbricht wurde zunächst stellvertretender Vorsitzender, später 1. Sekretär des Zentralkomitees der SED. Er ist der mächtigste Mann in der Staatspartei der »DDR« und zeichnet verantwortlich für die Zustände, die heute in der Sowjetzone herrschen. Chruschtschew hat sich bei seinem Besuch in Ostberlin im August 1957 ausdrücklich hinter die SED und ihre stalinistischen Methoden gestellt und Ulbricht öffentlich des ungebrochenen sowjetischen Vertrauens versichert. EIN KONFÖDERATIONSPLAN, der Verhandlungen zwischen Bonn und Pankow voraussetzt und einen Staatenbund von Bundesrepublik und »DDR« vorsieht, wird von den Sowjets und der »DDR« als zur Zeit einzig möglicher Weg zur deutschen Einheit angepriesen. Der sowjetische Außenminister Gromyko hat am 10. September 1957 diese Ansicht noch einmal bekräftigt und für die Sowjet-Union abgelehnt, jemals wieder an einer Viermächte-Konferenz über die deutsche Frage teilzunehmen. Die Bundesregierung, die Bonner Opposition und die Westmächte lehnen ihrerseits Gespräche mit Pankow und eine Konföderation ab. Sie bestehen auf einer Viermächtekonferenz zur Lösung der deutschen Frage.",
       "metadata": {
@@ -1971,7 +1985,7 @@
       }
     },
     {
-      "chunk_id": 92,
+      "chunk_id": 94,
       "relevance_score": 0.7314262390136719,
       "content": "Der Bundestag, um die angehaltenen Ratifizierungsgesetze durchzubringen, müßte dann nochmals abstimmen, und diesmal wäre nicht die einfache, relative Mehrheit, sondern die absolute Mehrheit der Mitglieder des Hauses erforderlich. Von ihren 251 Mitgliedern müßten die beiden Regierungsfraktionen dann 249 zu einem Ja aufbieten; unwahrscheinlich, daß sie das könnten. Sie wären auf Zuzug aus dem christlichen Lager angewiesen, und das bei öffentlicher und namentlicher Abstimmung. Warum zögert die Union, den Neandertalern in ihren Reihen zu folgen? Warum läßt sie nur ihre Bayern krakeelen? Weil die Mehrzahl der Abgeordneten weiß, daß die Verträge. wenn denn welche nötig waren, nicht anders aussehen können, und daß diese Verträge besser sind als keine Verträge. Sie wollen die Ratifizierung ablehnen, damit sie die letzten Nazis noch zusammenkratzen können; aber verhindern wollen sie die Ratifizierung nicht. Empfehlung an Barzel und Co.: die Politik der gespaltenen Zunge durch ein »Mehr an Sicherheit« für den einzelnen Abgeordneten zu institutionalisieren, nach dem Vorbild der Deutschnationalen während der Abstimmung über den Dawes-Plan im Jahre 1924: die Mehrheit der Fraktion bekämpft das Vertragswerk bis aufs Messer, eine von der Fraktionsführung bestimmte Minderheit stimmt ihm zu. So schön wäre das für die Bundesregierung ja gar nicht, wenn der Christen-Block ihrem Liebeswerben nachgäbe und in corpore dafür stimmte.",
       "metadata": {
@@ -1992,57 +2006,15 @@
       }
     },
     {
-      "chunk_id": 93,
-      "relevance_score": 0.7306556105613708,
-      "content": "Hessische Christdemokraten verzichten auf Rücksichtnahme: Obwohl in dem Bundesland zahlreiche Angehörige von Opfern des ehemaligen Frankfurter Gestapo-Sekretärs Heinrich Baab leben, mühte sich der CDU-Landtagsabgeordnete Richard Hackenberg brieflich beim Wiesbadener SPD-Justizminister Karl Hemfler um die Freilassung des -- 1950 unter anderem wegen Beihilfe zum Mord zu lebenslänglich verurteilten -- Nazi-Helfers. Baab, 1942 und 1943 für die Ausrottung der großen jüdischen Gemeinde verantwortlich, sitzt -- nierenkrank -- in der Strafanstalt Butzbach ein; ist aber »voll haftfähig« (so die Anstaltsleitung). Dennoch sieht Hackenberg »alle Voraussetzungen für eine Begnadigung«, denn -- so argumentiert er unter anderem -- es bestehe »keine Rückfallgefahr«. Die Gnaden-Bitte löste indes Proteste aus: Auf einer Wahlversammlung zwang der ehemalige jüdische KPD-Landtagsabgeordnete und heutige stellvertretende Chefredakteur des DKP-Blatts »Die Tat«, Emil Carlebach (\"Baab ist für die Ermordung meiner Eltern verantwortlich\"). Frankfurts CDU -Kreisvorsitzer Wilhelm Fay zur Offenbarung. Der Christdemokrat zu dem Kommunisten (der selbst verschiedene KZ durchlebte): Er bedaure das persönliche Schicksal Carlebachs, noch mehr jedoch die Tatsache, daß dieser der DKP angehöre. Und: »In dem Wunsch der CDU ... sehe ich eine Geste der Humanität.«",
-      "metadata": {
-        "titel": "Geste der Humanität",
-        "datum": "1972-11-05",
-        "jahrgang": 1972,
-        "ausgabe": 46,
-        "url": "https://www.spiegel.de/politik/geste-der-humanitaet-a-04f59222-0002-0001-0000-000042764995?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 94,
-      "relevance_score": 0.7303414344787598,
-      "content": "Das könnte auch dem BND die innere Beweglichkeit zurückgeben, deren er dringend bedarf. Dieses Programm könnte helfen, den Bundesnachrichtendienst wieder aus den Niederungen mangelnder Leistungsfähigkeit herauszuführen. Denn: 25 Jahre voller Erfolge und Niederlagen, voller Hoffnungen und Resignation haben offenbart, daß trotz mancher Skurrilität des Gewerbes dieser BND ein nützliches Instrument bundesdeutscher Politik sein kann. Solange die geschlossenen Gesellschaftssysteme des Ostens eine nach Entspannung drängende Welt irritieren, solange die Bundesregierung im wohlverstandenen Interesse Westdeutschlands fremde Geheimnisse erfahren muß, um sich vor Überraschungen zu sichern, ist der BND notwendig. Er bleibt ein Schlüssel zum Erfolg jeder Bundesregierung. Er kann freilich keine Wunder bewirken, die Zeit des Gehlen-Mythos ist vorbei. Die Welt weiß längst, daß der Geheimdienst nicht, wie einst der CIA-Chef Bedell Smith spottete. »mit Gott und Joe Stalin auf vertrautem Fuß steht und daher weiß, daß der nächste Krieg am Dienstag, 5.32 Uhr ausbricht«. Aber der BND kann liefern, wofür er bestimmt ist: Entscheidungshilfe für Bonn. Ende",
-      "metadata": {
-        "titel": "Pullach intern",
-        "datum": "1971-06-13",
-        "jahrgang": 1971,
-        "ausgabe": 25,
-        "url": "https://www.spiegel.de/politik/pullach-intern-a-fca6b415-0002-0001-0000-000043231231?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
       "chunk_id": 95,
-      "relevance_score": 0.7303209900856018,
-      "content": "Hindenburg blickte auf und sah Hitler auf sich zukommen; der Kanzler machte langsam eine tiefe Verbeugung und ergriff die Hand des Greises. Wohl kein Bild hat Millionen politikfremder Deutscher mehr gerührt und getäuscht als diese Szene. Kaum war der »Tag von Potsdam« vorüber, da legte Hitler dem Reichstag ein Gesetz zur Abstimmung vor, das praktisch das Ende des Parlaments bedeutete. Das Ermächtigungsgesetz berechtigte die Regierung. innerhalb der nächsten vier Jahre ohne Mitsprache des Reichstags Gesetze zu erlassen, Verträge mit anderen Staaten abzuschließen und die Verfassung zu ändern. Hitler ließ die Krolloper, den neuen Sitz des Reichstags. durch ein bedrohliches Aufgebot von SA- und SS-Männern umstellen, doch mit Zwang allein konnte er das Gesetz nicht durchsetzen. Für die notwendige Zweidrittelmehrheit benötigte er die Stimmen der Zentrumspartei; mit der Zusage eines Reichskonkordats brachte er die schwarze Fraktion »auf seine Seite. Hitler erzwingt die Auflösung der Parteien. Am 23. März 1933 besiegelten die Abgeordneten durch ihr Ja zum Ermächtigungsgesetz das Ende der parlamentarischen Demokratie in Deutschland. Nur die SPD-Fraktion bäumte sich noch einmal auf und lehnte das Gesetz ab. Ihr Sprecher Otto Wels: »Wir sind wehrlos, wehrlos ist aber nicht ehrlos.« Mit der Annahme des Diktatur-Gesetzes hatten die Parteien ihre Existenzbasis aufgegeben -- Hitler beeilte sich, sie völlig abzuschaffen. Auch die Deutschnationale Volkspartei mußte sich auflösen, mit ihr stürzte der einst so einflußreiche Wirtschaftsminister Hugenberg. Hitler war allein Herr seines Kabinetts. Ein »Gesetz gegen die Neubildung von Parteien«, am 14. Juli 1933 erlassen, machte den Einparteienstaat perfekt. Das Gesetz erklärte die NSDAP zur einzigen legalen Partei. Doch Adolf Hitler dachte nicht daran, seine Macht mit den Unterführern der NSDAP zu teilen. Instinktiv wehrte er sich dagegen, die »Totalität des Staates zu verwirklichen, deren Errichtung er jahrelang versprochen hatte. Er schuf vielmehr ein verknäultes Netz hierarchischer Rivalitäten und Kompetenzen, angelegt zu dem einzigen Zweck. das persönliche Regiment des Führers zu sichern. Voraussetzung dafür war, daß die Partei keinen allzu intimen Einblick in Hitlers Werkstatt erhielt. Hitler hatte deshalb sofort nach seiner Ernennung zum Kanzler die Übersiedlung der NS-Reichsleitung von München nach Berlin hintertrieben; nur ein winziger »Verbindungsstab der NSDAP« hielt in der Reichskanzlei Kontakt zum Chef. Als die Münchner Parteigenossen ihren Führer drängten, ihnen mehr Einfluß auf den Staatsapparat einzuräumen. schaltete er seinen ebenso schwachen wie treuen Sekretär Rudolf Heß zwischen sich und die Reichsleitung. Der neuernannte »Stellvertreter des Führers« sollte, wie der Historiker Martin Broszat formuliert, »Hitler manche unliebsame direkte Konfrontation« abnehmen. Beim Training im Berliner Grunewald Hitler wachte darüber, daß sich in der Partei keine Fronde gegen ihn bildete.",
+      "relevance_score": 0.7313435673713684,
+      "content": "»Warum soll man das Rad noch einmal erfinden«, überlegte sich der US-Historiker Arnold Krammer und suchte gemeinsam mit dem Chemie-Professor Richard Wainerdi überall in den USA nach einem längst vergessenen Beutegut der US-Army aus dem Zweiten Weltkrieg. Die Nazis, erinnerten sich die Wissenschaftler, haften gegen Ende des Krieges kaum Öl importieren können. Sie stillten ihren Treibstoff-Bedarf mittels Kohleverflüssigung. Das Nazi-Know-how, gepaart mit den riesigen amerikanischen Kohlevorräten, werde den Weg zur Unabhängigkeit vom Opec-Öl weisen, meinten die Professoren. Die Unterlagen, in denen die Kohle-Benzin-Technik genau beschrieben ist, wurden von der US-Army nach Kriegsende beschlagnahmt. In 18 Monaten trugen die Forscher rund 300 000 einschlägige Dokumente zusammen die jetzt mit Hilfe eines Computers katalogisiert und dann ausgewertet werden sollen. Diese Fleißarbeit, so meinen zumindest die in aller Welt renommierten Kohle-Aufbereitungsexperten der Frankfurter Lurgi-Gesellschaften, wird nichts bringen: »Das Verfahren von damals ist heute so unmodem, daß es niemandem mehr nützen kann.",
       "metadata": {
-        "titel": "Adolf Hitler: »Aufriß über meine Person«",
-        "datum": "1973-05-13",
-        "jahrgang": 1973,
-        "ausgabe": 20,
-        "url": "https://www.spiegel.de/politik/adolf-hitler-aufriss-ueber-meine-person-a-a176d29c-0002-0001-0000-000042601750?context=issue",
+        "titel": "Auf den Spuren der Nazis",
+        "datum": "1977-04-17",
+        "jahrgang": 1977,
+        "ausgabe": 17,
+        "url": "https://www.spiegel.de/wirtschaft/auf-den-spuren-der-nazis-a-5913b184-0002-0001-0000-000040915935?context=issue",
         "autoren": "",
         "schlagworte": "",
         "untertitel": "",
@@ -2056,16 +2028,16 @@
     },
     {
       "chunk_id": 96,
-      "relevance_score": 0.7293537259101868,
-      "content": "Doch Franz-Josef Straußens Bundeswehrbürokratie - gewohnt, zu improvisieren - ist auch hier zuversichtlich. Zum einen vertraut sie auf die mangelnde Rechtskunde und fehlende Prozeßfreudigkeit der Soldaten-Anwärter. Für, den nächsten Fall Bauer aber hat sie sich vorsorglich schon eine juristische Parade ausgedacht, die freilich an kühnheit nichts zu wünschen übrigläßt. Wird die vom Gesetz vorgeschriebene ärztliche Untersuchung abgelehnt, so ist sie für den Musterungsbescheid jeweils durch eine Art Indizien-Diagnose zu ersetzen. Die Musterungsmediziner werden dann über die Wehrdiensttauglichkeit des renitenten Jünglings nach Gesichtspunkten befinden, die bislang zwar in den Praxen diverser Heilpraktiker, nicht jedoch unter Militärärzten üblich waren: nach Erscheinungsbild und schriftlichen Unterlagen. Simplicissimus Ferndiagnose?",
+      "relevance_score": 0.7312743663787842,
+      "content": "Die Friedenau-Leute haben von diesem SSD eine ziemlich negative Meinung: »Kein Vergleich mit der Gestapo.« Die habe sich noch ihre Fachleute von der Kriminalpolizei geholt, aber beim SSD, der seine Unfähigkeit durch Brutalität ersetze, waren alle vorher Schlosser oder Dachdecker. Finanziert werden Friedenaus Leute aus Zuschüssen verschiedener Stellen, so vom Ministerium Jakob Kaiser, vom Berliner Senat und der »Gesellschaft für ein vereinigtes Deutschland in einem vereinigten Europa«, einer finanzkräftigen Gruppe hauptsächlich bierbrauender deutschstämmiger Amerikaner um Milwaukee (Michigan) herum. Die Bierbrauer stiften das meiste Geld. Theo Friedenau versichert auf Ehre und Gewissen, daß er mit keinem der Geheimdienste, die in der Sowjetzone Westspionage treiben, zu tun habe, »obwohl sie mir wegen unseres Materials die Bude einlaufen«. Und keiner der Sowjetzonen-Besucher wird von der Limastraße zu einem der etwa 27 verschiedenen in Westberlin arbeitenden Geheimdienste weitergereicht.",
       "metadata": {
-        "titel": "Ist Untersuchung Musterung?",
-        "datum": "1959-02-24",
-        "jahrgang": 1959,
-        "ausgabe": 9,
-        "url": "https://www.spiegel.de/politik/ist-untersuchung-musterung-a-10cf8f47-0002-0001-0000-000042624613?context=issue",
+        "titel": "Drohung mit Recht",
+        "datum": "1952-04-15",
+        "jahrgang": 1952,
+        "ausgabe": 16,
+        "url": "https://www.spiegel.de/politik/drohung-mit-recht-a-db6316aa-0002-0001-0000-000021976669?context=issue",
         "autoren": "",
-        "schlagworte": "['Wehrpflichtgesetz']",
+        "schlagworte": "['Berlin']",
         "untertitel": "",
         "nr_in_issue": null
       },
@@ -2077,16 +2049,16 @@
     },
     {
       "chunk_id": 97,
-      "relevance_score": 0.7287149429321289,
-      "content": "Neues hat die Veröffentlichung der »bisher sorgsam verwahrten Protokolle der gescheiterten militärischen Geheimverhandlungen zwischen der Sowjet-Union, Frankreich und Großbritannien vom August 1939« durch die Nachrichten-Agentur Tass nicht gebracht: Bereits ab 1947 wurden sie in London veröffentlicht. Die russischen Veröffentlichungen berichten nun genau das gleiche - mit einiger Verspätung. Freiburg (Breisgau) FRANZ HUBER Hitler hatte der Sowjet-Union mit dem Nichtangriffspakt vom 23. August 1939 Bedingungen geboten, die sie schlechterdings nicht ablehnen konnte. Er tat es leichten Herzens - war doch der Angriff auf Sowjetrußland nicht nur Punkt des nationalsozialistischen Programms, sondern bereits beschlossene Sache. Die diese politische Aktion begleitende Perfidie war Idee Hitlers, nicht der Russen, wie Sie in Ihrem Artikel »Das Doppelspiel« darzutun versuchen. Stuttgart MAX WOLFSTAL",
+      "relevance_score": 0.7312668561935425,
+      "content": "Er trat 1933 der NSDAP bei, wurde allerdings 1935, angeblich wegen sittlicher Verfehlungen, wieder ausgeschlossen. Ehe Grell nach Ostberlin überwechselte, war er nach dem Kriege bis 1947 als Lehrkraft an der katholischen-Philosophisch-Theologischen Hochschule in Bamberg tätig. Angesichts der großen Zahl illustrer DDR-Würdenträger mit brauner, Vergangenheit braucht der einstige Himmler-Adept Bartsch trötz des Sturzes aus dem SED-Himmel die Hoffnung, rehabilitiert zu werden, nicht aufzugeben. Hieß seine Ehre einst Treue, so heißt sie heute Reue. Bartsch, zur Bewährung bereit: »Gleichgültig, welche Tätigkeit ich in Zukunft ausüben werde, ich werde immer bestrebt sein, durch ehrliche Arbeit unserem Arbeiter-und-Bauern-Staat zu dienen.« DDR-Kultusminister Bentzien ... die Schatten der Vergangenheit",
       "metadata": {
-        "titel": "Briefe",
-        "datum": "1959-06-02",
-        "jahrgang": 1959,
-        "ausgabe": 23,
-        "url": "https://www.spiegel.de/politik/aus-den-akten-a-811805b8-0002-0001-0000-000042625523?context=issue",
+        "titel": "Reue statt Treue",
+        "datum": "1963-02-19",
+        "jahrgang": 1963,
+        "ausgabe": 8,
+        "url": "https://www.spiegel.de/politik/reue-statt-treue-a-2bcc7f21-0002-0001-0000-000045142363?context=issue",
         "autoren": "",
-        "schlagworte": "",
+        "schlagworte": "['Nsdap']",
         "untertitel": "",
         "nr_in_issue": null
       },
@@ -2098,16 +2070,16 @@
     },
     {
       "chunk_id": 98,
-      "relevance_score": 0.7275013327598572,
-      "content": "Das Vermögen bestand aus dem Haus Mergentheimer Straße 36 in Würzburg, wo bis dahin die Thuringia-Füchse ihre Salamander gerieben und nächtens die Nachbarschaft durch fröhliche Lieder erbaut hatten. Das nicht mehr für Kneipen benötigte Anwesen vermietete der »Hausverein« an das katholische Ehepaar Sauer, eine angesehene Würzburger Familie, von der Nach einigem Hin und Her fand sich auch ein Käufer: Für 17 000 Mark übernahm Frau Pauline Sauer das Verbindungshaus in der Mergentheimer Straße. Die Sauers qualifizierten sich vor allem dadurch als Käufer, daß ein Bruder der Frau Sauer Mitglied der Thuringia war. Der »Hausvereins«-Vorsitzende, Philister Dr. Balling, protokollierte bereitwillig: »Nachdem keiner der Bundesbrüder von diesem Angebot Gebrauch machte, erhielt Frau Pauline Sauer den Zuschlag. Ich bestätige ausdrücklich, daß der Kauf beziehungsweise Verkauf im gegenseitigen Einvernehmen vorbehaltlos und nach den Vorschriften des BGB getätigt wurde.« Trotzdem mußten die Söhne der Pauline Sauer erleben, daß 1948 eben jener Dr. Balling für die Thuringia Rückerstattung des Hauses forderte, weil der Verkauf unter politischem Druck erfolgt sei. Nach Ansicht von Hans und Lothar Sauer war von individuellen Verfolgungsmaßnahmen gegen den »Hausverein« keine Rede. Überhaupt seien: die katholischen Korporationen, so argumentierten die Sauer-Anwälte, nicht wegen ihrer Religion oder Weltanschauung »verfolgt«, sondern wie alle anderen studentischen Verbindungen »gleichgeschaltet« worden. Allein wirtschaftliche Schwierigkeiten und Interesselosigkeit der Vereinsmitglieder seien für den Verkauf maßgebend gewesen. Als Beweis dafür, daß die Philister der Thuringia Gestapo-Maßnahmen nicht zu fürchten hatten, gab die Familie Sauer an, daß von den rund 150 Philistern 46 Prozent der NSDAP oder anderen Nazi-Organisationen angehörten. Rechne man zu den Ur-Philistern (der Thuringia) noch die Band-Philister (Gäste anderer Korporationen) hinzu, komme man auf 50 Prozent. Ferner wurde dem Gericht offenbart, daß die Thuringia nach der Machtergreifung einen völligen Gesinnungswechsel vollzogen habe: Die Aktivitas sei schon 1933/34 aus Sympathie geschlossen der SA oder SS beigetreten, ohne daß für die Studenten dazu ein äußerer Zwang bestanden habe. In den Reden und Veröffentlichungen des Verbandsführer Forschbach, von denen die Sauer-Verteidigung ganze Stapel präsentierte, sei »ausgesprochen nationalsozialistisches Gedankengut« vertreten worden. In einem Forschbach -Sonderaufruf vom Juli 1933 erklärte der CV, er sei Künder und Träger der Idee des Dritten Reichs. Im September 1933 verlangte er, seine Mitglieder sollten das Braunhemd tragen, und im November 1933 verkündete Forschbach gar: »Wer am 12. November beim Volksentscheid nicht mit 'Ja' stimmt und nicht die Reichstagsliste der NSDAP wählt, bricht seinen Burscheneid, weil er in der Stunde der größten Gefahr sein Vaterland und sein Volk verrät.",
+      "relevance_score": 0.731248140335083,
+      "content": "(Nr. 21/51, Literatur) Eine respektable Leistung: Vielleicht war Kleist, als er die »Hermannsschlacht« schrieb, Anhänger Napoleons. Dies jedenfalls wäre ebensogut möglich wie das andere: Der Autor des »Hitlerjungen Quex« wäre kein Nazi! Er hat nur »vieles am Nationalsozialismus bewundert«. Ludwigshafen Dr. Robert Petry In der Tat war Kleist Anhänger Napoleons gewesen, bevor er die »Hermannsschlacht« schrieb - Red.",
       "metadata": {
-        "titel": "Philister über dir",
-        "datum": "1958-12-23",
-        "jahrgang": 1958,
-        "ausgabe": 52,
-        "url": "https://www.spiegel.de/politik/philister-ueber-dir-a-d54b399d-0002-0001-0000-000042621101?context=issue",
+        "titel": "Briefe",
+        "datum": "1951-06-19",
+        "jahrgang": 1951,
+        "ausgabe": 25,
+        "url": "https://www.spiegel.de/politik/schenzinger-a-ed80dabd-0002-0001-0000-000029194194?context=issue",
         "autoren": "",
-        "schlagworte": "['Rückerstattung']",
+        "schlagworte": "",
         "untertitel": "",
         "nr_in_issue": null
       },
@@ -2119,16 +2091,16 @@
     },
     {
       "chunk_id": 99,
-      "relevance_score": 0.7272070050239563,
-      "content": "Im zweiten Jahr meines Studiums an der (amerikanischen) Kommandeur- und Generalstabsschule in Fort Leavenworth erfuhr ich, daß ich für einen Besuch an der deutschen Kriegsakademie vorgesehen sei. Der stellvertretende Kommandeur von Fort Leavenworth hatte in meinen Personalakten gelesen, daß ich deutschen Sprachunterricht genommen hatte. Ich erklärte ihm zwar, daß ich auf der High School nur zwei Jahre lang Deutsch gelernt und zudem nahezu alles wieder vergessen hätte, dennoch bekundete ich Interesse für die Entsendung nach Berlin. Meine eigentliche Erziehung zum Strategen begann während meines Studiums an der deutschen Kriegsakademie in den Jahren zwischen 1936 und 1938. Die deutsche Kriegsakademie lag in einem häßlichen Industrieviertel Berlins, in Moabit; die Lehrmittel dagegen waren ausgezeichnet, unter ihnen moderne Unterrichtsräume, Kartenzimmer, Leseräume, eine Bibliothek und eine Turnhalle. Da ich gerade Fort Leavenworth absolviert hatte, mußte ich unentwegt die beiden Institutionen miteinander vergleichen. Am meisten war ich von den deutschen Methoden und der Qualität des Unterrichts beeindruckt. Die deutsche Pädagogik und die Seminararbeit waren unseren Methoden unbedingt überlegen. Mein Hauptlehrer im ersten Jahr des Lehrgangs war Ferdinand Jodl, Bruder des späteren Generalobersten Alfred Jodl, der in Nürnberg als Kriegsverbrecher verurteilt wurde. Täglich war ich mit vielen deutschen Offizieren zusammen. Meine Jahrgangskameraden und Lehrerwaren stets freundlich zu mir. Ein deutscher Jahrgangskamerad, Fritz Berendsen, half mir besonders. Er ist heute (CDU-)Mitglied des Bundestags, und Ich bin Taufpate seiner Tochter; Wessel Freytag von Loringhoven gehörte ebenfalls zu meinen engen Freunden. Er war ein aktives Mitglied der Anti-Hitler-Verschwörung und wurde nach dem Attentat des 20. Juli 1944 von den Nazis erschossen. Claus von Stauffenberg war ein weiterer Angehöriger meines Jahrgangs; für ihn empfand ich große Bewunderung. Später gehörte er zur Anti-Hitler-Gruppe. Er war zwar nicht in meinem Hörsaal, wir trafen uns jedoch oft nach den Vorlesungen. Als Gast der deutschen Regierung vermied Ich jede Anspielung auf Hitler und andere Führer des Dritten Reiches; ich ging auch allen politischen Diskussionen mit Deutschen aus dem Wege. Aber mir entging nicht, daß die Berufsmilitärs Hitler und die Nazis mißbilligten. Ich konnte freilich damals kaum die politischen Fehler voraussehen, die Hitler schließlich in sein schicksalhaftes Verhängnis trieben. Mir blieb jedoch nicht verborgen, daß sich die Naziführer zum Kriege rüsteten. Es war der Oberst Truman Smith, Militärattaché an der Berliner US-Botschaft, der mir über die wachsende Stärke der nazistischen Kriegsmaschine restlos die Augen öffnete. Smith gehörte zu den hervorragendsten Geheimdienst-Experten der amerikanischen Armee. Seine Berliner Berichte waren ausgezeichnete Exposés über die Stärke, Verteilung und Kampftüchtigkeit der deutschen Streitkräfte.",
+      "relevance_score": 0.730994462966919,
+      "content": "In einer »Studie über die Nachwirkungen des Nationalsozialismus« durchleuchtete der Autor die rechtsradikale Publizistik auf ihr Urteil über Hitler, die Kriegsschuldfrage, die deutsche Widerstandsbewegung und den Nationalsozialismus überhaupt. Sein Fazit: Es gibt zwar keine Verschwörung von rechts, wohl aber eine Kontinuität der nationalsozialistischen, teilweise der vornazistischen rechtsextremen Ideen, weil der Personenkreis, der heute vaterländische Zeitungen schreibt oder liest, das gleiche Geschäft schon vor 1945 betrieben hat. (Ludwig Röhrscheid Verlag, Bonn; 230 Seiten; 16,80 Mark.)",
       "metadata": {
-        "titel": "MEIN KAMERAD STAUFFENBERG",
-        "datum": "1959-02-24",
-        "jahrgang": 1959,
-        "ausgabe": 9,
-        "url": "https://www.spiegel.de/politik/mein-kamerad-stauffenberg-a-a5864927-0002-0001-0000-000042624624?context=issue",
+        "titel": "Hans-Helmuth Knütter: »ldeologien des Rechtsradikalismus im Nachkriegsdeutschland«.",
+        "datum": "1961-12-19",
+        "jahrgang": 1961,
+        "ausgabe": 52,
+        "url": "https://www.spiegel.de/kultur/hans-helmuth-knuetter-ldeologien-des-rechtsradikalismus-im-nachkriegsdeutschland-a-515bfc1f-0002-0001-0000-000043367926?context=issue",
         "autoren": "",
-        "schlagworte": "",
+        "schlagworte": "['Neu In Deutschland']",
         "untertitel": "",
         "nr_in_issue": null
       },
@@ -2140,56 +2112,14 @@
     },
     {
       "chunk_id": 100,
-      "relevance_score": 0.7271735072135925,
-      "content": "Zwischen Bundesaußenminister Heinrich von Brentano und dem hessischen Ministerpräsidenten Georg-August Zinn kam es in einer der letzten Sitzungen des Auswärtigen Ausschusses des Bundesrats zu einem Geplänkel, als von Brentano sagte, die Franzosen beriefen sich beim Ausbau ihres linksrheinischen Kanalnetzes auf den Versailler Vertrag. Zinn bemerkte, dieser Vertrag sei doch längst außer Kraft gesetzt, und zwar - wie er auf Rückfrage Brentanos ergänzte - durch Hitler. Als der Bundesaußenminister zu bedenken gab, ob es denn richtig sei, sich hier auf Hitler zu berufen, erwiderte der hessische Ministerpräsident: »Beim Reichskonkordat ist es doch gestattet, sich auf Hitler zu berufen.«",
+      "relevance_score": 0.7308531999588013,
+      "content": "Adolf Hitler hatte sich erschossen, russische Panzer waren auf Steinwurfweite an die zertrümmerte Reichskanzlei vorgedrungen. Die Überlebenden im Führer-Bunker, Politiker und Generale, kämpften am 1. Mai 1945 nur noch um Zeitgewinn. Die sowjetischen Generale durchschauten die Hinhaltetaktik und lehnten das Waffenstillstandsangebot ab, das der letzte Generalstabschef des deutschen Heeres Krebs ihnen unterbreitet hatte. Ratlosigkeit und Resignation breiteten sich im Bunker aus. Nur einer mochte den Waffenstillstandsplan noch immer nicht aufgehen: Reichsleiter Martin Bormann. Er gedachte, selber mit den Sowjets zu telephonieren. Seinen Argumenten, so glaubte er, würden sie sich nicht verschließen. Und so befahl er, die zerschossene Telephonleitung zu flicken. SS-General Mohnke, der die wenigen Truppen führte, die den letzten Verteidigungsring um die Reichskanzlei bildeten, erklärte jedoch Bormann, er werde deswegen keinen Soldaten in den Tod schicken. Bormann verschlug es für Sekunden die Sprache. Der Sekretär des Führers war es gewohnt, daß die höchsten Würdenträger vor seiner Machtfülle zitterten und seine Wünsche erfüllten -- und hier wagte ein SS-Troupier, einfach zu widersprechen. Bormann brüllte den Befehlsverweigerer an, doch der scherte sich nicht um den Wutausbruch. Er erwiderte, über den Einsatz seiner Leute entscheide er allein. Bormann verstummte schließlich und retirierte in den Hintergrund: Der von den Hitler-Trabanten bislang so gefürchtete und nicht ohne Grund für unumschränkt mächtig gehaltene Diener des Tyrannen hatte ausgedient. Mit Hitlers Leben war auch die Macht seines engsten Handlangers erloschen. Der stiernackige »Sekretär des Führers« (so sein offizieller Titel seit 1943) hatte eine einzigartige Schlüsselposition im Vorzimmer bekleidet: Chef Hitler erfuhr nur, was Bormann ihm vortrug, und er empfing nur, wen Bormann passieren ließ. Bormann mischte sich in fast alle Staatsgeschäfte und schließlich auch noch in Kriegsentscheidungen ein. Zahlreiche Dokumente der Unmenschlichkeit tragen seine Unterschrift, wenngleich im einzelnen ungeklärt bleiben wird, wie weit er für deren Inhalt unmittelbar verantwortlich war. In jedem Fall aber wachte er unerbittlich darüber, daß Hitlers Befehle exakt befolgt wurden, ja, er verschärfte sie sogar noch. Er sorgte dafür, daß Geistliche drangsaliert, Juden verfolgt und Kriegsgefangene geprügelt wurden. Während des Dritten Reiches kannten ihn nur wenige Deutsche. Nach Kriegsende -- Bormann war zusammen mit anderen Bunkerinsassen am 2. Mai 1945 aus dem Hitler-Refugium ausgebrochen und galt seitdem als verschollen -- wurde er von den überlebenden NS-Größen für fast jedes Verbrechen der Nazi-Herrschaft verantwortlich gemacht.",
       "metadata": {
-        "titel": "VERSAILLER VERTRAG",
-        "datum": "1956-02-07",
-        "jahrgang": 1956,
-        "ausgabe": 6,
-        "url": "https://www.spiegel.de/politik/versailler-vertrag-a-52f76c22-0002-0001-0000-000031587361?context=issue",
-        "autoren": "",
-        "schlagworte": "",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 101,
-      "relevance_score": 0.7267751693725586,
-      "content": "Alle bitten ihn händeringend, die Führung wieder zu übernehmen. An dieser Szene soll deutlich werden, sagt Habeck, wohin der Kadavergehorsam führt: Die Militärs können nur mehr gehorchen. Die Dreharbeiten des »Letzten Aktes« sollen noch in diesem Monat beendet werden. Nach der offiziellen Version schließt der Film mit der Vernichtung des Führerbunkers nach Hitlers Selbstmord und Verbrennung (die in allen Einzelheiten dargestellt wird). Produzent Szokoll, Regisseur Pabst und Autor Habeck haben jedoch inzwischen einen neuen Schluß entworfen, den sie möglichst bis zur Uraufführung geheimhalten wollen. Das neue Ende wird, versichern sie, »wie eine Bombe einschlagen«. Es soll »ein großer menschlicher Appell von packendster Aktualität« sein. *) Historische Antwort Himmlers, als der SS-Gruppenführer Graf Bassewitz-Behr ihn aufforderte, sich in Gefangenschaft zu begeben: »Ein jüdisches Gericht würde mich zerreißen.«",
-      "metadata": {
-        "titel": "Story von Remarque",
-        "datum": "1955-02-08",
-        "jahrgang": 1955,
-        "ausgabe": 7,
-        "url": "https://www.spiegel.de/politik/story-von-remarque-a-89c19d3c-0002-0001-0000-000031969190?context=issue",
-        "autoren": "",
-        "schlagworte": "['Hitler']",
-        "untertitel": "",
-        "nr_in_issue": null
-      },
-      "search_context": {
-        "zeit_interval": null,
-        "interval_start": null,
-        "interval_end": null
-      }
-    },
-    {
-      "chunk_id": 102,
-      "relevance_score": 0.724929928779602,
-      "content": "Die Wahlkampfblüte aus Tübingen auf Seite 48 Deiner Nr. 10 duftet anders, als Du und Deine Leser denken. Ich hatte 20 Mark dem versprochen, der mir in der Versammlung zehn unverändert übernommene wichtige Hitler-Gesetze und zwei ohne Zusatzabkommen weiterhin geltende Hitler-Verträge nennen würde. Die christlich-demokratischen Studenten präsentierten aus einer Gesetzessammlung eine Reihe von Vorschriften, die a) inzwischen verändert waren und b) keine wesentlichen Rechtsgebiete regelten. Verträge ohne ausdrückliches Wiederanwendungsabkommen konnten sie überhaupt nicht vorlegen, weil es keine gibt. Angesichts der sehr späten Stunde erklärte ich mich bereit, wenigstens den Eifer zu belohnen und die Wette für halb gewonnen zu erklären. Dieses pädagogische Bemühen wurde schlecht gelohnt. Anscheinend ist die Mitgliedschaft in einer christlich-demokratischen Organisation dem Gefühl für Fairneß nicht förderlich. Auf die zum Teil hämischen Betrachtungen In den Parteiblättern der CDU habe ich nicht reagiert. Bei Dir liegen die Dinge ernster. Dir könnte man glauben. Im übrigen: Welch seltsamer Eifer, nach Restbeständen von Hitlers Gewaltherrschaft zu forschen, um das Konkordat zu rechtfertigen! Sollte man nicht lieber ein neues abschließen, um die katholische Kirche von der Gewissensqual zu befreien, als Nutznießer der nationalsozialistischen Gewaltherrschaft zu erscheinen? Bonn FRITZ ERLER MdB",
-      "metadata": {
-        "titel": "Briefe",
-        "datum": "1956-03-13",
-        "jahrgang": 1956,
-        "ausgabe": 11,
-        "url": "https://www.spiegel.de/politik/erler-wette-a-1aebf7b6-0002-0001-0000-000043061671?context=issue",
+        "titel": "»Ein kleiner Sekretär - ein großer Intrigant«",
+        "datum": "1977-10-02",
+        "jahrgang": 1977,
+        "ausgabe": 41,
+        "url": "https://www.spiegel.de/politik/ein-kleiner-sekretaer-ein-grosser-intrigant-a-c0fef32a-0002-0001-0000-000040859185?context=issue",
         "autoren": "",
         "schlagworte": "",
         "untertitel": "",

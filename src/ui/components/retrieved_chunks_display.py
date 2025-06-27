@@ -297,17 +297,18 @@ def create_paginated_content_display(
                     </div>
                     <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">
                         <strong>Datum:</strong> {date} | 
-                        <strong>Jahr:</strong> {year} | 
-                        <strong>Relevanz:</strong> {relevance_score:.3f}
-        """
+                        <strong>Jahr:</strong> {year}"""
         
-        # Add dual scores if available (LLM-assisted)
+        # Add scores - if dual scores are available, only show LLM and Vector, otherwise show Relevanz
         if llm_score is not None:
-            html_content += f"""<br>
+            html_content += f""" | 
                         <span style="color: var(--brand-accent);">
-                            <strong>Vector:</strong> {vector_score:.3f} | 
-                            <strong>LLM:</strong> {llm_score:.3f}
+                            <strong>LLM:</strong> {llm_score:.3f} | 
+                            <strong>Vector:</strong> {vector_score:.3f}
                         </span>"""
+        else:
+            html_content += f""" | 
+                        <strong>Relevanz:</strong> {relevance_score:.3f}"""
         
         # Add author info if available
         if authors:
@@ -327,10 +328,29 @@ def create_paginated_content_display(
             </div>
         """
         
-        # Show LLM evaluation text if available
+        # Show LLM evaluation reasoning (Begründung) if available
         evaluation_text = metadata.get('evaluation_text', '')
         if evaluation_text:
-            html_content += f"""
+            # Extract reasoning from evaluation text using improved parsing
+            reasoning = ""
+            if '**Argumentation:**' in evaluation_text:
+                # Extract text after "Argumentation:" 
+                reasoning = evaluation_text.split('**Argumentation:**', 1)[1].strip()
+                # Remove any score information at the end
+                if 'Score:' in reasoning:
+                    reasoning = reasoning.split('Score:')[0].strip()
+            elif '-' in evaluation_text:
+                # Original dash separator format
+                reasoning = evaluation_text.split('-', 1)[1].strip()
+            else:
+                # Use full evaluation text as fallback, but clean it up
+                reasoning = evaluation_text.strip()
+                # Remove common prefixes that aren't part of reasoning
+                if reasoning.startswith('Text ') and ':' in reasoning:
+                    reasoning = reasoning.split(':', 1)[1].strip()
+            
+            if reasoning and reasoning != "Automatisch extrahiert" and len(reasoning) > 10:
+                html_content += f"""
             <div style="
                 background: var(--bg-primary); 
                 border-left: 3px solid var(--brand-accent); 
@@ -339,7 +359,7 @@ def create_paginated_content_display(
                 margin-bottom: 12px;
                 color: var(--text-secondary);
             ">
-                <strong style="color: var(--brand-accent);">🤖 KI-Bewertung:</strong> {evaluation_text}
+                <strong style="color: var(--brand-accent);">💭 Begründung:</strong> {reasoning}
             </div>
             """
         

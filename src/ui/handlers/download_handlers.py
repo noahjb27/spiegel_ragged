@@ -46,10 +46,11 @@ def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
             "chunks": []
         }
         
-        # Process each chunk with updated field names
+        # Process each chunk with updated field names and ranking
         for i, chunk in enumerate(retrieved_chunks.get('chunks', [])):
             chunk_data = {
                 "chunk_id": i + 1,
+                "rank": i + 1,  # Add ranking information
                 "relevance_score": chunk.get('relevance_score', 0.0),
                 "content": chunk.get('content', ''),
                 "metadata": {
@@ -72,11 +73,33 @@ def create_download_json(retrieved_chunks: Optional[Dict[str, Any]]) -> str:
             
             # Add dual scores if available (for LLM-assisted search)
             if has_dual_scores:
+                eval_text = chunk.get('metadata', {}).get('evaluation_text', '')
+                reasoning = ""
+                # Improved reasoning extraction
+                if eval_text:
+                    if '**Argumentation:**' in eval_text:
+                        # Extract text after "Argumentation:" 
+                        reasoning = eval_text.split('**Argumentation:**', 1)[1].strip()
+                        # Remove any score information at the end
+                        if 'Score:' in reasoning:
+                            reasoning = reasoning.split('Score:')[0].strip()
+                    elif '-' in eval_text:
+                        # Original dash separator format
+                        reasoning = eval_text.split('-', 1)[1].strip()
+                    else:
+                        # Use full evaluation text as fallback, but clean it up
+                        reasoning = eval_text.strip()
+                        # Remove common prefixes that aren't part of reasoning
+                        if reasoning.startswith('Text ') and ':' in reasoning:
+                            reasoning = reasoning.split(':', 1)[1].strip()
+                
                 chunk_data["scoring"] = {
+                    "rank": i + 1,  # Include ranking in scoring section
                     "primary_relevance_score": chunk.get('relevance_score', 0.0),
                     "vector_similarity_score": chunk.get('vector_similarity_score', 0.0),
                     "llm_evaluation_score": chunk.get('llm_evaluation_score', 0.0),
-                    "evaluation_text": chunk.get('metadata', {}).get('evaluation_text', ''),
+                    "evaluation_text": eval_text,
+                    "evaluation_reasoning": reasoning,  # Add separated reasoning
                     "score_type": "dual_scores_llm_assisted" if 'llm_evaluation_score' in chunk else "single_score_standard"  # UPDATED terminology
                 }
             

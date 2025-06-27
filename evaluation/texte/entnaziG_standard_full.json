@@ -1,6 +1,6 @@
 {
   "export_info": {
-    "timestamp": "2025-06-24T19:09:09.038979",
+    "timestamp": "2025-06-24T23:13:45.524691",
     "format": "json",
     "source": "SPIEGEL RAG System - Heuristik",
     "total_chunks": 100,
@@ -9,7 +9,7 @@
     "search_method": "standard"
   },
   "heuristik_metadata": {
-    "search_time": 5.267899990081787,
+    "search_time": 7.498138666152954,
     "strategy": "standard",
     "chunk_size": 3000,
     "year_range": [
