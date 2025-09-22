@@ -46,7 +46,27 @@ source .venv/bin/activate  # Unter Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. FastText Word Embeddings herunterladen
+### 4. Umgebungsvariablen konfigurieren
+
+Erstellen Sie eine `.env`-Datei basierend auf der bereitgestellten Vorlage:
+
+```bash
+cp .env.example .env
+```
+
+Öffnen Sie die `.env`-Datei und tragen Sie Ihre API-Schlüssel ein:
+
+```
+# Für OpenAI GPT-4o oder GPT-3.5 Turbo
+OPENAI_API_KEY=ihr_openai_api_schlüssel_hier
+
+# Für Google Gemini Pro (optional)
+GEMINI_API_KEY=ihr_gemini_api_schlüssel_hier
+```
+
+**Hinweis**: Die API-Schlüssel sind nur erforderlich, wenn Sie die entsprechenden externen Sprachmodelle verwenden möchten. Für die Nutzung der HU-LLM Modelle sind keine API-Schlüssel erforderlich.
+
+### 5. FastText Word Embeddings herunterladen
 
 Die FastText-Worteinbettungen müssen separat heruntergeladen werden, da sie zu groß für das Repository sind:
 
@@ -60,7 +80,7 @@ Alternativ:
 1. Laden Sie die Einbettungen von der angegebenen URL herunter: [https://box.hu-berlin.de/f/34c17bfd74b84454b276/?dl=1](https://box.hu-berlin.de/f/34c17bfd74b84454b276/?dl=1)
 2. Entpacken Sie die Dateien in den `models/` Ordner
 
-### 5. Daten herunterladen (optional)
+### 6. Daten herunterladen (optional)
 
 Die Anwendung verbindet sich standardmäßig mit einem Remote-Service für den Zugriff auf die Vektordatenbank. Wenn Sie die Daten lokal analysieren möchten, können Sie die CSV-Dateien herunterladen:
 
